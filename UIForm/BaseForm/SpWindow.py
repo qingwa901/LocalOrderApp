@@ -6,7 +6,7 @@ Created on Thu Feb  1 22:24:31 2024
 """
 
 import wx
-from .BaseForm.Panel import Panel
+from .Panel import Panel
 
 
 class SpWindow(wx.SplitterWindow):

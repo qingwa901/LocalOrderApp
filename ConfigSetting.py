@@ -13,6 +13,7 @@ import time
 
 class ConfigSetting:
     def __init__(self, logger, path=''):
+        self.open = True
         self.path = path + 'config.yaml'
         self._config = [dict()]
         self.logger = logger
@@ -22,7 +23,7 @@ class ConfigSetting:
         self.AutoSave()
 
     def save(self):
-        while True:
+        while self.open:
             try:
                 if not self.Change:
                     continue
@@ -46,9 +47,9 @@ class ConfigSetting:
         if os.path.exists(self.path):
             with open(self.path, "r") as yamlfile:
                 self._config = yaml.load(yamlfile, Loader=yaml.FullLoader)
-                self.logger.Info("config read successful")
+                self.logger.info("config read successful")
 
-    def ChangeValue(self, field, value):
+    def SetValue(self, field, value):
         fields = field.split('.')
         config = self._config[0]
         for field in fields[:-1]:
@@ -67,9 +68,9 @@ class ConfigSetting:
             if field in config:
                 config = config[field]
             else:
+                config[field] = dict()
                 return None
         return config
 
     def AutoSave(self):
-        SaveThreading = threading.Thread(self.save)
-        SaveThreading.start()
+        threading.Thread(target=self.save).start()

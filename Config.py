@@ -8,15 +8,12 @@ Created on Fri Feb  2 22:29:57 2024
 
 class Config:
     class DataBase:
-        MENU_LIST = 'MenuList'
-        ORDER_META_DATA = 'OrderMetaData'
         STORE_INFO = 'StoreList'
-        ORDER_LIST = 'OrderList'
-        STORE_ID = 0 # temperately put it in config. Later should put it into setting file.
+        STORE_ID = 0  # temperately put it in config. Later should put it into setting file.
         DOWNLOADED = 'Downloaded'
-        UPLOADED = 'Uploaded'
 
         class MenuList:
+            NAME = 'MenuList'
             ID = 'ID'
             STORE_ID = 'IDStore'
             FOOD_NAME = 'FoodName'
@@ -29,15 +26,17 @@ class Config:
                        PRICE, FOOD_TYPE, QTY, NOTE, VALID]
 
         class OrderMetaData:
-            ORDER_ID = 'OrderID'
-            STORE_ID = 'StoreID'
-            TABLE_ID = 'TableID'
+            NAME = 'OrderMetaData'
+            ID_ORDER = 'OrderID'
+            ID_STORE = 'StoreID'
             FIELD = 'Field'
             VALUE = 'Value'
             CREATE_TIME = 'CreatTime'
-            COLUMNS = [ORDER_ID, STORE_ID, TABLE_ID, FIELD, VALUE, CREATE_TIME]
+            COLUMNS = [ID_ORDER, ID_STORE, FIELD, VALUE, CREATE_TIME]
 
         class OrderList:
+            NAME = 'OrderList'
+            ID = 'ID'
             ID_ORDER = 'IDOrder'
             ID_TABLE = 'IDTable'
             ID_STORE = 'IDStore'
@@ -55,3 +54,7 @@ class Config:
             ID_MANAGER = 'IDManager'
             TABLE_ORDER = 'TableOrder'
             NOTE = 'Note'
+
+    class UI:
+        class EatInPage:
+            ToolBarSize = 35

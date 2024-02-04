@@ -6,12 +6,11 @@ Created on Tue Jan 30 18:49:08 2024
 """
 
 import wx
-from .Logger import CreateLogger
+from Logger import CreateLogger
 # from .LogIn import LogIn
-from .UIForm.EatInTable import EatInTable
-from .ConfigSetting import ConfigSetting
+from UIForm.EatInTable import EatInTable
 from datetime import datetime
-from .DataBase import DataBase
+from DataBase import DataBase
 
 
 class Base:
@@ -21,13 +20,17 @@ class Base:
             self._logger = CreateLogger(f'OrderSystem', filename)
         else:
             self._logger = logger
-        self._config = ConfigSetting(logger)
-        self._DataBase = DataBase(self._logger, self._config, 'DataBase')
+        self._DataBase = DataBase(self._logger, 'DataBase')
         self._logger.info('App start')
         self.app = wx.App()
         self.EatInTable = EatInTable(
-            None, self._logger, self._config, self._SQLControl)
+            None, self._logger, self._DataBase)
         self.EatInTable.Show()
 
     def run(self):
         self.app.MainLoop()
+
+
+if __name__ == '__main__':
+    x = Base()
+    x.run()
