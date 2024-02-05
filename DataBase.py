@@ -15,25 +15,28 @@ from datetime import datetime
 from PrinterControl import PrinterControl
 import logging
 import json
+from TableInfoStore import AllTableInfoStore
 
 class DataBase(SQLControl):
     def __init__(self, logger: logging.Logger, path):
         SQLControl.__init__(self, logger)
         self.logger = logger
+        self.config = Config.DataBase
         self.Setting = ConfigSetting(logger)
         self.Printer = PrinterControl(self.logger, self.Setting)
+        self.TableInfo = AllTableInfoStore()
         self.path = path
         if not os.path.exists(self.path):
             os.mkdir(self.path)
         self.tmp_path = path + '/tmp'
         if not os.path.exists(self.tmp_path):
             os.mkdir(self.tmp_path)
-        self.config = Config().DataBase
         self.STORE_ID = self.config.STORE_ID  # Todo save store id to setting file
         self.menu = None
         self.InitialLoadData()
         self.auto_update = threading.Thread(target=self.AutoUpdate)
         self.auto_update.start()
+
 
     def InitialLoadData(self):
         data = self.get_data(
@@ -43,9 +46,24 @@ class DataBase(SQLControl):
                 f'Can not find data in Store List. Please check database setting for Store ({self.STORE_ID})')
         data = data.iloc[0]
         self.Setting.SetValue(self.config.StoreList.TABLE_ORDER, json.loads(data[self.config.StoreList.TABLE_ORDER]))
-        self.GetMenu()
+        self.RefreshMenu()
 
-    def GetMenu(self):
+    def RefreshMenu(self):
+        with self.Lock:
+            try:
+                data = pd.read_sql(
+                    f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
+                    f'{self.STORE_ID}',
+                    self.conn)
+                self.SaveMenu(data)
+            except Exception:
+                data = pd.read_sql(
+                    f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
+                    f'{self.STORE_ID}',
+                    self.local_conn)
+        self.menu = data
+
+    def RefreshOrderList(self):
         with self.Lock:
             try:
                 data = pd.read_sql(
@@ -73,50 +91,92 @@ class DataBase(SQLControl):
             except OSError as e:
                 self.logger.error('Meet error in save data. Retry in 1 sec.', exc_info=e)
                 time.sleep(1)
-
     def HardReloadData(self):
         pass  # Todo
 
     def SaveMenu(self, data: pd.DataFrame):
         table = self.config.MenuList.NAME
-        data.to_csv(self.path + '/' + table + '.csv')
+        self.SaveLocalData(data, table)
 
     def SaveOrder(self, data: pd.DataFrame):
         table = self.config.OrderList.NAME
         self.AddLine(data, self.path + '/' + table + '.csv')
-        path = self.tmp_path + f'/{table}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
+        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
         self.AddLine(data, path)
 
     def SaveMetaOrder(self, data: pd.DataFrame):
         table = self.config.OrderMetaData.NAME
         self.AddLine(data, self.path + '/' + table + '.csv')
-        path = self.tmp_path + f'/{table}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
+        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
         self.AddLine(data, path)
 
-    def Update(self):
-        FileList = os.listdir(self.tmp_path)
-        for filename in FileList:
-            data = pd.read_csv(self.tmp_path + '/' + filename)
-            data[self.config.DOWNLOADED] = True
-            self.SaveData(data, filename.split('_')[0])
-            os.remove(self.tmp_path + '/' + filename)
+    def UpdateOrder(self, data: pd.DataFrame):
+        table = self.config.OrderList.NAME
+        self.AddLine(data, self.path + '/' + table + '.csv')
+        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
+        self.AddLine(data, path)
 
-    def Download(self):
-        table = self.config.OrderList
-        data = self.get_data(f'select * from {table.NAME} where {self.config.DOWNLOADED}=false;')
-        if len(data) > 0:
-            self.AddLine(data, self.path + '/' + table.NAME + '.csv')
-            self.execute(
-                f"update {table.NAME} set {self.config.DOWNLOADED}='1' where {table.ID_STORE}= "
+    def UpdateMetaOrder(self, data: pd.DataFrame):
+        table = self.config.OrderMetaData.NAME
+        self.AddLine(data, self.path + '/' + table + '.csv')
+        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
+        self.AddLine(data, path)
+
+    def UpdateOneLineLocally(self, data, table):
+        Value = ''
+        for field in table.COLUMNS:
+            if Value != '':
+                Value += ' and '
+            Value += f"{field} = '{data[field]}'"
+        self.executeLocally(
+            f"Update {table.Name} Set ({Value} and {self.config.UPDATED} = true and {self.config.LOADED} = true) "
+            f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
+
+    def UpdateOneLine(self, data, table):
+        Value = ''
+        for field in table.COLUMNS:
+            if Value != '':
+                Value += ' and '
+            Value += f"{field} = '{data[field]}'"
+        self.execute(
+            f"Update {table.Name} Set ({Value} and {self.config.UPDATED} = true and {self.config.LOADED} = true) "
+            f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
+
+    def Update(self):
+        for table in [self.config.OrderList, self.config.OrderMetaData]:
+            data = self.get_local_data(f"select * from {table.NAME} where {self.config.LOADED} = false")
+            data[self.config.LOADED] = True
+            data[self.config.UPDATED] = True
+            self.SaveData(data, table.NAME)
+            self.executeLocally(
+                f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {table.ID_STORE}="
                 f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
-        table = self.config.OrderMetaData
-        data = self.get_data(f'select * from {table.NAME} where {self.config.DOWNLOADED}=false;')
-        if len(data) > 0:
-            self.AddLine(data, self.path + '/' + table.NAME + '.csv')
+            data = self.get_local_data(
+                f"select * from {table.NAME} where {self.config.UPDATED} = false and {self.config.LOADED} = true")
+            data[self.config.UPDATED] = True
+            data.apply(self.UpdateOneLine, axis=1)
+            self.executeLocally(
+                f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
+                f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
+
+    def Download(self):
+        for table in [self.config.OrderList, self.config.OrderMetaData]:
+            data = self.get_data(f"select * from {table.NAME} where {self.config.LOADED} = false")
+            data[self.config.LOADED] = True
+            data[self.config.UPDATED] = True
+            self.SaveLocalData(data, table.NAME)
             self.execute(
-                f"update {table.NAME} set {self.config.DOWNLOADED}='1' where {table.ID_STORE}= "
-                f"{self.STORE_ID} and {table.ID_ORDER} in ({','.join(data[table.ID_ORDER])})")
+                f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {table.ID_STORE}="
+                f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
+
+            data = self.get_data(
+                f"select * from {table.NAME} where {self.config.UPDATED} = false and {self.config.LOADED} = true")
+            data[self.config.UPDATED] = True
+            data.apply(self.UpdateOneLineLocally, axis=1)
+            self.execute(
+                f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
+                f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
     def AutoUpdate(self):
         while self.open:
@@ -127,3 +187,24 @@ class DataBase(SQLControl):
                 self.logger.error('Unknown Error. Retry in 3 sec.', exc_info=e)
             finally:
                 time.sleep(3)
+
+    def GetOpenTableInfo(self):
+        query = (f"select {Config.DataBase.OrderMetaData.ID_ORDER} from {Config.DataBase.OrderMetaData.NAME} where "
+                 f"{Config.DataBase.OrderMetaData.FIELD}='{Config.DataBase.OrderMetaData.Fields.IS_FINISHED}' and "
+                 f"{Config.DataBase.OrderMetaData.VALUE}=false and "
+                 f"{Config.DataBase.OrderMetaData.ID_STORE}='{self.STORE_ID}'")
+        OpenTable = self.get_local_data(query)
+        self.OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].to_list()
+        self.TableInfo.Clear()
+        if len(self.OpenOrderList) > 0:
+            OpenOrderListStr = "', '".join(self.OpenOrderList)
+            query = (f"select * from {Config.DataBase.OrderList.NAME} where "
+                     f"{Config.DataBase.OrderList.ID_ORDER} in ('{OpenOrderListStr}' and "
+                     f"{Config.DataBase.OrderList.ID_STORE}='{self.STORE_ID}'")
+            OrderList = self.get_local_data(query)
+            query = (f"select * from {Config.DataBase.OrderMetaData.NAME} where "
+                     f"{Config.DataBase.OrderMetaData.ID_STORE}='{self.STORE_ID}'")
+            OrderMetaList = self.get_local_data(query)
+            self.TableInfo.UpdateTime = time.time()
+            self.TableInfo.ConverOrderData(OrderList, OrderMetaList)
+

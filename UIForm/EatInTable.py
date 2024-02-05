@@ -14,18 +14,20 @@ from .StatusPanel import StatusPanel
 from .ExistOrderPanel import ExistOrderPanel
 from .NewOrderPanel import NewOrderPanel
 from DataBase import DataBase
-from ConfigSetting import ConfigSetting
 from Config import Config
 from logging import Logger
 
 
 class EatInTable(wx.Frame):
     def __init__(self, parent, logger: Logger, DataBase: DataBase):
-        wx.Frame.__init__(self, parent, -1, title='ZhangJi Order System',
-                          size=(500, 400))
         self._logger = logger
         self._config = Config()
         self._DataBase = DataBase
+        size = self._DataBase.Setting.GetValue('UI.EatInTable.Size')
+        if size is None:
+            size = (500,300)
+        wx.Frame.__init__(self, parent, -1, title='ZhangJi Order System',
+                          size=size)
         self.TableOrder = self._DataBase.Setting.GetValue(field=self._config.DataBase.StoreList.TABLE_ORDER)
         self.TableList = {}
         self.Centre()
@@ -45,7 +47,7 @@ class EatInTable(wx.Frame):
         self.SetSizer(TotalSizer)
 
         self.TablePanel = TablePanel(
-            self.MainPanel.GetWindow1(), self.TableOrder)
+            self.MainPanel.GetWindow1(), self._DataBase)
         self.MainPanel.GetWindow1().AddMany([self.TablePanel])
         splitter2 = SpWindow(self.MainPanel.GetWindow2(), 1)
         self.MainPanel.GetWindow2().AddMany([splitter2])
@@ -97,3 +99,4 @@ class EatInTable(wx.Frame):
     def OnSize(self, e):
         self.MainPanel.SetSize((self.Size[0], self.Size[1] - 90))
         self.SettingPanel.SetSize((self.Size[0], self.Size[1] - 90))
+        self._DataBase.Setting.SetValue('UI.EatInTable.Size', self.Size)
