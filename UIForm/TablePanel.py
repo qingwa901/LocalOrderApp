@@ -39,9 +39,4 @@ class TablePanel(wx.Panel):
 
     def RefreshTableDetail(self):
 
-        for table in self.TableList.values():
-            table.StartTime = None
-        for order, table in TableOrderMap.items():
-            self.TableList[table].StartTime = \
-                self.StartTime[self.StartTime[Config.DataBase.OrderMetaData.ID_ORDER] == order][
-                Config.DataBase.OrderMetaData.VALUE]
+        pass #Todo

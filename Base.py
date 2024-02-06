@@ -11,6 +11,7 @@ from Logger import CreateLogger
 from UIForm.EatInTable import EatInTable
 from datetime import datetime
 from DataBase import DataBase
+from UIForm.LoginPage import LoginPage
 
 
 class Base:

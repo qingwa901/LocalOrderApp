@@ -33,62 +33,47 @@ class SQLControl:
         self.Connected = False
         self.Local_Connected = False
         self.build_connection()
-        self.build_local_connection()
-
-    def build_local_connection(self):
-        while self.open:
-            try:
-                with self.LocalLock:
-                    self.local_conn = sqlite3.connect(Config.DataBase.PATH)
-                    self.logger.info("Successfully connect to local database.")
-                    self.Local_Connected = True
-                    return
-            except sqlalchemy.exc.DBAPIError as e:
-                self.logger.error(
-                    "Lost connection. Try to reconnect local database.", exc_info=e)
-                time.sleep(_sleepsec)
-                self.logger.info("Reconnecting local database.")
 
     def get_local_data(self, query):
         while self.open:
             try:
                 with self.LocalLock:
-                    self.logger.info(f'query: {query}')
-                    data = pd.read_sql(query, self.local_conn)
-                    return data
+                    with sqlite3.connect(Config.DataBase.PATH) as conn:
+                        self.logger.info(f'query: {query}')
+                        data = pd.read_sql(query, conn)
+                        return data
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(
                     "Lost Local connection. Try to reconnect Local database.", exc_info=e)
                 self.Local_Connected = False
                 time.sleep(_sleepsec)
-                self.build_local_connection()
 
     def SaveLocalData(self, data: pd.DataFrame, Table):
         while self.open:
             try:
                 with self.LocalLock:
-                    self.logger.info(f'Table: {Table}')
-                    data.to_sql(Table, self.local_conn)
-                    return True
+                    with sqlite3.connect(Config.DataBase.PATH) as conn:
+                        self.logger.info(f'Table: {Table}')
+                        data.to_sql(Table, conn, if_exists='append')
+                        return True
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(
                     "Lost Local connection. Try to reconnect Local database.", exc_info=e)
                 self.Local_Connected = False
                 time.sleep(_sleepsec)
-                self.build_local_connection()
 
     def executeLocally(self, query):
         while self.open:
             try:
                 with self.LocalLock:
-                    self.logger.info(f'query: {query}')
-                    return self.local_conn.execute(query)
+                    with sqlite3.connect(Config.DataBase.PATH) as conn:
+                        self.logger.info(f'query: {query}')
+                        return conn.execute(query)
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(
                     "Lost Local connection. Try to reconnect Local database.", exc_info=e)
                 self.Local_Connected = False
                 time.sleep(_sleepsec)
-                self.build_local_connection()
 
     def build_connection(self):
         while self.open:
@@ -123,7 +108,7 @@ class SQLControl:
             try:
                 with self.Lock:
                     self.logger.info(f'Table: {Table}')
-                    data.to_sql(Table, self.conn)
+                    data.to_sql(Table, self.conn, if_exists='append')
                     return True
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(

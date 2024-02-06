@@ -17,6 +17,7 @@ import logging
 import json
 from TableInfoStore import AllTableInfoStore
 
+
 class DataBase(SQLControl):
     def __init__(self, logger: logging.Logger, path):
         SQLControl.__init__(self, logger)
@@ -36,7 +37,6 @@ class DataBase(SQLControl):
         self.InitialLoadData()
         self.auto_update = threading.Thread(target=self.AutoUpdate)
         self.auto_update.start()
-
 
     def InitialLoadData(self):
         data = self.get_data(
@@ -91,6 +91,7 @@ class DataBase(SQLControl):
             except OSError as e:
                 self.logger.error('Meet error in save data. Retry in 1 sec.', exc_info=e)
                 time.sleep(1)
+
     def HardReloadData(self):
         pass  # Todo
 
@@ -145,38 +146,42 @@ class DataBase(SQLControl):
     def Update(self):
         for table in [self.config.OrderList, self.config.OrderMetaData]:
             data = self.get_local_data(f"select * from {table.NAME} where {self.config.LOADED} = false")
-            data[self.config.LOADED] = True
-            data[self.config.UPDATED] = True
-            self.SaveData(data, table.NAME)
-            self.executeLocally(
-                f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {table.ID_STORE}="
-                f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
+            if len(data) > 0:
+                data[self.config.LOADED] = True
+                data[self.config.UPDATED] = True
+                self.SaveData(data, table.NAME)
+                self.executeLocally(
+                    f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {table.ID_STORE}="
+                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
             data = self.get_local_data(
                 f"select * from {table.NAME} where {self.config.UPDATED} = false and {self.config.LOADED} = true")
-            data[self.config.UPDATED] = True
-            data.apply(self.UpdateOneLine, axis=1)
-            self.executeLocally(
-                f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
-                f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
+            if len(data) > 0:
+                data[self.config.UPDATED] = True
+                data.apply(self.UpdateOneLine, axis=1)
+                self.executeLocally(
+                    f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
+                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
     def Download(self):
         for table in [self.config.OrderList, self.config.OrderMetaData]:
             data = self.get_data(f"select * from {table.NAME} where {self.config.LOADED} = false")
-            data[self.config.LOADED] = True
-            data[self.config.UPDATED] = True
-            self.SaveLocalData(data, table.NAME)
-            self.execute(
-                f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {table.ID_STORE}="
-                f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
+            if len(data) > 0:
+                data[self.config.LOADED] = True
+                data[self.config.UPDATED] = True
+                self.SaveLocalData(data, table.NAME)
+                self.execute(
+                    f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {table.ID_STORE}="
+                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
             data = self.get_data(
                 f"select * from {table.NAME} where {self.config.UPDATED} = false and {self.config.LOADED} = true")
-            data[self.config.UPDATED] = True
-            data.apply(self.UpdateOneLineLocally, axis=1)
-            self.execute(
-                f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
-                f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
+            if len(data) > 0:
+                data[self.config.UPDATED] = True
+                data.apply(self.UpdateOneLineLocally, axis=1)
+                self.execute(
+                    f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
+                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
     def AutoUpdate(self):
         while self.open:
@@ -186,7 +191,10 @@ class DataBase(SQLControl):
             except Exception as e:
                 self.logger.error('Unknown Error. Retry in 3 sec.', exc_info=e)
             finally:
-                time.sleep(3)
+                for _ in range(3):
+                    time.sleep(1)
+                    if not self.open:
+                        break
 
     def GetOpenTableInfo(self):
         query = (f"select {Config.DataBase.OrderMetaData.ID_ORDER} from {Config.DataBase.OrderMetaData.NAME} where "
@@ -207,4 +215,3 @@ class DataBase(SQLControl):
             OrderMetaList = self.get_local_data(query)
             self.TableInfo.UpdateTime = time.time()
             self.TableInfo.ConverOrderData(OrderList, OrderMetaList)
-

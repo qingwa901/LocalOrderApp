@@ -16,6 +16,7 @@ from .NewOrderPanel import NewOrderPanel
 from DataBase import DataBase
 from Config import Config
 from logging import Logger
+from .LoginPage import LoginPage
 
 
 class EatInTable(wx.Frame):
@@ -39,6 +40,10 @@ class EatInTable(wx.Frame):
     def InitUI(self):
         self._logger.info('Initial EatInTable')
         self.CreatToolbar()
+
+        self.LoginPage = LoginPage(self, self._logger, self._DataBase)
+
+        self.LoginPage.LoginAction = self.AfterLogin
         self.MainPanel = SpWindow(self, 0)
         self.SettingPanel = SettingPanel(self, self.Size, self._logger, self._DataBase)
         TotalSizer = wx.BoxSizer(wx.VERTICAL)
@@ -47,11 +52,11 @@ class EatInTable(wx.Frame):
         self.SetSizer(TotalSizer)
 
         self.TablePanel = TablePanel(
-            self.MainPanel.GetWindow1(), self._DataBase)
+            self.MainPanel.GetWindow1(), self._logger, self._DataBase)
         self.MainPanel.GetWindow1().AddMany([self.TablePanel])
         splitter2 = SpWindow(self.MainPanel.GetWindow2(), 1)
         self.MainPanel.GetWindow2().AddMany([splitter2])
-        self.StatusPanel = StatusPanel(splitter2.GetWindow1())
+        self.StatusPanel = StatusPanel(splitter2.GetWindow1(), self._logger, self._DataBase)
         self.MenuPanel = MenuPanel(splitter2.GetWindow1())
         splitter2.GetWindow1().AddMany((self.StatusPanel, self.MenuPanel))
 
@@ -65,22 +70,31 @@ class EatInTable(wx.Frame):
 
     def CreatToolbar(self):
         self._logger.info('Building toolbar')
-        toolbar = self.CreateToolBar()
-        bit = wx.Bitmap('img/quit.png')
+        self.toolbar = self.CreateToolBar()
         Size = self._config.UI.EatInPage.ToolBarSize
+
+        bit = wx.Bitmap('img/quit.png')
         wx.Bitmap.Rescale(bit, (Size, Size))
-        quitbut = toolbar.AddTool(wx.ID_ANY, 'Quit', bit)
+        quitbut = self.toolbar.AddTool(wx.ID_ANY, 'Quit', bit)
+
         bit = wx.Bitmap('img/setting.png')
         wx.Bitmap.Rescale(bit, (Size, Size))
-        setbut = toolbar.AddTool(wx.ID_SETUP, 'Setting', bit)
+        setbut = self.toolbar.AddTool(wx.ID_SETUP, 'Setting', bit)
+
         bit = wx.Bitmap('img/Table.png')
         wx.Bitmap.Rescale(bit, (Size, Size))
-        Tablebut = toolbar.AddTool(wx.ID_FILE, 'Table', bit)
-        toolbar.Realize()
-        toolbar.SetToolBitmapSize((Size, Size))
+        Tablebut = self.toolbar.AddTool(wx.ID_FILE, 'Table', bit)
+
+        bit = wx.Bitmap('img/Login.png')
+        wx.Bitmap.Rescale(bit, (Size, Size))
+        LoginBut = self.toolbar.AddTool(-1, 'Login', bit)
+
+        self.toolbar.Realize()
+        self.toolbar.SetToolBitmapSize((Size, Size))
         self.Bind(wx.EVT_TOOL, self.OnQuit, quitbut)
         self.Bind(wx.EVT_TOOL, self.OpenSetting, setbut)
         self.Bind(wx.EVT_TOOL, self.OpenTable, Tablebut)
+        self.Bind(wx.EVT_TOOL, self.Login, LoginBut)
         self._logger.info('Building toolbar finished')
 
     def OpenSetting(self, e):
@@ -99,4 +113,15 @@ class EatInTable(wx.Frame):
     def OnSize(self, e):
         self.MainPanel.SetSize((self.Size[0], self.Size[1] - 90))
         self.SettingPanel.SetSize((self.Size[0], self.Size[1] - 90))
-        self._DataBase.Setting.SetValue('UI.EatInTable.Size', self.Size)
+        self._DataBase.Setting.SetValue('UI.EatInTable.Size', (self.Size[0], self.Size[1]))
+
+    def Login(self, e):
+        self.LoginPage.Display()
+        self.MainPanel.Disable()
+        self.toolbar.Disable()
+        self.SettingPanel.Disable()
+
+    def AfterLogin(self):
+        self.MainPanel.Enable()
+        self.SettingPanel.Enable()
+        self.toolbar.Enable()

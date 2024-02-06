@@ -41,7 +41,10 @@ class ConfigSetting:
                     "UnknownError happen during saving config. Retry in "
                     "20 secs", exc_info=e)
             finally:
-                time.sleep(20)
+                for _ in range(20):
+                    time.sleep(1)
+                    if not self.open:
+                        break
 
     def load(self):
         if os.path.exists(self.path):
@@ -50,6 +53,7 @@ class ConfigSetting:
                 self.logger.info("config read successful")
 
     def SetValue(self, field, value):
+        self.logger.info(f'Set {field} to {value}')
         fields = field.split('.')
         config = self._config[0]
         for field in fields[:-1]:

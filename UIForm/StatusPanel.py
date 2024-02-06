@@ -33,17 +33,17 @@ class StatusPanel(wx.Panel):
         label = wx.StaticText(self, -1, "人数: ")
         hSizer.Add(label)
         self.NumOfPeople = wx.StaticText(self, -1, "")
-        hSizer.Add(self.TableNumber)
+        hSizer.Add(self.NumOfPeople)
         vSizer.Add(hSizer)
 
         hSizer = wx.BoxSizer(wx.HORIZONTAL)
         label = wx.StaticText(self, -1, "开始时间: ")
         hSizer.Add(label)
         self.StartTime = wx.StaticText(self, -1, "")
-        hSizer.Add(self.TableNumber)
+        hSizer.Add(self.StartTime)
         vSizer.Add(hSizer)
 
-        gs = wx.GridSizer(3, 1, 3, 3)
+        gs = wx.GridSizer(1, 3, 3, 3)
         self.NewOrderBut = wx.Button(parent=self, id=-1,
                                      label=f"下单", size=Config.UI.EatInPage.StatusButSize)
         gs.Add(self.NewOrderBut)
@@ -54,6 +54,7 @@ class StatusPanel(wx.Panel):
                                     label=f"清台", size=Config.UI.EatInPage.StatusButSize)
         gs.Add(self.CleanTable)
         vSizer.Add(gs)
+        self.SetSizer(vSizer)
 
     def ShowStatus(self, TableID):
         table = self._DataBase.TableInfo[str(TableID)]
