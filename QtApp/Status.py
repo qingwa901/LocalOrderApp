@@ -87,7 +87,7 @@ class StatusPanel(QtWidgets.QFrame):
         self.BtnCleanTable.pressed.connect(Event)
 
     def NewOrderConnect(self, Event):
-        pass
+        self.BtnNewOrder.pressed.connect(Event)
 
     def CheckOutConnect(self, Event):
         pass

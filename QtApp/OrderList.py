@@ -39,6 +39,9 @@ class OrderListPanel(QtWidgets.QFrame):
         for order in TableInfo:
             self.tableView.addRow(order, Menu)
 
+    def Clear(self):
+        self.tableView.Clear()
+
 
 if __name__ == "__main__":
     import sys

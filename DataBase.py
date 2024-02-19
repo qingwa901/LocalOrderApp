@@ -71,35 +71,6 @@ class DataBase(SQLControl):
         self.menu.clear()
         self.menu.setUp(data)
 
-    def RefreshOrderList(self):
-        with self.Lock:
-            try:
-                data = pd.read_sql(
-                    f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
-                    f'{self.STORE_ID}',
-                    self.conn)
-                self.SaveMenu(data)
-            except Exception:
-                data = pd.read_csv(self.path + '/' + self.config.MenuList.NAME + '.csv')
-        self.menu = data
-
-    def SaveFile(self, data: pd.DataFrame, tablename: str):
-        x = threading.Thread(target=self.AddLine, args=(data, tablename))
-        x.start()
-
-    def AddLine(self, tmp: pd.DataFrame, name: str):
-        while True:
-            try:
-                with self.Lock:
-                    if os.path.isfile(name):
-                        tmp.to_csv(name, index=False, header=False, mode='a')
-                    else:
-                        tmp.to_csv(name, index=False, mode='a')
-                return
-            except OSError as e:
-                self.logger.error('Meet error in save data. Retry in 1 sec.', exc_info=e)
-                time.sleep(1)
-
     def HardReloadData(self):
         pass  # Todo
 
@@ -107,48 +78,24 @@ class DataBase(SQLControl):
         table = self.config.MenuList.NAME
         self.SaveLocalData(data, table)
 
-    def SaveOrder(self, data: pd.DataFrame):
-        table = self.config.OrderList.NAME
-        self.AddLine(data, self.path + '/' + table + '.csv')
-        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
-        self.AddLine(data, path)
-
-    def SaveMetaOrder(self, data: pd.DataFrame):
-        table = self.config.OrderMetaData.NAME
-        self.AddLine(data, self.path + '/' + table + '.csv')
-        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
-        self.AddLine(data, path)
-
-    def UpdateOrder(self, data: pd.DataFrame):
-        table = self.config.OrderList.NAME
-        self.AddLine(data, self.path + '/' + table + '.csv')
-        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
-        self.AddLine(data, path)
-
-    def UpdateMetaOrder(self, data: pd.DataFrame):
-        table = self.config.OrderMetaData.NAME
-        self.AddLine(data, self.path + '/' + table + '.csv')
-        path = self.tmp_path + f'/{table}_Save_{datetime.now().strftime("%Y%m%d_%H%M%S")}.parquet'
-        self.AddLine(data, path)
-
     def UpdateOneLineLocally(self, data, table):
         Value = ''
         for field in table.COLUMNS:
             if Value != '':
-                Value += ' and '
-            Value += f"{field} = '{data[field]}'"
+                Value += ', '
+            Value += f"`{field}`='{data[field]}'"
         self.executeLocally(
-            f"Update {table.Name} Set ({Value} and {self.config.UPDATED} = true and {self.config.LOADED} = true) "
+            f"Update {table.NAME} Set {Value}, `{self.config.UPDATED}`=true, `{self.config.LOADED}`=true "
             f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
 
     def UpdateOneLine(self, data, table):
         Value = ''
         for field in table.COLUMNS:
             if Value != '':
-                Value += ' and '
-            Value += f"{field} = '{data[field]}'"
+                Value += ', '
+            Value += f"`{field}` = '{data[field]}'"
         self.execute(
-            f"Update {table.Name} Set ({Value} and {self.config.UPDATED} = true and {self.config.LOADED} = true) "
+            f"Update {table.NAME} Set {Value}, `{self.config.UPDATED}`=true, `{self.config.LOADED}`=true "
             f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
 
     def Update(self):
@@ -160,7 +107,7 @@ class DataBase(SQLControl):
                 data[self.config.UPDATED] = True
                 self.SaveData(data, table.NAME)
                 self.executeLocally(
-                    f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where "
+                    f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where "
                     f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
             data = self.get_local_data(
@@ -169,7 +116,7 @@ class DataBase(SQLControl):
                 data[self.config.UPDATED] = True
                 data.apply(self.UpdateOneLine, axis=1, table=table)
                 self.executeLocally(
-                    f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
+                    f"update {table.NAME} set {self.config.UPDATED}='1' where {table.ID_STORE}= "
                     f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
     def Download(self):
@@ -183,7 +130,7 @@ class DataBase(SQLControl):
                 data[self.config.UPDATED] = True
                 self.SaveLocalData(data, table.NAME)
                 self.execute(
-                    f"update {table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {table.ID_STORE}="
+                    f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where {table.ID_STORE}="
                     f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
 
             data = self.get_data(
@@ -193,7 +140,7 @@ class DataBase(SQLControl):
                 data[self.config.UPDATED] = True
                 data.apply(self.UpdateOneLineLocally, axis=1, table=table)
                 self.execute(
-                    f"update {table.NAME} set ({self.config.UPDATED}='1') where {table.ID_STORE}= "
+                    f"update {table.NAME} set {self.config.UPDATED}='1' where {table.ID_STORE}= "
                     f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
             if table == self.config.OrderList:
                 self.TableInfo.AddOrderInfo(data)
@@ -202,6 +149,60 @@ class DataBase(SQLControl):
                     OrderData = data.apply(self.OnlineOrderConvert, axis=1)
                     self.SaveOrdersLocal(OrderData)
                     OrderData.apply(self._PrintOrder, axis=1)
+
+    def Update_(self):
+        for table in [self.config.OrderList, self.config.OrderMetaData]:
+            data = self.get_local_data(
+                f"select * from {table.NAME} where {self.config.LOADED} = false and {table.ID_STORE}={self.STORE_ID};")
+            if len(data) > 0:
+                data[self.config.LOADED] = True
+                data[self.config.UPDATED] = True
+                ExistIDList = self.IsDataExist(data[table.ID].to_list(), table, True)
+                ExistData = data[data[table.ID].isin(ExistIDList)]
+                if len(ExistData) > 0:
+                    ExistData.apply(self.UpdateOneLine, axis=1, table=table)
+                NewData = data[~data[table.ID].isin(ExistIDList)]
+                if len(NewData) > 0:
+                    self.SaveData(NewData, table.NAME)
+                self.executeLocally(
+                    f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where "
+                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID].astype(str))})")
+
+    def Download_(self):
+        for table in [self.config.OrderList, self.config.OrderMetaData, self.config.PendingOnlineOrder]:
+            data = self.get_data(
+                f"select * from {table.NAME} where {self.config.LOADED} = false and {table.ID_STORE}={self.STORE_ID};")
+            if len(data) > 0:
+                data[self.config.LOADED] = True
+                data[self.config.UPDATED] = True
+                ExistIDList = self.IsDataExist(data[table.ID].to_list(), table, False)
+                ExistData = data[data[table.ID].isin(ExistIDList)]
+                if len(ExistData) > 0:
+                    ExistData.apply(self.UpdateOneLineLocally, axis=1, table=table)
+                NewData = data[~data[table.ID].isin(ExistIDList)]
+                if len(NewData) > 0:
+                    self.SaveLocalData(NewData, table.NAME)
+
+                self.execute(f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where "
+                             f"{table.ID_STORE}={self.STORE_ID} and {table.ID} in ({','.join(data[table.ID].astype(str))})")
+
+            if table == self.config.OrderList:
+                self.TableInfo.AddOrderInfo(data)
+            if table == self.config.PendingOnlineOrder:
+                if len(data) > 0:
+                    OrderData = data.apply(self.OnlineOrderConvert, axis=1)
+                    self.SaveOrdersLocal(OrderData)
+                    OrderData.apply(self._PrintOrder, axis=1)
+
+    def IsDataExist(self, IDList, table, IsOnline=True):
+        if len(IDList) == 0:
+            return []
+        IDListStr = "', '".join(map(str, IDList))
+        if IsOnline:
+            data = self.get_data(f"select {table.ID} from {table.NAME} where {table.ID} in ('{IDListStr}');")
+        else:
+            data = self.get_local_data(f"select {table.ID} from {table.NAME} where {table.ID} in ('{IDListStr}');")
+        return data[table.ID].to_list()
 
     def SaveOrdersLocal(self, OrderData: pd.DataFrame):
         OrderData[self.config.LOADED] = False
@@ -230,8 +231,8 @@ class DataBase(SQLControl):
     def AutoUpdate(self):
         while self.open:
             try:
-                self.Download()
-                self.Update()
+                self.Download_()
+                self.Update_()
             except Exception as e:
                 self.logger.error('Unknown Error. Retry in 3 sec.', exc_info=e)
             finally:
@@ -269,13 +270,15 @@ class DataBase(SQLControl):
 
     def HardLoadData(self, Table):
         data = self.get_data(f"select * from {Table.NAME} where {Table.ID_STORE}={self.STORE_ID};")
-        update_data = data[(~data[self.config.LOADED]) | (~data[self.config.UPDATED])]
-        data[self.config.LOADED] = True
-        data[self.config.UPDATED] = True
-        self.SaveData(data, Table.NAME)
-        self.execute(
-            f"update {Table.NAME} set ({self.config.LOADED}='1', {self.config.UPDATED}='1') where {Table.ID_STORE}="
-            f"{self.STORE_ID} and {Table.ID} in ({','.join(update_data[Table.ID])})")
+        if len(data) > 0:
+            update_data = data[(data[self.config.LOADED] == 0) | (data[self.config.UPDATED] == 0)]
+            data[self.config.LOADED] = True
+            data[self.config.UPDATED] = True
+            self.SaveLocalData(data, Table.NAME)
+            if len(update_data) > 0:
+                self.execute(
+                    f"update {Table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where {Table.ID_STORE}="
+                    f"{self.STORE_ID} and {Table.ID} in ({','.join(update_data[Table.ID])})")
 
     def GetMaxOrderID(self):
         query = (f'select max({self.config.OrderMetaData.ID_ORDER}) from {self.config.OrderMetaData.NAME} where '

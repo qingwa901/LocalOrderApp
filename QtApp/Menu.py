@@ -11,6 +11,7 @@ from functools import partial
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from QtApp.MenuPage import MenuPage
+from DataBase import FullMenuList
 
 
 class Menu(QtWidgets.QFrame):
@@ -18,6 +19,7 @@ class Menu(QtWidgets.QFrame):
         QtWidgets.QFrame.__init__(self, parant)
         self.MenuENName = {1: "ColdFood", 2: "HotFood", 3: "MainFood", 4: "Desert", 5: "Drink"}
         self.MenuCNName = {1: "冷菜", 2: "热菜", 3: "主食", 4: "甜品", 5: "饮品"}
+        self.setupUi()
 
     def setupUi(self):
         self.setObjectName("Menu")
@@ -46,6 +48,10 @@ class Menu(QtWidgets.QFrame):
         self.ActivePage(1)
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
+
+    def AddMenu(self, menu: FullMenuList):
+        for m in menu.Foods.values():
+            self.MenuPageList[m.Type].AddMenu(m)
 
     def AddItems(self, data: pd.DataFrame):
         data.apply(self.AddItem, axis=1)

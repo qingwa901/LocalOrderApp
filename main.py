@@ -31,9 +31,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.TableNumber = None
         try:
             self.setupUi()
-        except:
+        except Exception as e:
             self.DataBase.open = False
             self.DataBase.Setting.open = False
+            raise e
 
     def setupUi(self):
         self.setObjectName("MainWindow")
@@ -125,6 +126,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.JumpWindow.InitialCloseEvent(self.CloseJumpWindow)
 
         self.StatusPanel.CloseTableConnect(self.CloseTableEvent)
+        self.StatusPanel.NewOrderConnect(self.StartOrder)
+
+        self.MenuPanel.AddMenu(self.DataBase.menu)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -216,11 +220,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.splitter.setVisible(True)
         self.JumpWindow.BtnYes.pressed.disconnect()
 
+    def StartOrder(self):
+        self.StatusPanel.setVisible(False)
+        self.MenuPanel.setVisible(True)
+        self.OrderPanel.setVisible(True)
+        self.OrderPanel.Clear()
 
     def Close(self, e):
         print('exit')
         self.DataBase.open = False
         self.DataBase.Setting.open = False
+
 
 
 import QtApp.resource_rc

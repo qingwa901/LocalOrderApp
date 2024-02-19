@@ -23,18 +23,17 @@ class Food:
         self.Note = data[confg.NOTE]
 
 
-class FullMenuList(dict):
+class FullMenuList:
     def __init__(self):
-        dict.__init__(self)
-        self._dict = defaultdict(Food)
+        self.Foods = defaultdict(Food)
 
     def clear(self):
-        self._dict = defaultdict(Food)
+        self.Foods = defaultdict(Food)
 
     def _setUp(self, data: pd.Series):
         confg = Config.DataBase.MenuList
-        self._dict[data[confg.ID]].setUp(data)
+        self.Foods[data[confg.ID]].setUp(data)
 
     def setUp(self, data: pd.DataFrame):
-        self._dict.clear()
+        self.Foods.clear()
         data.apply(self._setUp, axis=1)

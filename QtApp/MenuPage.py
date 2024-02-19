@@ -33,6 +33,15 @@ class MenuPage(QtWidgets.QFrame):
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
+    def AddMenu(self, data):
+        But = QtWidgets.QPushButton(self.gridLayoutWidget)
+        But.setObjectName(data.NameEN)
+        Count = len(self.ButList)
+        print(Count)
+        self.ButList[data.ID] = But
+        self.gridLayout.addWidget(But, Count // self.gridSize, Count % self.gridSize, 1, 1)
+        But.setText(self._translate("Form", data.NameCN))
+
     def AddItem(self, data: pd.Series):
         But = QtWidgets.QPushButton(self.gridLayoutWidget)
         But.setObjectName(data['FoodENName'])
