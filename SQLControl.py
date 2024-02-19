@@ -47,6 +47,11 @@ class SQLControl:
                     "Lost Local connection. Try to reconnect Local database.", exc_info=e)
                 self.Local_Connected = False
                 time.sleep(_sleepsec)
+            except pd.errors.DatabaseError as e:
+                self.logger.error(
+                    "DataBase Error", exc_info=e)
+                print(e)
+                break
 
     def SaveLocalData(self, data: pd.DataFrame, Table):
         while self.open:
@@ -54,7 +59,7 @@ class SQLControl:
                 with self.LocalLock:
                     with sqlite3.connect(Config.DataBase.PATH) as conn:
                         self.logger.info(f'Table: {Table}')
-                        data.to_sql(Table, conn, if_exists='append')
+                        data.to_sql(Table, conn, if_exists='append', index=False)
                         return True
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(
@@ -108,7 +113,7 @@ class SQLControl:
             try:
                 with self.Lock:
                     self.logger.info(f'Table: {Table}')
-                    data.to_sql(Table, self.conn, if_exists='append')
+                    data.to_sql(Table, self.conn, if_exists='append', index=False)
                     return True
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(
@@ -129,3 +134,4 @@ class SQLControl:
                 self.Connected = False
                 time.sleep(_sleepsec)
                 self.build_connection()
+

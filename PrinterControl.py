@@ -48,7 +48,7 @@ class PrinterControl:
         if self.Setting.GetValue('Printer.DefaultKitchenPrinter') in list:
             self._DefaultKitchenPrinter = self.Setting.GetValue('Printer.DefaultKitchenPrinter')
 
-    def PrinterList(self):
+    def PrinterList(self) -> list:
         printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL, None,
                                            1)
         return [x[2] for x in printers if 'ONENOTE' not in x[2].upper() and
