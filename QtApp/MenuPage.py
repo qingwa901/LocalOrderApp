@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pandas as pd
-
+from functools import partial
 
 class MenuPage(QtWidgets.QFrame):
     def __init__(self, parant, Name='MenuPage'):
@@ -37,7 +37,6 @@ class MenuPage(QtWidgets.QFrame):
         But = QtWidgets.QPushButton(self.gridLayoutWidget)
         But.setObjectName(data.NameEN)
         Count = len(self.ButList)
-        print(Count)
         self.ButList[data.ID] = But
         self.gridLayout.addWidget(But, Count // self.gridSize, Count % self.gridSize, 1, 1)
         But.setText(self._translate("Form", data.NameCN))
@@ -55,6 +54,9 @@ class MenuPage(QtWidgets.QFrame):
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate("Form", "MenuPage"))
 
+    def Connect(self, Event):
+        for btnID in self.ButList:
+            self.ButList[btnID].pressed.connect(partial(Event, btnID))
 
 
 if __name__ == "__main__":

@@ -74,6 +74,9 @@ class Menu(QtWidgets.QFrame):
         for i in self.MenuCNName:
             self.ButList[i].setText(_translate("Form", self.MenuCNName[i]))
 
+    def Connect(self, Event):
+        for page in self.MenuPageList:
+            self.MenuPageList[page].Connect(Event)
 
 if __name__ == "__main__":
     import sys

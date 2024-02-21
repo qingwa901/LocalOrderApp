@@ -259,6 +259,7 @@ class DataBase(SQLControl):
         OrderList = self.get_local_data(query)
         if len(OrderList) > 0:
             self.TableInfo.AddOrderInfo(OrderList)
+        self.TableInfo.LoadMenu(self.menu)
         self.TableInfo.UpdateTime = time.time()
 
     def DataBaseCheck(self):

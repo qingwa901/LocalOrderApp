@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QHeaderView, QAbstractItemVie
     QTableWidgetItem
 from PyQt5.QtGui import QColor
 from Config import Config
+from TableInfoStore import OrderInfo
 
 
 class TableWdiget(QTableWidget):
@@ -25,17 +26,16 @@ class TableWdiget(QTableWidget):
     def setupUI(self):
         self.setHorizontalHeaderLabels(Config.DisplaySetting.OrderTable.COL_NAME_CN)
 
-    def addRow(self, Order, Menu):
+    def addRow(self, Order: OrderInfo):
         rowCount = self.rowCount()
         self.insertRow(rowCount)
         colCount = self.columnCount()
         displayList = Config.DataBase.MenuList.DISPLAYLIST
         OrderColList = Config.DataBase.OrderList.COLUMNS
-        for i in range(colCount):
-            if displayList[i] in OrderColList:
-                self.setItem(rowCount - 1, i, Order.getValue(displayList[i]))
-            else:
-                self.setItem(rowCount - 1, i, Menu[Order.FoodID].NameCN)
+        self.setItem(rowCount, 0, QTableWidgetItem(str(Order.NameCN)))
+        self.setItem(rowCount, 1, QTableWidgetItem(str(Order.Qty)))
+        self.setItem(rowCount, 2, QTableWidgetItem(str(Order.UnitPrice)))
+        self.setItem(rowCount, 3, QTableWidgetItem(str(Order.Note)))
 
     def Clear(self):
         rowCount = self.rowCount()

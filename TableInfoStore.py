@@ -1,15 +1,18 @@
 import pandas as pd
 from Config import Config
 from collections import defaultdict
+from MenuStore import FullMenuList
 
 
 class OrderInfo:
     ID = None
     OrderID = None
     FoodID = None
-    IsOnline = None
+    NameCN = None
+    NameEN = None
     Qty = None
     UnitPrice = None
+    OriUnitPrice = None
     StaffID = None
     Note = None
     CreateTime = None
@@ -36,8 +39,14 @@ class OrderInfo:
         elif Tag == conf.UNIT_PRICE:
             return self.UnitPrice
 
+    def LoadMenu(self, menu: FullMenuList):
+        m = menu.Foods[self.FoodID]
+        self.NameCN = m.NameCN
+        self.NameEN = m.NameEN
+        self.OriUnitPrice = m.UnitPrice
 
-class TableInfoStore(dict):
+
+class TableInfoStore():
     OrderID = None
     TableID = None
     StartTime = None
@@ -46,10 +55,7 @@ class TableInfoStore(dict):
     NumOfPeople = None
     OrderList = Config.DataBase.OrderList
     OrderMetaList = Config.DataBase.OrderMetaData
-
-    def __init__(self):
-        dict.__init__(self)
-        self._dict = defaultdict(OrderInfo)
+    Orders = {}
 
     def Clear(self):
         self.StartTime = None
@@ -58,7 +64,7 @@ class TableInfoStore(dict):
         self.IsFinished = False
         self.NumOfPeople = None
         self.TableID = None
-        self._dict = defaultdict(OrderInfo)
+        self.Orders = {}
 
     def SetMetaInfo(self, Info: pd.Series):
         field = Info[self.OrderMetaList.FIELD]
@@ -77,8 +83,16 @@ class TableInfoStore(dict):
 
     def SetOrder(self, Order: pd.Series):
         self.OrderID = Order[self.OrderList.ID_ORDER]
-        self._dict[self.OrderID].SetOrder(Order)
+        ID = Order[self.OrderList.ID]
+        if pd.isna(ID):
+            return
+        if ID not in self.Orders:
+            self.Orders[ID] = OrderInfo()
+        self.Orders[ID].SetOrder(Order)
 
+    def LoadMenu(self, menu:FullMenuList):
+        for i in self.Orders.values():
+            i.LoadMenu(menu)
 
 class AllTableInfoStore():
     UpdateTime = None
@@ -115,3 +129,7 @@ class AllTableInfoStore():
 
     def AddOrderMetaInfo(self, OrderMeta):
         OrderMeta.apply(self._AddOrderMeta, axis=1)
+
+    def LoadMenu(self, menu):
+        for i in self.ByOrderIDDict.values():
+            i.LoadMenu(menu)

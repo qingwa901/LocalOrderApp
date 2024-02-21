@@ -10,12 +10,15 @@
 
 from PyQt5 import QtCore, QtWidgets
 from QtApp.Base.OrderTableWdiget import TableWdiget
+from collections import defaultdict
+from TableInfoStore import OrderInfo
 
 
 class OrderListPanel(QtWidgets.QFrame):
     def __init__(self, parant):
         QtWidgets.QFrame.__init__(self, parant)
         self.setupUi()
+        self.Orders = []
 
     def setupUi(self):
         self.setObjectName("orderList")
@@ -34,13 +37,18 @@ class OrderListPanel(QtWidgets.QFrame):
     def selectedRow(self):
         return self.tableView.selectedRow
 
-    def DisplayTable(self, TableInfo, Menu):
+    def DisplayTable(self, TableInfo):
         self.tableView.Clear()
-        for order in TableInfo:
-            self.tableView.addRow(order, Menu)
+        for order in TableInfo.Orders.values():
+            self.Orders.append(order)
+            self.tableView.addRow(order)
 
     def Clear(self):
         self.tableView.Clear()
+
+    def AddOrder(self, Order):
+        self.Orders.append(Order)
+        self.tableView.addRow(Order)
 
 
 if __name__ == "__main__":

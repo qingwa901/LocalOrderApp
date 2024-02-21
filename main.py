@@ -20,6 +20,7 @@ from DataBase import DataBase
 from Logger import CreateLogger
 from Config import Config
 from datetime import datetime
+from TableInfoStore import OrderInfo
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
@@ -129,6 +130,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.StatusPanel.NewOrderConnect(self.StartOrder)
 
         self.MenuPanel.AddMenu(self.DataBase.menu)
+        self.MenuPanel.Connect(self.OrderFoo)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -186,7 +188,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.StatusPanel.setVisible(True)
             self.StatusPanel.DisplayTable(TableInfo)
             self.OrderPanel.setVisible(True)
-            self.OrderPanel.DisplayTable(TableInfo, self.DataBase.menu)
+            self.OrderPanel.DisplayTable(TableInfo)
         elif not TableInfo.IsFinished:
             # finishing table
             pass
@@ -231,6 +233,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.DataBase.open = False
         self.DataBase.Setting.open = False
 
+    def OrderFoo(self, FoodID):
+        Order = OrderInfo()
+        Order.FoodID = FoodID
+        Order.Qty = 1
+        Order.Note = ''
+        Order.LoadMenu(self.DataBase.menu)
+        Order.UnitPrice = Order.OriUnitPrice
+        self.OrderPanel.AddOrder(Order)
 
 
 import QtApp.resource_rc
