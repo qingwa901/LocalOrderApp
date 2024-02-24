@@ -9,13 +9,18 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from TableInfoStore import TableInfoStore
 
 
-class Ui_Form(object):
-    def setupUi(self, Form):
-        Form.setObjectName("Form")
-        Form.resize(401, 300)
-        self.formLayoutWidget = QtWidgets.QWidget(Form)
+class FinalStatusPanel(QtWidgets.QFrame):
+    def __init__(self, parant):
+        QtWidgets.QFrame.__init__(self, parant)
+        self.setupUi()
+
+    def setupUi(self):
+        self.setObjectName("FinalStatus")
+        self.resize(401, 300)
+        self.formLayoutWidget = QtWidgets.QWidget(self)
         self.formLayoutWidget.setGeometry(QtCore.QRect(0, 0, 385, 253))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
@@ -114,7 +119,7 @@ class Ui_Form(object):
         self.label_8 = QtWidgets.QLabel(self.formLayoutWidget)
         self.label_8.setObjectName("label_8")
         self.formLayout.setWidget(8, QtWidgets.QFormLayout.LabelRole, self.label_8)
-        self.gridLayoutWidget = QtWidgets.QWidget(Form)
+        self.gridLayoutWidget = QtWidgets.QWidget(self)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 259, 295, 31))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
@@ -130,12 +135,12 @@ class Ui_Form(object):
         self.BtnCleanTable.setObjectName("BtnCleanTable")
         self.gridLayout.addWidget(self.BtnCleanTable, 0, 2, 1, 1)
 
-        self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+        self.retranslateUi()
+        QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self, Form):
+    def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        self.setWindowTitle(_translate("Form", "FinalStatusPanel"))
         self.label.setText(_translate("Form", "桌号"))
         self.LBTableNumber.setText(_translate("Form", "None"))
         self.label_2.setText(_translate("Form", "人数"))
@@ -162,12 +167,27 @@ class Ui_Form(object):
         self.BtnPrintReceipt.setText(_translate("Form", "打单"))
         self.BtnCleanTable.setText(_translate("Form", "清台"))
 
+    def DisplayTable(self, TableInfo: TableInfoStore):
+        self.LBTableNumber.setText(TableInfo.TableID)
+        self.LBStartTime.setText(TableInfo.StartTime)
+        self.LBEndTime.setText(TableInfo.EndTime)
+        self.LBNumOfPeople.setText(TableInfo.NumOfPeople)
+        self.LBTotalAmount.setText(str(TableInfo.GetTotalAmount()))
+
+    def ReopenConnect(self, Event):
+        self.BtnReOpen.pressed.connect(Event)
+
+    def CleanTableConnect(self, Event):
+        self.BtnCleanTable.pressed.connect(Event)
+
+    def PrintReceiptConnect(self, Event):
+        self.BtnPrintReceipt.pressed.connect(Event)
+
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
+    ui = FinalStatusPanel(None)
+    ui.show()
     sys.exit(app.exec_())

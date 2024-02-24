@@ -29,26 +29,26 @@ class TableWdiget(QTableWidget):
     def addRow(self, Order: OrderInfo):
         rowCount = self.rowCount()
         self.insertRow(rowCount)
-        colCount = self.columnCount()
-        displayList = Config.DataBase.MenuList.DISPLAYLIST
-        OrderColList = Config.DataBase.OrderList.COLUMNS
         self.setItem(rowCount, 0, QTableWidgetItem(str(Order.NameCN)))
         self.setItem(rowCount, 1, QTableWidgetItem(str(Order.Qty)))
         self.setItem(rowCount, 2, QTableWidgetItem(str(Order.UnitPrice)))
         self.setItem(rowCount, 3, QTableWidgetItem(str(Order.Note)))
 
     def Clear(self):
+        self.selectedRow = None
         rowCount = self.rowCount()
         for i in range(rowCount - 1, -1, -1):
             self.removeRow(i)
 
     def CellChanged(self, currentRow, CurrentColumn, previousRow, previousCol):
-        self.setRowBackgoundColor(self.selectedRow, QColor(255, 255, 255))
+        if self.selectedRow is not None and self.selectedRow > -1:
+            self.setRowBackgroundColor(self.selectedRow, QColor(255, 255, 255))
         if self.selectedRow != currentRow:
             self.selectedRow = currentRow
-        self.setRowBackgoundColor(self.selectedRow, QColor(207, 254, 255))
+        if self.selectedRow is not None and self.selectedRow > -1:
+            self.setRowBackgroundColor(self.selectedRow, QColor(207, 254, 255))
 
-    def setRowBackgoundColor(self, row, color):
+    def setRowBackgroundColor(self, row, color):
         if row == None:
             return
         if row >= self.rowCount():

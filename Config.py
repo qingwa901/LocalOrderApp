@@ -19,13 +19,13 @@ class Config:
             ID = 'ID'
             STORE_ID = 'IDStore'
             NAME_CN = 'NameCN'
-            Name_EN = 'NameEN'
+            NAME_EN = 'NameEN'
             PRICE = 'Price'
             FOOD_TYPE = 'FoodType'
             QTY = 'Qty'
             NOTE = 'Note'
             VALID = 'Valid'
-            COLUMNS = [STORE_ID, NAME_CN, Name_EN,
+            COLUMNS = [STORE_ID, NAME_CN, NAME_EN,
                        PRICE, FOOD_TYPE, QTY, NOTE, VALID]
             DISPLAYLIST = [NAME_CN, QTY, PRICE, NOTE]
 
@@ -152,5 +152,5 @@ class Config:
 
     class DisplaySetting:
         class OrderTable:
-            COL_NAME_CN = ['FoodName', 'Qty', 'UnitPrice', 'Note']
-            COl_NAME_EN = ['菜名', '数量', '单价', '备注']
+            COL_NAME_EN = ['FoodName', 'Qty', 'UnitPrice', 'Note']
+            COL_NAME_CN = ['菜名', '数量', '单价', '备注']

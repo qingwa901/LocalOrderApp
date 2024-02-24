@@ -11,12 +11,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pandas as pd
 from functools import partial
+from QtApp.MenuBut import MenuBut
+
 
 class MenuPage(QtWidgets.QFrame):
-    def __init__(self, parant, Name='MenuPage'):
-        QtWidgets.QFrame.__init__(self, parant)
+    def __init__(self, parent, Name='MenuPage'):
+        QtWidgets.QFrame.__init__(self, parent)
         self.Name = Name
-        self.ButList = {}
+        self.ButList = []
+        self.Count = 0
         self.gridSize = 5
         self.setupUi()
 
@@ -34,20 +37,21 @@ class MenuPage(QtWidgets.QFrame):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def AddMenu(self, data):
-        But = QtWidgets.QPushButton(self.gridLayoutWidget)
-        But.setObjectName(data.NameEN)
-        Count = len(self.ButList)
-        self.ButList[data.ID] = But
-        self.gridLayout.addWidget(But, Count // self.gridSize, Count % self.gridSize, 1, 1)
-        But.setText(self._translate("Form", data.NameCN))
+        if self.Count >= len(self.ButList):
+            But = MenuBut(self.gridLayoutWidget)
+            self.ButList.append(But)
+            self.gridLayout.addWidget(But, self.Count // self.gridSize, self.Count % self.gridSize, 1, 1)
+        else:
+            But = self.ButList[self.Count]
+        self.Count += 1
+        But.setupUi(data)
 
     def AddItem(self, data: pd.Series):
         But = QtWidgets.QPushButton(self.gridLayoutWidget)
         But.setObjectName(data['FoodENName'])
-        Count = len(self.ButList)
-        print(Count)
-        self.ButList[data['ID']] = But
-        self.gridLayout.addWidget(But, Count // self.gridSize, Count % self.gridSize, 1, 1)
+        self.ButList.append(But)
+        self.gridLayout.addWidget(But, self.Count // self.gridSize, self.Count % self.gridSize, 1, 1)
+        self.Count += 1
         But.setText(self._translate("Form", data['FoodCNName']))
 
     def retranslateUi(self):
@@ -55,8 +59,12 @@ class MenuPage(QtWidgets.QFrame):
         self.setWindowTitle(self._translate("Form", "MenuPage"))
 
     def Connect(self, Event):
-        for btnID in self.ButList:
-            self.ButList[btnID].pressed.connect(partial(Event, btnID))
+        for btn in self.ButList:
+            btn.BindEvent(Event)
+
+    def Clear(self):
+        for btn in self.ButList:
+            btn.Clear()
 
 
 if __name__ == "__main__":

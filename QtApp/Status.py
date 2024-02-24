@@ -9,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from functools import partial
 
 class StatusPanel(QtWidgets.QFrame):
     def __init__(self, parant):
@@ -90,7 +90,8 @@ class StatusPanel(QtWidgets.QFrame):
         self.BtnNewOrder.pressed.connect(Event)
 
     def CheckOutConnect(self, Event):
-        pass
+        self.BtnCheckOut.pressed.connect(Event)
+
 
 if __name__ == "__main__":
     import sys

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from PrinterControl import PrinterControl
 import logging
 import json
-from TableInfoStore import AllTableInfoStore
+from TableInfoStore import AllTableInfoStore, OrderInfo, TableInfoStore
 from MenuStore import FullMenuList
 import sqlite3
 
@@ -27,7 +27,7 @@ class DataBase(SQLControl):
         self.config = Config.DataBase
         self.Setting = ConfigSetting(logger)
         self.Printer = PrinterControl(self.logger, self.Setting)
-        self.TableInfo = AllTableInfoStore()
+        self.TableInfo = AllTableInfoStore(self.logger)
         self.path = path
         if not os.path.exists(self.path):
             os.mkdir(self.path)
@@ -37,37 +37,44 @@ class DataBase(SQLControl):
         self.STORE_ID = self.config.STORE_ID  # Todo save store id to setting file
         self.menu = FullMenuList()
         self.DataBaseCheck()
-        self.InitialLoadData()
+        threading.Thread(target=self.LoadStoreInfo).start()
+        self.MenuLoad = threading.Thread(target=self.RefreshMenu)
+        self.MenuLoad.start()
         self.auto_update = threading.Thread(target=self.AutoUpdate)
         self.auto_update.start()
         self.MaxOrderID = None
         self.MaxOrderListID = None
         self.MaxOrderMataListID = None
 
-    def InitialLoadData(self):
-        data = self.get_data(
-            f"select * from {self.config.STORE_INFO} where {self.config.StoreList.ID} = '{self.STORE_ID}';")
-        if len(data) == 0:
-            raise AttributeError(
-                f'Can not find data in Store List. Please check database setting for Store ({self.STORE_ID})')
-        data = data.iloc[0]
-        self.Setting.SetValue(self.config.StoreList.TABLE_ORDER, json.loads(data[self.config.StoreList.TABLE_ORDER]))
-        self.RefreshMenu()
+    def LoadStoreInfo(self):
+        try:
+            data = self.get_data(
+                f"select * from {self.config.STORE_INFO} where {self.config.StoreList.ID} = '{self.STORE_ID}';")
+            if len(data) == 0:
+                raise AttributeError(
+                    f'Can not find data in Store List. Please check database setting for Store ({self.STORE_ID})')
+            data = data.iloc[0]
+            self.Setting.SetValue(self.config.StoreList.TABLE_ORDER,
+                                  json.loads(data[self.config.StoreList.TABLE_ORDER]))
+        except:
+            pass
 
     def RefreshMenu(self):
         with self.Lock:
             try:
-                data = pd.read_sql(
-                    f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
-                    f'{self.STORE_ID}',
-                    self.conn)
+                query = (f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
+                         f'{self.STORE_ID}')
+                self.logger.info(query)
+                data = pd.read_sql(query, self.conn)
                 self.SaveMenu(data)
-            except Exception:
+            except Exception as e:
+                self.logger.error('Connection issue try to load local menu', exc_info=e)
                 query = (f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
                          f'{self.STORE_ID}')
                 with sqlite3.connect(Config.DataBase.PATH) as conn:
                     self.logger.info(f'query: {query}')
                     data = pd.read_sql(query, conn)
+                    self.logger.info('Local menu loaded.')
         self.menu.clear()
         self.menu.setUp(data)
 
@@ -187,7 +194,8 @@ class DataBase(SQLControl):
                              f"{table.ID_STORE}={self.STORE_ID} and {table.ID} in ({','.join(data[table.ID].astype(str))})")
 
             if table == self.config.OrderList:
-                self.TableInfo.AddOrderInfo(data)
+                if len(data) > 0:
+                    self.TableInfo.AddOrderInfo(data)
             if table == self.config.PendingOnlineOrder:
                 if len(data) > 0:
                     OrderData = data.apply(self.OnlineOrderConvert, axis=1)
@@ -339,6 +347,8 @@ class DataBase(SQLControl):
                             table.VALUE: ['False']
                             })
         data = data.append(tmp)
+        if self.MaxOrderID not in self.TableInfo.ByOrderIDDict:
+            self.TableInfo.ByOrderIDDict[self.MaxOrderID] = TableInfoStore()
         self.TableInfo.ByOrderIDDict[self.MaxOrderID].OrderID = self.MaxOrderID
         self.TableInfo.ByOrderIDDict[self.MaxOrderID].StartTime = StartTime
         self.TableInfo.ByOrderIDDict[self.MaxOrderID].TablID = TableID
@@ -394,3 +404,66 @@ class DataBase(SQLControl):
                  f"where {ordertable.ID_ORDER}={OrderID} and {ordertable.ID_STORE}={self.STORE_ID}")
         self.executeLocally(query)
         self.TableInfo.ByOrderIDDict[OrderID].Clear()
+
+    def PlaceOrder(self, Orders):
+        if len(Orders) == 0:
+            return
+        table = self.config.OrderList
+        OrderSeires = {table.ID: [],
+                       table.ID_FOOD: [],
+                       table.QTY: [],
+                       table.UNIT_PRICE: [],
+                       table.NOTE: []}
+        self.GetMaxOrderListID()
+        k = 1
+        for Order in Orders:
+            self.MaxOrderListID += 1
+            OrderSeires[table.ID].append(self.MaxOrderListID)
+            OrderSeires[table.ID_FOOD].append(Order.FoodID)
+            OrderSeires[table.QTY].append(Order.Qty)
+            OrderSeires[table.UNIT_PRICE].append(Order.UnitPrice)
+            OrderSeires[table.NOTE].append(Order.Note)
+        data = pd.DataFrame(OrderSeires)
+        data[table.ID_STAFF] = Orders[0].StaffID
+        data[table.ID_ORDER] = Orders[0].OrderID
+        data[table.ID_STORE] = self.STORE_ID
+        data[table.VALID] = 1
+        data[table.CREATE_TIME] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        data[self.config.LOADED] = 0
+        data[self.config.UPDATED] = 0
+        self.SaveLocalData(data, table.NAME)
+
+    def CheckOutTable(self, TableNumber):
+        try:
+            table = self.config.OrderMetaData
+            if self.MaxOrderMataListID is None:
+                self.GetMaxOrderMataListID()
+            self.MaxOrderMataListID += 1
+            OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
+            EndTime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            self.logger.info(f'Order {OrderID} add end time {EndTime}.')
+            data = {table.ID: [self.MaxOrderMataListID],
+                    table.ID_ORDER: [OrderID],
+                    table.FIELD: [table.Fields.END_TIME],
+                    table.VALUE: [EndTime],
+                    table.CREATE_TIME: [EndTime],
+                    table.VALID: [True],
+                    table.ID_STORE: [self.STORE_ID],
+                    self.config.UPDATED: [True],
+                    self.config.LOADED: [True]}
+            data = pd.DataFrame(data)
+            self.SaveLocalData(data, table.NAME)
+        except Exception as e:
+            self.logger.error(f'Error during adding order end time. TableID: {TableNumber}',
+                              exc_info=e)
+
+    def ReopenTable(self, TableNumber):
+        try:
+            table = self.config.OrderMetaData
+            OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
+            self.executeLocally(f"Update {table.NAME} set `{table.VALID}` = false, `{self.config.LOADED}`=false where "
+                                f"`{table.ID_STORE}`='{self.STORE_ID}' and `{table.FIELD}`='{table.Fields.END_TIME}'"
+                                f" and `{table.ID_ORDER}`='{OrderID}'")
+        except Exception as e:
+            self.logger.error(f'Error during remove order end time. TableID: {TableNumber}',
+                              exc_info=e)

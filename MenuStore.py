@@ -17,7 +17,7 @@ class Food:
         self.ID = data[confg.ID]
         self.Type = data[confg.FOOD_TYPE]
         self.UnitPrice = data[confg.PRICE]
-        self.NameEN = data[confg.Name_EN]
+        self.NameEN = data[confg.NAME_EN]
         self.NameCN = data[confg.NAME_CN]
         self.RestQty = data[confg.QTY]
         self.Note = data[confg.NOTE]

@@ -59,11 +59,9 @@ class Menu(QtWidgets.QFrame):
     def AddItem(self, data: pd.Series):
         self.MenuPageList[data['FoodType']].AddItem(data)
 
-    def ActivePage(self, type):
-        print(type)
+    def ActivePage(self, FoodType):
         for i in self.MenuPageList:
-            if i == type:
-                print(i)
+            if i == FoodType:
                 self.MenuPageList[i].setVisible(True)
             else:
                 self.MenuPageList[i].setVisible(False)
@@ -77,6 +75,7 @@ class Menu(QtWidgets.QFrame):
     def Connect(self, Event):
         for page in self.MenuPageList:
             self.MenuPageList[page].Connect(Event)
+
 
 if __name__ == "__main__":
     import sys

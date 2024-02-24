@@ -11,6 +11,7 @@ import pandas as pd
 import time
 import threading
 from Config import Config
+from Logger import CreateLogger
 import sqlite3
 
 _user = 'ZhangjiTestSQL'
@@ -22,17 +23,24 @@ _sleepsec = 2
 
 
 class SQLControl:
-    def __init__(self, logger):
+    def __init__(self, logger=None):
+        if logger is None:
+            self.logger = CreateLogger('test')
+        else:
+            self.logger = logger
         self.open = True
         self.Lock = threading.Lock()
         self.LocalLock = threading.Lock()
         self.engine = create_engine("mysql+pymysql://{0}:{1}@{2}:{3}/{4}".format(
             _user, _password, _host, _port, _database
         ))
-        self.logger = logger
         self.Connected = False
         self.Local_Connected = False
-        self.build_connection()
+        try:
+            self.conn = self.engine.connect()
+        except sqlalchemy.exc.OperationalError:
+            self.conn = None
+        # threading.Thread(target=self.build_connection).start()
 
     def get_local_data(self, query):
         while self.open:
@@ -50,7 +58,6 @@ class SQLControl:
             except pd.errors.DatabaseError as e:
                 self.logger.error(
                     "DataBase Error", exc_info=e)
-                print(e)
                 break
 
     def SaveLocalData(self, data: pd.DataFrame, Table):
@@ -97,6 +104,8 @@ class SQLControl:
     def get_data(self, query):
         while self.open:
             try:
+                if self.conn is None:
+                    raise ConnectionError('Connection not build yet')
                 with self.Lock:
                     self.logger.info(f'query: {query}')
                     data = pd.read_sql(query, self.conn)
@@ -111,6 +120,8 @@ class SQLControl:
     def SaveData(self, data: pd.DataFrame, Table):
         while self.open:
             try:
+                if self.conn is None:
+                    raise ConnectionError('Connection not build yet')
                 with self.Lock:
                     self.logger.info(f'Table: {Table}')
                     data.to_sql(Table, self.conn, if_exists='append', index=False)
@@ -125,6 +136,8 @@ class SQLControl:
     def execute(self, query):
         while self.open:
             try:
+                if self.conn is None:
+                    raise ConnectionError('Connection not build yet')
                 with self.Lock:
                     self.logger.info(f'query: {query}')
                     return self.conn.execute(query)
@@ -134,4 +147,3 @@ class SQLControl:
                 self.Connected = False
                 time.sleep(_sleepsec)
                 self.build_connection()
-

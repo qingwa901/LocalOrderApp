@@ -67,6 +67,7 @@ class InitialTable(QtWidgets.QFrame):
     def AddConnect(self, Event):
         self.OpenTable.pressed.connect(Event)
 
+
 if __name__ == "__main__":
     import sys
 

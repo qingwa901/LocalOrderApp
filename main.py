@@ -16,6 +16,7 @@ from QtApp.Menu import Menu
 from QtApp.Status import StatusPanel
 from QtApp.OrderList import OrderListPanel
 from QtApp.JumpWindow import JumpWindow
+from QtApp.FinalStatus import FinalStatusPanel
 from DataBase import DataBase
 from Logger import CreateLogger
 from Config import Config
@@ -36,6 +37,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.DataBase.open = False
             self.DataBase.Setting.open = False
             raise e
+        self.StaffID = 1
 
     def setupUi(self):
         self.setObjectName("MainWindow")
@@ -91,10 +93,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.RightBottomFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.RightBottomFrame.setObjectName("RightBottomFrame")
 
-        self.OrderPanel = OrderListPanel(self.RightBottomFrame)
+        self.OrderPanel = OrderListPanel(self.RightBottomFrame, self.Logger)
         self.OrderPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.OrderPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.OrderPanel.setObjectName("OrderPanel")
+        self.OrderPanel.setVisible(False)
+
+        self.FinalStatusPanel = FinalStatusPanel(self.RightTopFrame)
+        self.FinalStatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.FinalStatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.FinalStatusPanel.setVisible(False)
+        self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
 
         self.setCentralWidget(self.centralwidget)
         self.toolbar = self.addToolBar("Panels")
@@ -128,9 +137,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.StatusPanel.CloseTableConnect(self.CloseTableEvent)
         self.StatusPanel.NewOrderConnect(self.StartOrder)
+        self.StatusPanel.CheckOutConnect(self.CheckOut)
 
+        self.DataBase.MenuLoad.join()
         self.MenuPanel.AddMenu(self.DataBase.menu)
-        self.MenuPanel.Connect(self.OrderFoo)
+        self.MenuPanel.Connect(self.OrderFood)
+
+        self.OrderPanel.Connect(self.PlaceOrder)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -147,6 +160,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hbox.addWidget(self.InitialPanel)
         hbox.addWidget(self.MenuPanel)
         hbox.addWidget(self.StatusPanel)
+        hbox.addWidget(self.FinalStatusPanel)
         self.RightTopFrame.setLayout(hbox)
 
         hbox = QtWidgets.QHBoxLayout(self.RightBottomFrame)
@@ -158,89 +172,156 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
     def menuSetting_onClick(self, e):
-        self.SettingPanel.setVisible(True)
-        self.splitter.setVisible(False)
+        try:
+            self.SettingPanel.setVisible(True)
+            self.splitter.setVisible(False)
+        except Exception as e:
+            self.Logger.error(f'Error during show Setting panel', exc_info=e)
 
     def menuTable_onClick(self, e):
-        self.SettingPanel.setVisible(False)
-        self.splitter.setVisible(True)
+        try:
+            self.SettingPanel.setVisible(False)
+            self.splitter.setVisible(True)
+        except Exception as e:
+            self.Logger.error(f'Error during show menu panel', exc_info=e)
 
     def setupTableColor(self):
         self.DataBase.GetOpenTableInfo()
         self.TablePanel.setupTableColor(self.DataBase.TableInfo)
 
     def TableButClick(self, TableNumber):
-        self.TableNumber = TableNumber
-        self.MenuPanel.setVisible(False)
-        self.DataBase.GetOpenTableInfo()
-        TableInfo = None
-        if TableNumber in self.DataBase.TableInfo.ByTableIDDict:
-            TableInfo = self.DataBase.TableInfo.ByTableIDDict[TableNumber]
-        if TableInfo is None or TableInfo.StartTime is None:
-            # initial table
-            self.InitialPanel.setVisible(True)
-            self.InitialPanel.DisplayTable(TableNumber)
-            self.OrderPanel.setVisible(False)
-            self.StatusPanel.setVisible(False)
-        elif TableInfo.EndTime is None:
-            # working table
-            self.InitialPanel.setVisible(False)
-            self.StatusPanel.setVisible(True)
-            self.StatusPanel.DisplayTable(TableInfo)
-            self.OrderPanel.setVisible(True)
-            self.OrderPanel.DisplayTable(TableInfo)
-        elif not TableInfo.IsFinished:
-            # finishing table
-            pass
+        try:
+            self.Logger.info(f'start to load Table {TableNumber}')
+            self.TableNumber = TableNumber
+            self.MenuPanel.setVisible(False)
+            self.DataBase.GetOpenTableInfo()
+            TableInfo = None
+            if TableNumber in self.DataBase.TableInfo.ByTableIDDict:
+                TableInfo = self.DataBase.TableInfo.ByTableIDDict[TableNumber]
+                self.OrderID = TableInfo.OrderID
+            if TableInfo is None or TableInfo.StartTime is None:
+                # initial table
+                self.InitialPanel.setVisible(True)
+                self.InitialPanel.DisplayTable(TableNumber)
+                self.OrderPanel.setVisible(False)
+                self.StatusPanel.setVisible(False)
+                self.FinalStatusPanel.setVisible(False)
+            elif TableInfo.EndTime is None:
+                # working table
+                self.InitialPanel.setVisible(False)
+                self.StatusPanel.setVisible(True)
+                self.StatusPanel.DisplayTable(TableInfo)
+                self.OrderPanel.setVisible(True)
+                self.OrderPanel.DisplayTable(TableInfo)
+                self.FinalStatusPanel.setVisible(False)
+            elif not TableInfo.IsFinished:
+                # finishing table
+                self.InitialPanel.setVisible(False)
+                self.StatusPanel.setVisible(False)
+                self.OrderPanel.setVisible(True)
+                self.OrderPanel.DisplayTable(TableInfo)
+                self.FinalStatusPanel.setVisible(True)
+                self.FinalStatusPanel.DisplayTable(TableInfo)
+        except Exception as e:
+            self.Logger.error(f'Error during show Table {TableNumber} info.', exc_info=e)
 
     def OpenTable(self):
-        TableNumber = self.TableNumber
-        if TableNumber is not None:
-            self.InitialPanel.setVisible(False)
-            self.StatusPanel.setVisible(True)
-            self.DataBase.InitialOrder(TableNumber, self.InitialPanel.EditBoxNumOfPeople.value())
-            self.TableButClick(self.TableNumber)
+        try:
+            TableNumber = self.TableNumber
+            self.Logger.info(f'Table {TableNumber} open')
+            if TableNumber is not None:
+                self.InitialPanel.setVisible(False)
+                self.StatusPanel.setVisible(True)
+                self.OrderID = self.DataBase.InitialOrder(TableNumber, self.InitialPanel.EditBoxNumOfPeople.value())
+                self.TableButClick(self.TableNumber)
+        except Exception as e:
+            self.Logger.error(f'Error during Table {self.TableNumber} open', exc_info=e)
 
     def CloseTableEvent(self):
-        # Need a jump out window
-        self.JumpWindow.SetQuestion('确定要清台吗？')
-        self.JumpWindow.connect(self.CloseTable)
-        self.ShowJumpWindow()
+        try:
+            # Need a jump out window
+            self.Logger.info(f'Table {self.TableNumber} close check')
+            self.JumpWindow.SetQuestion('确定要清台吗？')
+            self.JumpWindow.connect(self.CloseTable)
+            self.ShowJumpWindow()
+        except Exception as e:
+            self.Logger.error(f'Error during show Close check', exc_info=e)
 
     def CloseTable(self):
-        self.CloseJumpWindow()
-        self.DataBase.CloseTable(self.DataBase.TableInfo.ByTableIDDict[self.TableNumber].OrderID)
-        self.TableButClick(self.TableNumber)
+        try:
+            self.Logger.info(f'Close Table {self.TableNumber}')
+            self.CloseJumpWindow()
+            self.DataBase.CloseTable(self.DataBase.TableInfo.ByTableIDDict[self.TableNumber].OrderID)
+            self.TableButClick(self.TableNumber)
+        except Exception as e:
+            self.Logger.error(f'Error during close Table {self.TableNumber}', exc_info=e)
 
     def ShowJumpWindow(self):
-        self.JumpWindow.setVisible(True)
-        self.SettingPanel.setVisible(False)
-        self.splitter.setVisible(False)
+        try:
+            self.JumpWindow.setVisible(True)
+            self.SettingPanel.setVisible(False)
+            self.splitter.setVisible(False)
+        except Exception as e:
+            self.Logger.error(f'Error during show jump window', exc_info=e)
 
     def CloseJumpWindow(self):
-        self.JumpWindow.setVisible(False)
-        self.splitter.setVisible(True)
-        self.JumpWindow.BtnYes.pressed.disconnect()
+        try:
+            self.JumpWindow.setVisible(False)
+            self.splitter.setVisible(True)
+            self.JumpWindow.BtnYes.pressed.disconnect()
+        except Exception as e:
+            self.Logger.error(f'Error during close jump window', exc_info=e)
 
     def StartOrder(self):
-        self.StatusPanel.setVisible(False)
-        self.MenuPanel.setVisible(True)
-        self.OrderPanel.setVisible(True)
-        self.OrderPanel.Clear()
+        try:
+            self.StatusPanel.setVisible(False)
+            self.MenuPanel.setVisible(True)
+            self.OrderPanel.setVisible(True)
+            self.OrderPanel.Clear()
+        except Exception as e:
+            self.Logger.error(f'Error during show menu page, start order', exc_info=e)
 
     def Close(self, e):
-        print('exit')
+        self.Logger.info(f'close connection')
         self.DataBase.open = False
         self.DataBase.Setting.open = False
 
-    def OrderFoo(self, FoodID):
-        Order = OrderInfo()
-        Order.FoodID = FoodID
-        Order.Qty = 1
-        Order.Note = ''
-        Order.LoadMenu(self.DataBase.menu)
-        Order.UnitPrice = Order.OriUnitPrice
-        self.OrderPanel.AddOrder(Order)
+    def OrderFood(self, FoodID):
+        try:
+            self.Logger.info(f'menu order food, food id:{FoodID}')
+            Order = OrderInfo()
+            Order.FoodID = FoodID
+            Order.Qty = 1
+            Order.Note = ''
+            Order.LoadMenu(self.DataBase.menu)
+            Order.UnitPrice = Order.OriUnitPrice
+            self.OrderPanel.AddOrder(Order)
+        except Exception as e:
+            self.Logger.error(f'Error during order food into orderlist', exc_info=e)
+
+    def PlaceOrder(self, Orders):
+        try:
+            self.Logger.info(f'Place order')
+            for order in Orders:
+                order.OrderID = self.OrderID
+                order.StaffID = self.StaffID
+            self.DataBase.PlaceOrder(Orders)
+            self.TableButClick(self.TableNumber)
+        except Exception as e:
+            self.Logger.error(f'Error during placing order', exc_info=e)
+
+    def CheckOut(self):
+        TableNumber = int(self.StatusPanel.TableNumber)
+        try:
+            self.Logger.info(f'Table {TableNumber} checkout')
+            self.DataBase.CheckOutTable(TableNumber)
+            self.TableButClick(TableNumber)
+        except Exception as e:
+            self.Logger.error(f'Error during check out table {TableNumber}', exc_info=e)
+
+    def ReopenTable(self):
+        self.DataBase.ReopenTable(self.TableNumber)
+        self.TableButClick(self.TableNumber)
 
 
 import QtApp.resource_rc

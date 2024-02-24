@@ -12,11 +12,16 @@ from PyQt5 import QtCore, QtWidgets
 from QtApp.Base.OrderTableWdiget import TableWdiget
 from collections import defaultdict
 from TableInfoStore import OrderInfo
-
+from functools import partial
+from Logger import CreateLogger
 
 class OrderListPanel(QtWidgets.QFrame):
-    def __init__(self, parant):
-        QtWidgets.QFrame.__init__(self, parant)
+    def __init__(self, parent, logger=None):
+        QtWidgets.QFrame.__init__(self, parent)
+        if logger is not None:
+            self.logger = logger
+        else:
+            self.logger = CreateLogger('test')
         self.setupUi()
         self.Orders = []
 
@@ -24,8 +29,12 @@ class OrderListPanel(QtWidgets.QFrame):
         self.setObjectName("orderList")
         self.tableView = TableWdiget(self)
         self.tableView.setObjectName("tableView")
-        mainLayout = QtWidgets.QHBoxLayout()
+        mainLayout = QtWidgets.QVBoxLayout()
         mainLayout.addWidget(self.tableView)
+        self.BtnPlaceOrder = QtWidgets.QPushButton(self)
+        self.BtnPlaceOrder.setObjectName("BtnPlacecOrder")
+        self.BtnPlaceOrder.setMaximumWidth(300)
+        mainLayout.addWidget(self.BtnPlaceOrder)
         self.setLayout(mainLayout)
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -33,22 +42,31 @@ class OrderListPanel(QtWidgets.QFrame):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("Form", "OrderList"))
+        self.BtnPlaceOrder.setText(_translate("Form", "下单"))
 
     def selectedRow(self):
         return self.tableView.selectedRow
 
     def DisplayTable(self, TableInfo):
+        self.logger.debug(f'Display Order:ID {TableInfo.OrderID}, table: {TableInfo.TableID}')
         self.tableView.Clear()
+        self.BtnPlaceOrder.setVisible(False)
         for order in TableInfo.Orders.values():
             self.Orders.append(order)
             self.tableView.addRow(order)
 
     def Clear(self):
+        self.logger.info('clear OrderList panel')
         self.tableView.Clear()
+        self.BtnPlaceOrder.setVisible(True)
+        self.Orders.clear()
 
     def AddOrder(self, Order):
         self.Orders.append(Order)
         self.tableView.addRow(Order)
+
+    def Connect(self, Event):
+        self.BtnPlaceOrder.pressed.connect(partial(Event, self.Orders))
 
 
 if __name__ == "__main__":

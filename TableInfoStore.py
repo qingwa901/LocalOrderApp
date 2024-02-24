@@ -46,7 +46,7 @@ class OrderInfo:
         self.OriUnitPrice = m.UnitPrice
 
 
-class TableInfoStore():
+class TableInfoStore:
     OrderID = None
     TableID = None
     StartTime = None
@@ -55,7 +55,9 @@ class TableInfoStore():
     NumOfPeople = None
     OrderList = Config.DataBase.OrderList
     OrderMetaList = Config.DataBase.OrderMetaData
-    Orders = {}
+
+    def __init__(self):
+        self.Orders = {}
 
     def Clear(self):
         self.StartTime = None
@@ -90,30 +92,50 @@ class TableInfoStore():
             self.Orders[ID] = OrderInfo()
         self.Orders[ID].SetOrder(Order)
 
-    def LoadMenu(self, menu:FullMenuList):
+    def LoadMenu(self, menu: FullMenuList):
         for i in self.Orders.values():
             i.LoadMenu(menu)
 
-class AllTableInfoStore():
+    def GetTotalAmount(self):
+        total = 0
+        for order in self.Orders.values():
+            total += order.UnitPrice * order.Qty
+        return total
+
+
+class AllTableInfoStore:
     UpdateTime = None
     OrderList = Config.DataBase.OrderList
     OrderMetaList = Config.DataBase.OrderMetaData
     OnlineOrderTableMap = dict()
     OfflineOrderTableMap = dict()
-    ByOrderIDDict = defaultdict(TableInfoStore)
-    ByTableIDDict = defaultdict(TableInfoStore)
+    ByOrderIDDict = {}
+    ByTableIDDict = {}
+
+    def __init__(self, logger):
+        self.logger = logger
 
     def _AddOrder(self, order: pd.Series):
+        self.logger.debug(f"Order added. ID: {order[self.OrderList.ID]}, OrderID: {order[self.OrderList.ID_ORDER]}")
         OrderID = order[self.OrderList.ID_ORDER]
+        if OrderID not in self.ByOrderIDDict:
+            self.ByOrderIDDict[OrderID] = TableInfoStore()
         self.ByOrderIDDict[OrderID].SetOrder(order)
 
     def _AddOrderMeta(self, OrderMeta: pd.Series):
+        self.logger.debug(f"Order Meta added: ID: {OrderMeta[self.OrderMetaList.ID]}, "
+                          f"OrderID: {OrderMeta[self.OrderMetaList.ID_ORDER]}, "
+                          f"Field: {OrderMeta[self.OrderMetaList.FIELD]}, "
+                          f"Value: {OrderMeta[self.OrderMetaList.VALUE]}")
         OrderID = OrderMeta[self.OrderMetaList.ID_ORDER]
+        if OrderID not in self.ByOrderIDDict:
+            self.ByOrderIDDict[OrderID] = TableInfoStore()
         self.ByOrderIDDict[OrderID].SetMetaInfo(OrderMeta)
         if OrderMeta[self.OrderMetaList.FIELD] == self.OrderMetaList.Fields.ID_TABLE:
             self.ByTableIDDict[int(OrderMeta[self.OrderMetaList.VALUE])] = self.ByOrderIDDict[OrderID]
 
     def Clear(self):
+        self.logger.debug('Clear Tableinfo')
         for table in self.ByTableIDDict.values():
             table.Clear()
         self.ByTableIDDict.clear()
