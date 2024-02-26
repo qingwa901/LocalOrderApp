@@ -71,6 +71,10 @@ class Config:
                 IS_FINISHED = 'IsFinished'
                 NUM_OF_PEOPLE = 'NumOfPeople'
                 ID_TABLE = 'IDTable'
+                CASH = 'Cash'
+                CARD = 'Card'
+                DISCOUNT = 'DisCountAmount'
+                SERVICE_CHARGE = 'ServiceCharge'
 
         class OrderList:
             NAME = 'OrderList'

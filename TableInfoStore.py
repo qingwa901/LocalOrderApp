@@ -1,6 +1,5 @@
 import pandas as pd
 from Config import Config
-from collections import defaultdict
 from MenuStore import FullMenuList
 
 
@@ -47,17 +46,21 @@ class OrderInfo:
 
 
 class TableInfoStore:
-    OrderID = None
-    TableID = None
-    StartTime = None
-    EndTime = None
-    IsFinished = False
-    NumOfPeople = None
     OrderList = Config.DataBase.OrderList
     OrderMetaList = Config.DataBase.OrderMetaData
 
     def __init__(self):
         self.Orders = {}
+        self.OrderID = None
+        self.TableID = None
+        self.StartTime = None
+        self.EndTime = None
+        self.IsFinished = False
+        self.NumOfPeople = None
+        self.Cash = None
+        self.Card = None
+        self.ServiceCharge = None
+        self.Discount = None
 
     def Clear(self):
         self.StartTime = None
@@ -82,6 +85,14 @@ class TableInfoStore:
             self.NumOfPeople = value
         elif field == self.OrderMetaList.Fields.ID_TABLE:
             self.TableID = value
+        elif field == self.OrderMetaList.Fields.CARD:
+            self.Card = value
+        elif field == self.OrderMetaList.Fields.CASH:
+            self.Card = value
+        elif field == self.OrderMetaList.Fields.DISCOUNT:
+            self.Discount = value
+        elif field == self.OrderMetaList.Fields.SERVICE_CHARGE:
+            self.ServiceCharge = value
 
     def SetOrder(self, Order: pd.Series):
         self.OrderID = Order[self.OrderList.ID_ORDER]

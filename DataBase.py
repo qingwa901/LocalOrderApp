@@ -467,3 +467,70 @@ class DataBase(SQLControl):
         except Exception as e:
             self.logger.error(f'Error during remove order end time. TableID: {TableNumber}',
                               exc_info=e)
+
+
+    def AddCash(self, Cash, TableNumber):
+        try:
+            table = self.config.OrderMetaData
+            OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
+            self.logger.info(f'Order {OrderID} update Cash {Cash}.')
+            query = (f"select * from {table.NAME} where `{table.FIELD}`='{table.Fields.CASH}' and "
+                     f"`{table.ID_ORDER}`='{OrderID}' and `{table.VALID}` = true")
+            data = self.get_local_data(query)
+            if len(data) > 0:
+                query = (f"Update {table.NAME} set `{table.VALUE}`='{Cash}', `{self.config.LOADED}`=false where "
+                         f"`{table.ID}`='{data.iloc[0][table.ID]}'")
+                self.executeLocally(query)
+            else:
+                if self.MaxOrderMataListID is None:
+                    self.GetMaxOrderMataListID()
+                self.MaxOrderMataListID += 1
+                self.logger.info(f'Order {OrderID} add Cash {Cash}.')
+                data = {table.ID: [self.MaxOrderMataListID],
+                        table.ID_ORDER: [OrderID],
+                        table.FIELD: [table.Fields.CASH],
+                        table.VALUE: [Cash],
+                        table.CREATE_TIME: [datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")],
+                        table.VALID: [True],
+                        table.ID_STORE: [self.STORE_ID],
+                        self.config.UPDATED: [False],
+                        self.config.LOADED: [False]}
+                data = pd.DataFrame(data)
+                self.SaveLocalData(data, table.NAME)
+
+        except Exception as e:
+            self.logger.error(f'Error during adding order end time. TableID: {TableNumber}',
+                              exc_info=e)
+
+    def AddCard(self, Card, TableNumber):
+        try:
+            table = self.config.OrderMetaData
+            OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
+            self.logger.info(f'Order {OrderID} update Card {Card}.')
+            query = (f"select * from {table.NAME} where `{table.FIELD}`='{table.Fields.CARD}' and "
+                     f"`{table.ID_ORDER}`='{OrderID}' and `{table.VALID}` = true")
+            data = self.get_local_data(query)
+            if len(data) > 0:
+                query = (f"Update {table.NAME} set `{table.VALUE}`='{Card}', `{self.config.LOADED}`=false where "
+                         f"`{table.ID}`='{data.iloc[0][table.ID]}'")
+                self.executeLocally(query)
+            else:
+                if self.MaxOrderMataListID is None:
+                    self.GetMaxOrderMataListID()
+                self.MaxOrderMataListID += 1
+                self.logger.info(f'Order {OrderID} add Card {Card}.')
+                data = {table.ID: [self.MaxOrderMataListID],
+                        table.ID_ORDER: [OrderID],
+                        table.FIELD: [table.Fields.CARD],
+                        table.VALUE: [Card],
+                        table.CREATE_TIME: [datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")],
+                        table.VALID: [True],
+                        table.ID_STORE: [self.STORE_ID],
+                        self.config.UPDATED: [False],
+                        self.config.LOADED: [False]}
+                data = pd.DataFrame(data)
+                self.SaveLocalData(data, table.NAME)
+
+        except Exception as e:
+            self.logger.error(f'Error during adding order end time. TableID: {TableNumber}',
+                              exc_info=e)

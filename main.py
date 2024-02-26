@@ -103,7 +103,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.FinalStatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.FinalStatusPanel.setVisible(False)
-        self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
 
         self.setCentralWidget(self.centralwidget)
         self.toolbar = self.addToolBar("Panels")
@@ -144,6 +143,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.MenuPanel.Connect(self.OrderFood)
 
         self.OrderPanel.Connect(self.PlaceOrder)
+
+        self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
+        self.FinalStatusPanel.AddCardConnect(self.AddCash)
+        self.FinalStatusPanel.AddCashConnect(self.AddCash)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -322,6 +325,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def ReopenTable(self):
         self.DataBase.ReopenTable(self.TableNumber)
         self.TableButClick(self.TableNumber)
+
+    def AddCash(self, TotalCash):
+        self.DataBase.AddCash(Cash=TotalCash, TableNumber=self.TableNumber)
+
+    def AddCard(self, TotalCard):
+        self.DataBase.AddCard(Card=TotalCard, TableNumber=self.TableNumber)
 
 
 import QtApp.resource_rc

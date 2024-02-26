@@ -10,169 +10,71 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from TableInfoStore import TableInfoStore
+from QtApp.FinalStatusBase import FinalStatusBase
+from functools import partial
 
 
-class FinalStatusPanel(QtWidgets.QFrame):
+class FinalStatusPanel(FinalStatusBase):
     def __init__(self, parant):
-        QtWidgets.QFrame.__init__(self, parant)
-        self.setupUi()
-
-    def setupUi(self):
-        self.setObjectName("FinalStatus")
-        self.resize(401, 300)
-        self.formLayoutWidget = QtWidgets.QWidget(self)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(0, 0, 385, 253))
-        self.formLayoutWidget.setObjectName("formLayoutWidget")
-        self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
-        self.formLayout.setContentsMargins(0, 0, 0, 0)
-        self.formLayout.setObjectName("formLayout")
-        self.label = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label.setObjectName("label")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
-        self.LBTableNumber = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBTableNumber.setObjectName("LBTableNumber")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.LBTableNumber)
-        self.label_2 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label_2.setObjectName("label_2")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
-        self.LBNumOfPeople = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBNumOfPeople.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.LBNumOfPeople.setObjectName("LBNumOfPeople")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.LBNumOfPeople)
-        self.label_3 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label_3.setObjectName("label_3")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_3)
-        self.LBStartTime = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBStartTime.setObjectName("LBStartTime")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.LBStartTime)
-        self.label_4 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label_4.setObjectName("label_4")
-        self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_4)
-        self.LBEndTime = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBEndTime.setObjectName("LBEndTime")
-        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.LBEndTime)
-        self.label_5 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label_5.setObjectName("label_5")
-        self.formLayout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label_5)
-        self.LBTotalAmount = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBTotalAmount.setObjectName("LBTotalAmount")
-        self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.LBTotalAmount)
-        self.label_6 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label_6.setObjectName("label_6")
-        self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_6)
-        self.label_7 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label_7.setObjectName("label_7")
-        self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.label_7)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.LBPaidCard = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBPaidCard.setObjectName("LBPaidCard")
-        self.horizontalLayout.addWidget(self.LBPaidCard)
-        self.BtnCardRemove = QtWidgets.QPushButton(self.formLayoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.BtnCardRemove.sizePolicy().hasHeightForWidth())
-        self.BtnCardRemove.setSizePolicy(sizePolicy)
-        self.BtnCardRemove.setObjectName("BtnCardRemove")
-        self.horizontalLayout.addWidget(self.BtnCardRemove)
-        self.formLayout.setLayout(6, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout)
-        self.LBLablePayment = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBLablePayment.setObjectName("LBLablePayment")
-        self.formLayout.setWidget(7, QtWidgets.QFormLayout.LabelRole, self.LBLablePayment)
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.EditBoxToPayAmount = QtWidgets.QDoubleSpinBox(self.formLayoutWidget)
-        self.EditBoxToPayAmount.setMaximum(100000.0)
-        self.EditBoxToPayAmount.setObjectName("EditBoxToPayAmount")
-        self.horizontalLayout_3.addWidget(self.EditBoxToPayAmount)
-        self.BtnPayByCard = QtWidgets.QPushButton(self.formLayoutWidget)
-        self.BtnPayByCard.setObjectName("BtnPayByCard")
-        self.horizontalLayout_3.addWidget(self.BtnPayByCard)
-        self.BtnPayByCash = QtWidgets.QPushButton(self.formLayoutWidget)
-        self.BtnPayByCash.setObjectName("BtnPayByCash")
-        self.horizontalLayout_3.addWidget(self.BtnPayByCash)
-        self.formLayout.setLayout(7, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_3)
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.BtnPayKCash = QtWidgets.QPushButton(self.formLayoutWidget)
-        self.BtnPayKCash.setObjectName("BtnPayKCash")
-        self.horizontalLayout_4.addWidget(self.BtnPayKCash)
-        self.pushButton_2 = QtWidgets.QPushButton(self.formLayoutWidget)
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.horizontalLayout_4.addWidget(self.pushButton_2)
-        self.formLayout.setLayout(8, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_4)
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.LBPaiedCash_2 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.LBPaiedCash_2.setObjectName("LBPaiedCash_2")
-        self.horizontalLayout_5.addWidget(self.LBPaiedCash_2)
-        self.BtnCashRemove_2 = QtWidgets.QPushButton(self.formLayoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.BtnCashRemove_2.sizePolicy().hasHeightForWidth())
-        self.BtnCashRemove_2.setSizePolicy(sizePolicy)
-        self.BtnCashRemove_2.setObjectName("BtnCashRemove_2")
-        self.horizontalLayout_5.addWidget(self.BtnCashRemove_2)
-        self.formLayout.setLayout(5, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_5)
-        self.label_8 = QtWidgets.QLabel(self.formLayoutWidget)
-        self.label_8.setObjectName("label_8")
-        self.formLayout.setWidget(8, QtWidgets.QFormLayout.LabelRole, self.label_8)
-        self.gridLayoutWidget = QtWidgets.QWidget(self)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 259, 295, 31))
-        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout.setObjectName("gridLayout")
-        self.BtnReOpen = QtWidgets.QPushButton(self.gridLayoutWidget)
-        self.BtnReOpen.setObjectName("BtnReOpen")
-        self.gridLayout.addWidget(self.BtnReOpen, 0, 0, 1, 1)
-        self.BtnPrintReceipt = QtWidgets.QPushButton(self.gridLayoutWidget)
-        self.BtnPrintReceipt.setObjectName("BtnPrintReceipt")
-        self.gridLayout.addWidget(self.BtnPrintReceipt, 0, 1, 1, 1)
-        self.BtnCleanTable = QtWidgets.QPushButton(self.gridLayoutWidget)
-        self.BtnCleanTable.setObjectName("BtnCleanTable")
-        self.gridLayout.addWidget(self.BtnCleanTable, 0, 2, 1, 1)
-
-        self.retranslateUi()
-        QtCore.QMetaObject.connectSlotsByName(self)
-
-    def retranslateUi(self):
-        _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Form", "FinalStatusPanel"))
-        self.label.setText(_translate("Form", "桌号"))
-        self.LBTableNumber.setText(_translate("Form", "None"))
-        self.label_2.setText(_translate("Form", "人数"))
-        self.LBNumOfPeople.setText(_translate("Form", "None"))
-        self.label_3.setText(_translate("Form", "开始时间"))
-        self.LBStartTime.setText(_translate("Form", "None"))
-        self.label_4.setText(_translate("Form", "结账时间"))
-        self.LBEndTime.setText(_translate("Form", "None"))
-        self.label_5.setText(_translate("Form", "总金额"))
-        self.LBTotalAmount.setText(_translate("Form", "None"))
-        self.label_6.setText(_translate("Form", "现金金额"))
-        self.label_7.setText(_translate("Form", "刷卡金额"))
-        self.LBPaidCard.setText(_translate("Form", "None"))
-        self.BtnCardRemove.setText(_translate("Form", "X"))
-        self.LBLablePayment.setText(_translate("Form", "未付"))
-        self.BtnPayByCard.setText(_translate("Form", "刷卡"))
-        self.BtnPayByCash.setText(_translate("Form", "现金"))
-        self.BtnPayKCash.setText(_translate("Form", "£10"))
-        self.pushButton_2.setText(_translate("Form", "£20"))
-        self.LBPaiedCash_2.setText(_translate("Form", "None"))
-        self.BtnCashRemove_2.setText(_translate("Form", "X"))
-        self.label_8.setText(_translate("Form", "现金"))
-        self.BtnReOpen.setText(_translate("Form", "重开台"))
-        self.BtnPrintReceipt.setText(_translate("Form", "打单"))
-        self.BtnCleanTable.setText(_translate("Form", "清台"))
+        FinalStatusBase.__init__(self, parant)
+        self.total = 0
+        self.cash = 0
+        self.card = 0
+        self.ServiceChargePercent = 0.1
+        self.DiscountPercent = 0
+        self.AddCashEvent = None
+        self.AddCardEvent = None
+        self.AddDiscountEvent = None
+        self.AddServiceChargeEvent = None
+        self.BtnCashRemove_2.pressed.connect(self.RemoveCash)
+        self.BtnCardRemove.pressed.connect(self.RemoveCard)
+        self.BtnPay5Cash.pressed.connect(partial(self.AddCash, 5))
+        self.BtnPay10Cash.pressed.connect(partial(self.AddCash, 10))
+        self.BtnPay20Cash.pressed.connect(partial(self.AddCash, 20))
+        self.BtnPayByCard.pressed.connect(self.AddRestCard)
+        self.BtnPayByCash.pressed.connect(self.AddRestCash)
 
     def DisplayTable(self, TableInfo: TableInfoStore):
+        self.Clear()
         self.LBTableNumber.setText(TableInfo.TableID)
         self.LBStartTime.setText(TableInfo.StartTime)
         self.LBEndTime.setText(TableInfo.EndTime)
         self.LBNumOfPeople.setText(TableInfo.NumOfPeople)
-        self.LBTotalAmount.setText(str(TableInfo.GetTotalAmount()))
+        self.total = TableInfo.GetTotalAmount()
+        if TableInfo.Cash is None:
+            self.cash = 0
+        else:
+            self.cash = float(TableInfo.Cash)
+        if TableInfo.Card is None:
+            self.card = 0
+        else:
+            self.card = float(TableInfo.Card)
+
+        self.LBTotalAmount.setText(str(self.total))
+        self.EditBoxToPayAmount.setValue(self.total)
+        self.LBPaidCard.setText('0.00')
+        self.LBPaiedCash.setText('0.00')
+
+    def Clear(self):
+        self.card = 0
+        self.cash = 0
+        self.total = 0
+
+    def DisplayAllInfo(self):
+        self.LBPaiedCash_2.setText(str(round(self.cash, 2)))
+        self.LBPaidCard.setText(str(round(self.card, 2)))
+        self.LBTotalAmount.setText(str(round(self.total)))
+        ServiceCharge = round(self.total * self.ServiceChargePercent)
+        self.LBServiceCharge.setText(str(ServiceCharge))
+        DiscountAmount = round(self.total * self.DiscountPercent)
+        self.LBDiscountAmount.setText((str(DiscountAmount)))
+        LeftToPay = self.total + ServiceCharge - DiscountAmount - self.card - self.cash
+        if LeftToPay >= 0:
+            self.EditBoxToPayAmount.setValue(str(LeftToPay))
+            self.LBLablePayment.setText('未付')
+        else:
+            self.EditBoxToPayAmount.setValue(str(-LeftToPay))
+            self.LBLablePayment.setText('找零')
 
     def ReopenConnect(self, Event):
         self.BtnReOpen.pressed.connect(Event)
@@ -182,6 +84,48 @@ class FinalStatusPanel(QtWidgets.QFrame):
 
     def PrintReceiptConnect(self, Event):
         self.BtnPrintReceipt.pressed.connect(Event)
+
+    def RemoveCash(self):
+        self.cash = 0
+        self.AddCashEvent(0)
+        self.DisplayAllInfo()
+
+    def RemoveCard(self):
+        self.card = 0
+        self.AddCardEvent(0)
+        self.DisplayAllInfo()
+
+    def AddCash(self, Amount):
+        self.cash += Amount
+        self.AddCashEvent(self.cash)
+        self.DisplayAllInfo()
+
+    def AddCard(self, Amount):
+        self.card += Amount
+        self.AddCardEvent(self.cash)
+        self.DisplayAllInfo()
+
+    def AddRestCash(self):
+        self.cash += self.EditBoxToPayAmount.value()
+        self.AddCashEvent(self.cash)
+        self.DisplayAllInfo()
+
+    def AddRestCard(self):
+        self.card += self.EditBoxToPayAmount.value()
+        self.AddCardEvent(self.card)
+        self.DisplayAllInfo()
+
+    def AddCashConnect(self, Event):
+        self.AddCashEvent = Event
+
+    def AddCardConnect(self, Event):
+        self.AddCardEvent = Event
+
+    def AddDiscountConnect(self, Event):
+        self.AddDiscountEvent = Event
+
+    def AddServiceChargeConnect(self, Event):
+        self.AddServiceChargeEvent = Event
 
 
 if __name__ == "__main__":
