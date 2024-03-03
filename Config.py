@@ -73,8 +73,8 @@ class Config:
                 ID_TABLE = 'IDTable'
                 CASH = 'Cash'
                 CARD = 'Card'
-                DISCOUNT = 'DisCountAmount'
-                SERVICE_CHARGE = 'ServiceCharge'
+                DISCOUNT_PERCENT = 'DiscountPercent'
+                SERVICE_CHARGE_PERCENT = 'ServiceChargePercent'
 
         class OrderList:
             NAME = 'OrderList'

@@ -15,24 +15,63 @@ from functools import partial
 
 
 class FinalStatusPanel(FinalStatusBase):
+
     def __init__(self, parant):
         FinalStatusBase.__init__(self, parant)
         self.total = 0
         self.cash = 0
         self.card = 0
-        self.ServiceChargePercent = 0.1
+        self.ServiceChargePercent = 10
         self.DiscountPercent = 0
         self.AddCashEvent = None
         self.AddCardEvent = None
         self.AddDiscountEvent = None
         self.AddServiceChargeEvent = None
-        self.BtnCashRemove_2.pressed.connect(self.RemoveCash)
+        self.BtnCashRemove.pressed.connect(self.RemoveCash)
         self.BtnCardRemove.pressed.connect(self.RemoveCard)
         self.BtnPay5Cash.pressed.connect(partial(self.AddCash, 5))
         self.BtnPay10Cash.pressed.connect(partial(self.AddCash, 10))
         self.BtnPay20Cash.pressed.connect(partial(self.AddCash, 20))
         self.BtnPayByCard.pressed.connect(self.AddRestCard)
         self.BtnPayByCash.pressed.connect(self.AddRestCash)
+        self._DefaultServiceChargePercent = 10
+        self._DefaultDisCountPercentA = 5
+        self._DefaultDisCountPercentB = 10
+        _translate = QtCore.QCoreApplication.translate
+        self.ButDiscountA.setText(_translate("Form", "5%"))
+        self.ButDiscountB.setText(_translate("Form", "10%"))
+        self.BtnRemoveDiscount.pressed.connect(self.RemoveDiscount)
+        self.ButDiscountA.pressed.connect(self.AddDiscountA)
+        self.ButDiscountB.pressed.connect(self.AddDiscountB)
+        self.BtnAddRemoveServiceCharge.pressed.connect(self.ChangeServiceChargePercent)
+
+    def SetDefaultDiscountPercentA(self, Value: int):
+        self._DefaultDisCountPercentA = Value
+        _translate = QtCore.QCoreApplication.translate
+        self.ButDiscountA.setText(_translate("Form", f"{Value}%"))
+
+    def GetDefaultDiscountPercentA(self):
+        return self._DefaultDisCountPercentA
+
+    DefaultDiscountPercentA = property(GetDefaultDiscountPercentA, SetDefaultDiscountPercentA)
+
+    def SetDefaultDiscountPercentB(self, Value: int):
+        self._DefaultDisCountPercentB = Value
+        _translate = QtCore.QCoreApplication.translate
+        self.ButDiscountB.setText(_translate("Form", f"{Value}%"))
+
+    def GetDefaultDiscountPercentB(self):
+        return self._DefaultDisCountPercentB
+
+    DefaultDiscountPercentB = property(GetDefaultDiscountPercentB, SetDefaultDiscountPercentB)
+
+    def SetDefaultServiceChargePercent(self, Value: float):
+        self._DefaultServiceChargePercent = Value
+
+    def GetDefaultServiceChargePercent(self):
+        return self._DefaultServiceChargePercent
+
+    DefaultServiceChargePercent = property(GetDefaultServiceChargePercent, SetDefaultServiceChargePercent)
 
     def DisplayTable(self, TableInfo: TableInfoStore):
         self.Clear()
@@ -40,7 +79,9 @@ class FinalStatusPanel(FinalStatusBase):
         self.LBStartTime.setText(TableInfo.StartTime)
         self.LBEndTime.setText(TableInfo.EndTime)
         self.LBNumOfPeople.setText(TableInfo.NumOfPeople)
-        self.total = TableInfo.GetTotalAmount()
+        self.total = round(TableInfo.GetTotalAmount(), 2)
+        self.DiscountPercent = TableInfo.Discount
+        self.ServiceChargePercent = TableInfo.ServiceCharge
         if TableInfo.Cash is None:
             self.cash = 0
         else:
@@ -49,31 +90,30 @@ class FinalStatusPanel(FinalStatusBase):
             self.card = 0
         else:
             self.card = float(TableInfo.Card)
-
-        self.LBTotalAmount.setText(str(self.total))
-        self.EditBoxToPayAmount.setValue(self.total)
-        self.LBPaidCard.setText('0.00')
-        self.LBPaiedCash.setText('0.00')
+        self.DisplayAllInfo()
 
     def Clear(self):
         self.card = 0
         self.cash = 0
         self.total = 0
+        self.ServiceChargePercent = self.DefaultServiceChargePercent
+        self.DiscountPercent = 0
 
     def DisplayAllInfo(self):
         self.LBPaiedCash_2.setText(str(round(self.cash, 2)))
         self.LBPaidCard.setText(str(round(self.card, 2)))
-        self.LBTotalAmount.setText(str(round(self.total)))
-        ServiceCharge = round(self.total * self.ServiceChargePercent)
-        self.LBServiceCharge.setText(str(ServiceCharge))
-        DiscountAmount = round(self.total * self.DiscountPercent)
-        self.LBDiscountAmount.setText((str(DiscountAmount)))
-        LeftToPay = self.total + ServiceCharge - DiscountAmount - self.card - self.cash
+        ServiceCharge = round(self.total * self.ServiceChargePercent / 100, 2)
+        self.LBServiceCharge.setText(str(ServiceCharge) + f" ({self.ServiceChargePercent}%)")
+        DiscountAmount = round(self.total * self.DiscountPercent / 100, 2)
+        self.LBDiscountAmount.setText(str(DiscountAmount) + f" ({self.DiscountPercent}%)")
+        self.LBTotalAmount.setText(str(round(self.total + ServiceCharge - DiscountAmount, 2)) +
+                                   f" ({round(self.total, 2)})")
+        LeftToPay = round(self.total + ServiceCharge - DiscountAmount - self.card - self.cash, 2)
         if LeftToPay >= 0:
-            self.EditBoxToPayAmount.setValue(str(LeftToPay))
+            self.EditBoxToPayAmount.setValue(LeftToPay)
             self.LBLablePayment.setText('未付')
         else:
-            self.EditBoxToPayAmount.setValue(str(-LeftToPay))
+            self.EditBoxToPayAmount.setValue(-LeftToPay)
             self.LBLablePayment.setText('找零')
 
     def ReopenConnect(self, Event):
@@ -113,6 +153,29 @@ class FinalStatusPanel(FinalStatusBase):
     def AddRestCard(self):
         self.card += self.EditBoxToPayAmount.value()
         self.AddCardEvent(self.card)
+        self.DisplayAllInfo()
+
+    def ChangeServiceChargePercent(self):
+        if self.ServiceChargePercent > 0:
+            self.ServiceChargePercent = 0
+        else:
+            self.ServiceChargePercent = self.DefaultServiceChargePercent
+        self.AddServiceChargeEvent(self.ServiceChargePercent)
+        self.DisplayAllInfo()
+
+    def RemoveDiscount(self):
+        self.DiscountPercent = 0
+        self.AddDiscountEvent(0)
+        self.DisplayAllInfo()
+
+    def AddDiscountA(self):
+        self.DiscountPercent = self.DefaultDiscountPercentA
+        self.AddDiscountEvent(self.DefaultDiscountPercentA)
+        self.DisplayAllInfo()
+
+    def AddDiscountB(self):
+        self.DiscountPercent = self.DefaultDiscountPercentB
+        self.AddDiscountEvent(self.DefaultDiscountPercentB)
         self.DisplayAllInfo()
 
     def AddCashConnect(self, Event):

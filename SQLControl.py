@@ -47,7 +47,7 @@ class SQLControl:
             try:
                 with self.LocalLock:
                     with sqlite3.connect(Config.DataBase.PATH) as conn:
-                        self.logger.info(f'query: {query}')
+                        self.logger.info(f'Local query: {query}')
                         data = pd.read_sql(query, conn)
                         return data
             except sqlalchemy.exc.DBAPIError as e:
@@ -65,7 +65,7 @@ class SQLControl:
             try:
                 with self.LocalLock:
                     with sqlite3.connect(Config.DataBase.PATH) as conn:
-                        self.logger.info(f'Table: {Table}')
+                        self.logger.info(f'Local Table: {Table}')
                         data.to_sql(Table, conn, if_exists='append', index=False)
                         return True
             except sqlalchemy.exc.DBAPIError as e:
@@ -79,7 +79,7 @@ class SQLControl:
             try:
                 with self.LocalLock:
                     with sqlite3.connect(Config.DataBase.PATH) as conn:
-                        self.logger.info(f'query: {query}')
+                        self.logger.info(f'Local query: {query}')
                         return conn.execute(query)
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(
@@ -107,7 +107,7 @@ class SQLControl:
                 if self.conn is None:
                     raise ConnectionError('Connection not build yet')
                 with self.Lock:
-                    self.logger.info(f'query: {query}')
+                    self.logger.info(f'Server query: {query}')
                     data = pd.read_sql(query, self.conn)
                     return data
             except sqlalchemy.exc.DBAPIError as e:
@@ -123,7 +123,7 @@ class SQLControl:
                 if self.conn is None:
                     raise ConnectionError('Connection not build yet')
                 with self.Lock:
-                    self.logger.info(f'Table: {Table}')
+                    self.logger.info(f'Server Table: {Table}')
                     data.to_sql(Table, self.conn, if_exists='append', index=False)
                     return True
             except sqlalchemy.exc.DBAPIError as e:
@@ -139,7 +139,7 @@ class SQLControl:
                 if self.conn is None:
                     raise ConnectionError('Connection not build yet')
                 with self.Lock:
-                    self.logger.info(f'query: {query}')
+                    self.logger.info(f'Server query: {query}')
                     return self.conn.execute(query)
             except sqlalchemy.exc.DBAPIError as e:
                 self.logger.error(

@@ -50,26 +50,20 @@ class TableInfoStore:
     OrderMetaList = Config.DataBase.OrderMetaData
 
     def __init__(self):
-        self.Orders = {}
-        self.OrderID = None
-        self.TableID = None
-        self.StartTime = None
-        self.EndTime = None
-        self.IsFinished = False
-        self.NumOfPeople = None
-        self.Cash = None
-        self.Card = None
-        self.ServiceCharge = None
-        self.Discount = None
+        self.Clear()
 
     def Clear(self):
+        self.Orders = {}
+        self.OrderID = None
+        self.TableID = None
         self.StartTime = None
         self.EndTime = None
-        self.OrderID = None
         self.IsFinished = False
         self.NumOfPeople = None
-        self.TableID = None
-        self.Orders = {}
+        self.Cash = 0
+        self.Card = 0
+        self.ServiceCharge = 0
+        self.Discount = 0
 
     def SetMetaInfo(self, Info: pd.Series):
         field = Info[self.OrderMetaList.FIELD]
@@ -86,13 +80,13 @@ class TableInfoStore:
         elif field == self.OrderMetaList.Fields.ID_TABLE:
             self.TableID = value
         elif field == self.OrderMetaList.Fields.CARD:
-            self.Card = value
+            self.Card = round(float(value), 2)
         elif field == self.OrderMetaList.Fields.CASH:
-            self.Card = value
-        elif field == self.OrderMetaList.Fields.DISCOUNT:
-            self.Discount = value
-        elif field == self.OrderMetaList.Fields.SERVICE_CHARGE:
-            self.ServiceCharge = value
+            self.Cash = round(float(value), 2)
+        elif field == self.OrderMetaList.Fields.DISCOUNT_PERCENT:
+            self.Discount = int(value)
+        elif field == self.OrderMetaList.Fields.SERVICE_CHARGE_PERCENT:
+            self.ServiceCharge = int(value)
 
     def SetOrder(self, Order: pd.Series):
         self.OrderID = Order[self.OrderList.ID_ORDER]

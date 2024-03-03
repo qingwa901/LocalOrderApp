@@ -145,8 +145,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.OrderPanel.Connect(self.PlaceOrder)
 
         self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
-        self.FinalStatusPanel.AddCardConnect(self.AddCash)
+        self.FinalStatusPanel.AddCardConnect(self.AddCard)
         self.FinalStatusPanel.AddCashConnect(self.AddCash)
+        self.FinalStatusPanel.AddDiscountConnect(self.AddDiscountPercent)
+        self.FinalStatusPanel.AddServiceChargeConnect(self.AddServiceChargePercent)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -331,6 +333,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def AddCard(self, TotalCard):
         self.DataBase.AddCard(Card=TotalCard, TableNumber=self.TableNumber)
+
+    def AddServiceChargePercent(self, ServiceChargePercent):
+        self.DataBase.AddServicePercent(ServicePercent=ServiceChargePercent, TableNumber=self.TableNumber)
+
+    def AddDiscountPercent(self, DiscountPercent):
+        self.DataBase.AddDiscountPercent(DiscountPercent=DiscountPercent, TableNumber=self.TableNumber)
 
 
 import QtApp.resource_rc

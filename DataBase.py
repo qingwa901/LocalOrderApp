@@ -92,7 +92,7 @@ class DataBase(SQLControl):
                 Value += ', '
             Value += f"`{field}`='{data[field]}'"
         self.executeLocally(
-            f"Update {table.NAME} Set {Value}, `{self.config.UPDATED}`=true, `{self.config.LOADED}`=true "
+            f"Update {table.NAME} Set {Value}, `{self.config.UPDATED}`='1', `{self.config.LOADED}`='1' "
             f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
 
     def UpdateOneLine(self, data, table):
@@ -160,7 +160,7 @@ class DataBase(SQLControl):
     def Update_(self):
         for table in [self.config.OrderList, self.config.OrderMetaData]:
             data = self.get_local_data(
-                f"select * from {table.NAME} where {self.config.LOADED} = false and {table.ID_STORE}={self.STORE_ID};")
+                f"select * from {table.NAME} where {self.config.LOADED} = '0' and {table.ID_STORE}={self.STORE_ID};")
             if len(data) > 0:
                 data[self.config.LOADED] = True
                 data[self.config.UPDATED] = True
@@ -178,7 +178,7 @@ class DataBase(SQLControl):
     def Download_(self):
         for table in [self.config.OrderList, self.config.OrderMetaData, self.config.PendingOnlineOrder]:
             data = self.get_data(
-                f"select * from {table.NAME} where {self.config.LOADED} = false and {table.ID_STORE}={self.STORE_ID};")
+                f"select * from {table.NAME} where {self.config.LOADED}='0' and {table.ID_STORE}={self.STORE_ID};")
             if len(data) > 0:
                 data[self.config.LOADED] = True
                 data[self.config.UPDATED] = True
@@ -191,7 +191,8 @@ class DataBase(SQLControl):
                     self.SaveLocalData(NewData, table.NAME)
 
                 self.execute(f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where "
-                             f"{table.ID_STORE}={self.STORE_ID} and {table.ID} in ({','.join(data[table.ID].astype(str))})")
+                             f"{table.ID_STORE}={self.STORE_ID} and {table.ID} in "
+                             f"({','.join(data[table.ID].astype(str))})")
 
             if table == self.config.OrderList:
                 if len(data) > 0:
@@ -468,61 +469,40 @@ class DataBase(SQLControl):
             self.logger.error(f'Error during remove order end time. TableID: {TableNumber}',
                               exc_info=e)
 
-
     def AddCash(self, Cash, TableNumber):
-        try:
-            table = self.config.OrderMetaData
-            OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
-            self.logger.info(f'Order {OrderID} update Cash {Cash}.')
-            query = (f"select * from {table.NAME} where `{table.FIELD}`='{table.Fields.CASH}' and "
-                     f"`{table.ID_ORDER}`='{OrderID}' and `{table.VALID}` = true")
-            data = self.get_local_data(query)
-            if len(data) > 0:
-                query = (f"Update {table.NAME} set `{table.VALUE}`='{Cash}', `{self.config.LOADED}`=false where "
-                         f"`{table.ID}`='{data.iloc[0][table.ID]}'")
-                self.executeLocally(query)
-            else:
-                if self.MaxOrderMataListID is None:
-                    self.GetMaxOrderMataListID()
-                self.MaxOrderMataListID += 1
-                self.logger.info(f'Order {OrderID} add Cash {Cash}.')
-                data = {table.ID: [self.MaxOrderMataListID],
-                        table.ID_ORDER: [OrderID],
-                        table.FIELD: [table.Fields.CASH],
-                        table.VALUE: [Cash],
-                        table.CREATE_TIME: [datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")],
-                        table.VALID: [True],
-                        table.ID_STORE: [self.STORE_ID],
-                        self.config.UPDATED: [False],
-                        self.config.LOADED: [False]}
-                data = pd.DataFrame(data)
-                self.SaveLocalData(data, table.NAME)
-
-        except Exception as e:
-            self.logger.error(f'Error during adding order end time. TableID: {TableNumber}',
-                              exc_info=e)
+        self.AddMetaTableValue(Cash, TableNumber, self.config.OrderMetaData.Fields.CASH)
 
     def AddCard(self, Card, TableNumber):
+        self.AddMetaTableValue(Card, TableNumber, self.config.OrderMetaData.Fields.CARD)
+
+    def AddServicePercent(self, ServicePercent, TableNumber):
+        self.AddMetaTableValue(ServicePercent, TableNumber, self.config.OrderMetaData.Fields.SERVICE_CHARGE_PERCENT)
+
+    def AddDiscountPercent(self, DiscountPercent, TableNumber):
+        self.AddMetaTableValue(DiscountPercent, TableNumber, self.config.OrderMetaData.Fields.DISCOUNT_PERCENT)
+
+    def AddMetaTableValue(self, Amount, TableNumber, Field):
         try:
             table = self.config.OrderMetaData
             OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
-            self.logger.info(f'Order {OrderID} update Card {Card}.')
-            query = (f"select * from {table.NAME} where `{table.FIELD}`='{table.Fields.CARD}' and "
+            self.logger.info(f'Order {OrderID} update {Field} {Amount}.')
+            query = (f"select * from {table.NAME} where `{table.FIELD}`='{Field}' and "
                      f"`{table.ID_ORDER}`='{OrderID}' and `{table.VALID}` = true")
             data = self.get_local_data(query)
             if len(data) > 0:
-                query = (f"Update {table.NAME} set `{table.VALUE}`='{Card}', `{self.config.LOADED}`=false where "
-                         f"`{table.ID}`='{data.iloc[0][table.ID]}'")
+                self.logger.info(f"Order {OrderID} update {Field} from {data.iloc[0][table.VALID]} to {Amount}.")
+                query = (f"Update {table.NAME} set `{table.VALUE}`='{Amount}', `{self.config.LOADED}`=false where "
+                         f"`{table.ID}`='{data.iloc[0][table.ID]}' and `{table.FIELD}` = '{Field}'")
                 self.executeLocally(query)
             else:
                 if self.MaxOrderMataListID is None:
                     self.GetMaxOrderMataListID()
                 self.MaxOrderMataListID += 1
-                self.logger.info(f'Order {OrderID} add Card {Card}.')
+                self.logger.info(f'Order {OrderID} add {Field} {Amount}.')
                 data = {table.ID: [self.MaxOrderMataListID],
                         table.ID_ORDER: [OrderID],
-                        table.FIELD: [table.Fields.CARD],
-                        table.VALUE: [Card],
+                        table.FIELD: [Field],
+                        table.VALUE: [Amount],
                         table.CREATE_TIME: [datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")],
                         table.VALID: [True],
                         table.ID_STORE: [self.STORE_ID],
@@ -532,5 +512,5 @@ class DataBase(SQLControl):
                 self.SaveLocalData(data, table.NAME)
 
         except Exception as e:
-            self.logger.error(f'Error during adding order end time. TableID: {TableNumber}',
+            self.logger.error(f'Error during adding {Field} end time. TableID: {TableNumber}',
                               exc_info=e)
