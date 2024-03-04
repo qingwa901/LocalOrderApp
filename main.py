@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from QtApp.Tables import TablesPanel
-from QtApp.SettingPage import SettingPanel
+from QtApp.SettingPanel import SettingPanel
 from QtApp.InitialTable import InitialTable
 from QtApp.Menu import Menu
 from QtApp.Status import StatusPanel
@@ -130,6 +130,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.LayoutSetting()
 
         self.SettingPanel.SetupPrinters(self.DataBase.Printer)
+
+        CurrentServiceChargePercent = (
+            self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT))
+        if CurrentServiceChargePercent is None:
+            CurrentServiceChargePercent = 10
+        CurrentDiscountPercentA = (
+            self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_A))
+        if CurrentDiscountPercentA is None:
+            CurrentDiscountPercentA = 5
+        CurrentDiscountPercentB = (
+            self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_B))
+        if CurrentDiscountPercentB is None:
+            CurrentDiscountPercentB = 10
+
+        self.SettingPanel.EventChangeDefaultServiceChargePercent = self.ChangeDefaultServiceChargePercent
+        self.SettingPanel.SetupServiceChargePercentList(Config.ValueSetting.TableOrder.SERVICE_CHARGE_PERCENT_LIST,
+                                                        CurrentServiceChargePercent)
+        self.SettingPanel.EventChangeDefaultDiscountPercentA = self.ChangeDefaultSDiscountPercentA
+        self.SettingPanel.SetupDiscountPercentAList(Config.ValueSetting.TableOrder.DISCOUNT_PERCENT_LIST,
+                                                    CurrentDiscountPercentA)
+        self.SettingPanel.EventChangeDefaultDiscountPercentB = self.ChangeDefaultSDiscountPercentB
+        self.SettingPanel.SetupDiscountPercentBList(Config.ValueSetting.TableOrder.DISCOUNT_PERCENT_LIST,
+                                                    CurrentDiscountPercentB)
+
         self.InitialPanel.AddConnect(self.OpenTable)
 
         self.JumpWindow.InitialCloseEvent(self.CloseJumpWindow)
@@ -149,6 +173,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.AddCashConnect(self.AddCash)
         self.FinalStatusPanel.AddDiscountConnect(self.AddDiscountPercent)
         self.FinalStatusPanel.AddServiceChargeConnect(self.AddServiceChargePercent)
+        self.FinalStatusPanel.DefaultServiceChargePercent = CurrentServiceChargePercent
+        self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
+        self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -339,6 +366,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def AddDiscountPercent(self, DiscountPercent):
         self.DataBase.AddDiscountPercent(DiscountPercent=DiscountPercent, TableNumber=self.TableNumber)
+
+    def ChangeDefaultServiceChargePercent(self, Value):
+        self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT, Value)
+        self.FinalStatusPanel.DefaultServiceChargePercent = Value
+
+    def ChangeDefaultSDiscountPercentA(self, Value):
+        self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_A, Value)
+        self.FinalStatusPanel.DefaultDiscountPercentA = Value
+
+    def ChangeDefaultSDiscountPercentB(self, Value):
+        self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_B, Value)
+        self.FinalStatusPanel.DefaultDiscountPercentB = Value
 
 
 import QtApp.resource_rc

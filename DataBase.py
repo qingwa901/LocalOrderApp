@@ -37,7 +37,8 @@ class DataBase(SQLControl):
         self.STORE_ID = self.config.STORE_ID  # Todo save store id to setting file
         self.menu = FullMenuList()
         self.DataBaseCheck()
-        threading.Thread(target=self.LoadStoreInfo).start()
+        LoadStoreInfo = threading.Thread(target=self.LoadStoreInfo)
+        LoadStoreInfo.start()
         self.MenuLoad = threading.Thread(target=self.RefreshMenu)
         self.MenuLoad.start()
         self.auto_update = threading.Thread(target=self.AutoUpdate)
@@ -45,6 +46,7 @@ class DataBase(SQLControl):
         self.MaxOrderID = None
         self.MaxOrderListID = None
         self.MaxOrderMataListID = None
+        LoadStoreInfo.join()
 
     def LoadStoreInfo(self):
         try:
@@ -222,18 +224,18 @@ class DataBase(SQLControl):
 
     def _PrintOrder(self, Order):
         table = self.config.OrderList
-        Name = self.menu[Order[table.ID_FOOD]].NameCN
+        Name = self.menu.Foods[Order[table.ID_FOOD]].NameCN
         TableID = self.TableInfo.ByOrderIDDict[Order[table.ID_ORDER]].TablID
         Qty = Order[table.QTY]
         Note = Order[table.NOTE]
         Time = datetime.now()
-        Type = self.menu[Order[table.ID_FOOD]].Type
+        Type = self.menu.Foods[Order[table.ID_FOOD]].Type
         text = f'''Table: {TableID}
 {Name}   X   {Qty}
 {Note}
 {Time}'''
-        if Type in [1, 2, 3, 4]:
-            self.Printer.SendOrder(text, self.Printer.DefaultKitchenPrinter)
+        if Type in Config.DisplaySetting.MenuPage.MENU_EN_NAME:
+            self.Printer.SendOrder(text, self.Printer.DefaultKitchenPrinters[Type])
         else:
             self.Printer.SendOrder(text, self.Printer.DefaultCashierPrinter)
 

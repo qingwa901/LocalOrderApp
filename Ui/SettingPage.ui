@@ -30,9 +30,6 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QComboBox" name="CBCashierPrinter"/>
-    </item>
     <item row="1" column="0">
      <widget class="QLabel" name="label_2">
       <property name="text">
@@ -40,8 +37,146 @@
       </property>
      </widget>
     </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>服务费比例</string>
+      </property>
+     </widget>
+    </item>
     <item row="1" column="1">
-     <widget class="QComboBox" name="CBKitchenPrinter"/>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QComboBox" name="CBKitchenPrinter"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="BtnKitchenTestPrint">
+        <property name="text">
+         <string>测试打印</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="1">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QComboBox" name="CBCashierPrinter"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="BtnCashierTestPrint">
+        <property name="text">
+         <string>测试打印</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="2" column="1">
+     <widget class="QComboBox" name="CBServiceChargePercent">
+      <item>
+       <property name="text">
+        <string>5%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>7.5%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>10%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>12.5%</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>折扣A</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>折扣B</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QComboBox" name="CBDiscountPercentA">
+      <item>
+       <property name="text">
+        <string>5%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>10%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>15%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>20%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>25%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>30%</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QComboBox" name="CBDiscountPercentB">
+      <item>
+       <property name="text">
+        <string>5%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>10%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>15%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>20%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>25%</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>30%</string>
+       </property>
+      </item>
+     </widget>
     </item>
    </layout>
   </widget>

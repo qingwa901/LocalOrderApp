@@ -63,6 +63,9 @@ class TablesPanel(QtWidgets.QFrame):
                 # end table
                 self.Tables[TableNumber].setupColor(TableStatus.Finishing)
 
+    def PrintReceipt(self):
+        ReceiptStr = f'''icon
+'''
 
 if __name__ == "__main__":
     import sys

@@ -45,7 +45,7 @@ class FinalStatusPanel(FinalStatusBase):
         self.ButDiscountB.pressed.connect(self.AddDiscountB)
         self.BtnAddRemoveServiceCharge.pressed.connect(self.ChangeServiceChargePercent)
 
-    def SetDefaultDiscountPercentA(self, Value: int):
+    def SetDefaultDiscountPercentA(self, Value):
         self._DefaultDisCountPercentA = Value
         _translate = QtCore.QCoreApplication.translate
         self.ButDiscountA.setText(_translate("Form", f"{Value}%"))
@@ -55,7 +55,7 @@ class FinalStatusPanel(FinalStatusBase):
 
     DefaultDiscountPercentA = property(GetDefaultDiscountPercentA, SetDefaultDiscountPercentA)
 
-    def SetDefaultDiscountPercentB(self, Value: int):
+    def SetDefaultDiscountPercentB(self, Value):
         self._DefaultDisCountPercentB = Value
         _translate = QtCore.QCoreApplication.translate
         self.ButDiscountB.setText(_translate("Form", f"{Value}%"))
@@ -75,6 +75,7 @@ class FinalStatusPanel(FinalStatusBase):
 
     def DisplayTable(self, TableInfo: TableInfoStore):
         self.Clear()
+        self.TableInfo = TableInfo
         self.LBTableNumber.setText(TableInfo.TableID)
         self.LBStartTime.setText(TableInfo.StartTime)
         self.LBEndTime.setText(TableInfo.EndTime)
@@ -98,6 +99,7 @@ class FinalStatusPanel(FinalStatusBase):
         self.total = 0
         self.ServiceChargePercent = self.DefaultServiceChargePercent
         self.DiscountPercent = 0
+        self.TableInfo = None
 
     def DisplayAllInfo(self):
         self.LBPaiedCash_2.setText(str(round(self.cash, 2)))
@@ -124,6 +126,12 @@ class FinalStatusPanel(FinalStatusBase):
 
     def PrintReceiptConnect(self, Event):
         self.BtnPrintReceipt.pressed.connect(Event)
+
+    def PrintReceipt(self):
+        pass
+        # TODO
+        # if self.TableInfo is not None:
+        #     receipt =
 
     def RemoveCash(self):
         self.cash = 0

@@ -147,7 +147,6 @@ class Config:
               `Updated` tinyint NOT NULL DEFAULT '1'
             );'''
 
-
     class UI:
         class EatInPage:
             ToolBarSize = 35
@@ -158,3 +157,18 @@ class Config:
         class OrderTable:
             COL_NAME_EN = ['FoodName', 'Qty', 'UnitPrice', 'Note']
             COL_NAME_CN = ['菜名', '数量', '单价', '备注']
+
+        class MenuPage:
+            MENU_EN_NAME = {1: "ColdFood", 2: "HotFood", 3: "MainFood", 4: "Desert", 5: "Drink"}
+            MENU_CN_NAME = {1: "冷菜", 2: "热菜", 3: "主食", 4: "甜品", 5: "饮品"}
+
+    class ValueSetting:
+        class TableOrder:
+            SERVICE_CHARGE_PERCENT_LIST = [5, 7.5, 10, 12.5]
+            DISCOUNT_PERCENT_LIST = [5, 10, 15, 20, 25, 30]
+            STR_DEFAULT_SERVICE_CHARGE_PERCENT = 'DefaultServiceChargePercent'
+            STR_DEFAULT_DISCOUNT_PERCENT_A = 'DefaultDiscountPercentA'
+            STR_DEFAULT_DISCOUNT_PERCENT_B = 'DefaultDiscountPercentB'
+        class Printer:
+            STR_CASHIER_PRINTER = 'Printer.DefaultCashierPrinter'
+            STR_KITCHEN_PRINTER = 'Printer.DefaultKitchenPrinter'

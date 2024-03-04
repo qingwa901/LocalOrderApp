@@ -72,7 +72,6 @@ class ConfigSetting:
             if field in config:
                 config = config[field]
             else:
-                config[field] = dict()
                 return None
         return config
 

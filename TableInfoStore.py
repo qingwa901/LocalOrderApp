@@ -86,7 +86,7 @@ class TableInfoStore:
         elif field == self.OrderMetaList.Fields.DISCOUNT_PERCENT:
             self.Discount = int(value)
         elif field == self.OrderMetaList.Fields.SERVICE_CHARGE_PERCENT:
-            self.ServiceCharge = int(value)
+            self.ServiceCharge = round(float(value), 2)
 
     def SetOrder(self, Order: pd.Series):
         self.OrderID = Order[self.OrderList.ID_ORDER]
