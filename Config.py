@@ -13,6 +13,7 @@ class Config:
         LOADED = 'Loaded'
         UPDATED = 'Updated'
         PATH = 'DataBase.sql'
+        TMP_PRINT_PDF_PATH = 'D:/Code/tmp2.pdf'
 
         class MenuList:
             NAME = 'MenuList'
@@ -169,6 +170,7 @@ class Config:
             STR_DEFAULT_SERVICE_CHARGE_PERCENT = 'DefaultServiceChargePercent'
             STR_DEFAULT_DISCOUNT_PERCENT_A = 'DefaultDiscountPercentA'
             STR_DEFAULT_DISCOUNT_PERCENT_B = 'DefaultDiscountPercentB'
+
         class Printer:
             STR_CASHIER_PRINTER = 'Printer.DefaultCashierPrinter'
             STR_KITCHEN_PRINTER = 'Printer.DefaultKitchenPrinter'

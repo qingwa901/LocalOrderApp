@@ -176,6 +176,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.DefaultServiceChargePercent = CurrentServiceChargePercent
         self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
         self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
+        self.FinalStatusPanel.PrintReceiptConnect(self.DataBase.Printer.PrintReceipt)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)

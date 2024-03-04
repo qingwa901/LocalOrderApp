@@ -125,13 +125,10 @@ class FinalStatusPanel(FinalStatusBase):
         self.BtnCleanTable.pressed.connect(Event)
 
     def PrintReceiptConnect(self, Event):
-        self.BtnPrintReceipt.pressed.connect(Event)
+        def func():
+            Event(self.TableInfo)
 
-    def PrintReceipt(self):
-        pass
-        # TODO
-        # if self.TableInfo is not None:
-        #     receipt =
+        self.BtnPrintReceipt.pressed.connect(func)
 
     def RemoveCash(self):
         self.cash = 0
