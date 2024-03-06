@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QHeaderView, QAbstractItemView, QTableWidget, QHBoxLayout, \
+from PySide6.QtWidgets import QApplication, QWidget, QHeaderView, QAbstractItemView, QTableWidget, QHBoxLayout, \
     QTableWidgetItem
-from PyQt5.QtGui import QColor
+from PySide6.QtGui import QColor
 from Config import Config
 from TableInfoStore import OrderInfo
 

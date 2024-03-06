@@ -17,91 +17,115 @@ class Receipt(QtWidgets.QFrame):
     def __init__(self, parant):
         QtWidgets.QFrame.__init__(self, parant)
         self.TableNumber = None
+        self.setupUi()
+        self.HTML = ''
 
-    def setupUi(self, TableInfo: TableInfoStore):
+    def setupUi(self):
         self.setObjectName("Form")
         self.resize(468, 1000)
         self.setObjectName("Form")
         self.web_view = QtWebEngineWidgets.QWebEngineView(self)
-        # load HTML content
+        # set the widget as the main window's central widget
+        vview = QtWidgets.QVBoxLayout(self)
+        vview.addWidget(self.web_view)
+        self.setLayout(vview)
+
+        QtCore.QMetaObject.connectSlotsByName(self)
+
+    def LoadHtml(self, TableInfo: TableInfoStore):
         receiptform = ('''<html><body><style type="text/css">.receipt_main {display: grid;width = 100%;
-                grid-template-columns: 1fr 1fr;align-items: center;}.itemname{flex-wrap: wrap;}
-                .itemprice{margin-right:0;margin-left: auto;}</style>
-                <div id="receipt">
-                <div id="receipt_head" style="text-align: center;">
-                <div id="icon"><img src="file://{Path_To_LOGO}" style="width:50px;height:50px;"></div>
-                <div id="address">{ADDRESS}</div>
-                </div><hr>
-                <div id="receipt_info">VAT No: {VATNO}<br>Date: {TIME}<br> ORDERID: {ORDERID}<br>Table Number: {TABLE_NUMBER}
-                </div></div><hr>'''.replace('{Path_To_LOGO}', 'D:/Code/web_python/App/img/Login.png')
+                                grid-template-columns: 1fr 1fr;align-items: center;}.itemname{flex-wrap: wrap;}
+                                .itemprice{margin-right:0;margin-left: auto;}</style>
+                                <div id="receipt">
+                                <div id="receipt_head" style="text-align: center;">
+                                <div id="icon"><img src="file://{Path_To_LOGO}" style="width:50px;height:50px;"></div>
+                                <div id="address">{ADDRESS}</div>
+                                </div><hr>
+                                <div id="receipt_info">VAT No: {VATNO}<br>Date: {TIME}<br>#ORDER: {ORDERID}<br>#Table: {TABLE_NUMBER}
+                                </div></div><hr>'''.replace('{Path_To_LOGO}', 'D:/Code/web_python/App/img/Login.png')
                        .replace('{ADDRESS}', 'Address')
                        .replace('{VATNO}', '')
                        .replace('{TIME}', TableInfo.EndTime)
-                       .replace('{ORDERID}', TableInfo.OrderID)
-                       .replace('{TABLE_NUMBER}', TableInfo.TableID))
+                       .replace('{ORDERID}', str(TableInfo.OrderID))
+                       .replace('{TABLE_NUMBER}', str(TableInfo.TableID)))
         Total = TableInfo.GetTotalAmount()
         for OrderID in TableInfo.Orders:
             Order = TableInfo.Orders[OrderID]
 
-            receiptform += ('''<div id="item" class="receipt_main">
-                    <div class="itemname">{QTY} x {NAME} {NOTE}</div>
-                    <div class="itemprice">£{PRICE}</div>
-                    </div>'''.replace('{QTY}', str(int(Order.Qty))).replace('{NAME}', Order.NameEN)
+            receiptform += ('''<div id="item" class="receipt_main" style="display: grid;width = 100%;
+                                grid-template-columns: 1fr 1fr;align-items: center;">
+                                    <div class="itemname" style="flex-wrap: wrap;">{QTY} x {NAME} {NOTE}</div>
+                                    <div class="itemprice" style="margin-right:0;margin-left: auto;">£{PRICE}</div>
+                                    </div>'''.replace('{QTY}', str(int(Order.Qty))).replace('{NAME}', Order.NameEN)
                             .replace('{NOTE}', Order.Note).replace('{PRICE}', str(round(Order.UnitPrice, 2))))
-        receiptform += '''<hr><div id='Total' class='receipt_main'>
-                    <div class="itemname">SUBTOTAL</div>
-                    <div class="itemprice">£{TOTAL}</div></div>'''.replace('{TOTAL}', str(round(Total, 2)))
+        receiptform += ('''<hr><div id='Total' class='receipt_main' style="display: grid;width = 100%;
+                                grid-template-columns: 1fr 1fr;align-items: center;">
+                                    <div class="itemname" style="flex-wrap: wrap;">SUBTOTAL</div>
+                                    <div class="itemprice" style="margin-right:0;margin-left: auto;">£{TOTAL}</div></div>'''
+                        .replace('{TOTAL}', str(round(Total, 2))))
         if TableInfo.ServiceCharge != 0:
-            receiptform += ('''<div id="Total" class="receipt_main">
-                    <div class="itemname">{SERVICE_CHARGE_PERCENT}% Service Charge</div>
-                    <div class="itemprice">£{SERVICE_CHARGE_AMOUNT}</div></div>'''
-                            .replace('SERVICE_CHARGE_PERCENT}', str(round(TableInfo.ServiceCharge, 1)))
+            receiptform += ('''<div id="Total" class="receipt_main" style="display: grid;width = 100%;
+                                grid-template-columns: 1fr 1fr;align-items: center;">
+                                    <div class="itemname" style="flex-wrap: wrap;">{SERVICE_CHARGE_PERCENT}% Service Charge</div>
+                                    <div class="itemprice" style="margin-right:0;margin-left: auto;">
+                                    £{SERVICE_CHARGE_AMOUNT}</div></div>'''
+                            .replace('{SERVICE_CHARGE_PERCENT}', str(round(TableInfo.ServiceCharge, 1)))
                             .replace('{SERVICE_CHARGE_AMOUNT}', str(round(Total * TableInfo.ServiceCharge, 2))))
             Total = Total * (1 + TableInfo.ServiceCharge)
         DiscountPercent = round(TableInfo.Discount)
         if DiscountPercent > 0:
-            receiptform += ('''<div id='discount' class='receipt_main'>
-                    <div class="itemname">{DISCOUNT_PERCENT}%DISCOUNT</div>
-                    <div class="itemprice">£{DISCOUNT_AMOUNT}}</div></div><br>'''
-                            .replace('DISCOUNT_PERCENT}', str(round(TableInfo.Discount)))
+            receiptform += ('''<div id='discount' class='receipt_main' style="display: grid;width = 100%;
+                                grid-template-columns: 1fr 1fr;align-items: center;">
+                                    <div class="itemname" style="flex-wrap: wrap;">{DISCOUNT_PERCENT}%DISCOUNT</div>
+                                    <div class="itemprice" style="margin-right:0;margin-left: auto;">
+                                    £{DISCOUNT_AMOUNT}}</div></div><br>'''
+                            .replace('{DISCOUNT_PERCENT}', str(round(TableInfo.Discount)))
                             .replace('{DISCOUNT_AMOUNT}', str(round(Total * TableInfo.Discount, 2))))
             Total = Total * (1 - DiscountPercent)
 
-        receiptform += '''<hr><div id="Total" class="receipt_main"><div class="itemname">12.5% VAT included</div></div>
-                <div id="Total" class="receipt_main"><div class="itemname">TOTAL</div>
-                <div class="itemprice">£{TOTAL}</div></div><hr>
-                <div id="receipt_foot" style="text-align: center;">
-                Thanks for visiting!<br>You can find us on instagram<br> @usagi_animemaid_cafe</div></div></body></html>
-                '''.replace('{TOTAL}', str(round(Total, 2)))
+        receiptform += '''<hr><div id="Total" class="receipt_main" style="display: grid;width = 100%;
+                                grid-template-columns: 1fr 1fr;align-items: center;">
+                                <div class="itemname" style="flex-wrap: wrap;">12.5% VAT included</div></div>
+                                <div id="Total" class="receipt_main" style="display: grid;width = 100%;
+                                grid-template-columns: 1fr 1fr;align-items: center;">
+                                <div class="itemname" style="flex-wrap: wrap;">TOTAL</div>
+                                <div class="itemprice" style="margin-right:0;margin-left: auto;">
+                                £{TOTAL}</div></div><hr>
+                                <div id="receipt_foot" style="text-align: center;">
+                                Thanks for visiting!<br>You can find us on instagram<br> @usagi_animemaid_cafe</div>
+                                </div></body></html>
+                                '''.replace('{TOTAL}', str(round(Total, 2)))
+        self.HTML = receiptform
+        return receiptform
+
+    def LoadTable(self, TableInfo: TableInfoStore):
+        receiptform = self.LoadHtml(TableInfo)
         self.web_view.setHtml(receiptform)
-        # set the widget as the main window's central widget
-        vview = QtWidgets.QVBoxLayout(self)
-        vview.addWidget(self.web_view)
-
-        # self.label_3 = QtWidgets.QPushButton(self)
-        # vview.addWidget(self.label_3)
-        # self.label_3.pressed.connect(self.print_me2)
-        #
-        # _translate = QtCore.QCoreApplication.translate
-        # self.label_3.setText(_translate("Form", "开始时间"))
-        self.setLayout(vview)
-
-        QtCore.QMetaObject.connectSlotsByName(self)
 
     def print_me2(self):
         printer = QtPrintSupport.QPrinter()
         printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
         printer.setPrinterName('ET-2850 Series(Network)')
         painter = QtGui.QPainter(printer)
-        xscale = printer.pageRect(QtPrintSupport.QPrinter.Unit.DevicePixel).width() / self.width()
-        yscale = printer.pageRect(QtPrintSupport.QPrinter.Unit.DevicePixel).height() / self.height()
-        scale = min(xscale, yscale)
-        painter.translate(printer.paperRect(QtPrintSupport.QPrinter.Unit.DevicePixel).center())
-        painter.scale(scale, scale)
-        painter.translate((self.width() / 2) * -1, (self.height() / 2) * -1)
-
+        # scale = printer.pageRect(QtPrintSupport.QPrinter.Unit.DevicePixel).width() / (self.width()+50)
+        # painter.translate(printer.paperRect(QtPrintSupport.QPrinter.Unit.DevicePixel).center())
+        # painter.scale(scale, scale)
+        # painter.translate((self.width() / 2) * -1, (self.height() / 2) * -1)
+        # self.web_view.page().printRequested()
         self.web_view.render(painter, QtCore.QPoint())
         painter.end()
+
+    def print_me3(self):
+        printer = QtPrintSupport.QPrinter()
+        printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
+        printer.setPrinterName('ET-2850 Series(Network)')
+        document = QtGui.QTextDocument()
+        cursor = QtGui.QTextCursor(document)
+        blockFormat = QtGui.QTextBlockFormat()
+        cursor.insertBlock(blockFormat)
+        cursor.insertHtml(self.HTML)
+        blockFormat.setPageBreakPolicy(QtGui.QTextFormat.PageBreak_AlwaysBefore)
+        document.print_(printer)
 
 
 if __name__ == "__main__":
