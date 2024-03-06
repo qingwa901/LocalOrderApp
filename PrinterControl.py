@@ -12,10 +12,14 @@ from ConfigSetting import ConfigSetting
 from Config import Config
 from TableInfoStore import TableInfoStore
 import pdfkit
+from Logger import CreateLogger
+from logging import Logger
 
 
 class PrinterControl:
-    def __init__(self, logger, Setting: ConfigSetting):
+    def __init__(self, logger: Logger, Setting: ConfigSetting):
+        if logger is None:
+            logger = CreateLogger('test')
         self.logger = logger
         self.Setting = Setting
         self.DefaultKitchenPrinters = {}
@@ -142,3 +146,8 @@ class PrinterControl:
         '''.replace('{TOTAL}', str(round(Total, 2)))
         self.convert_html_to_pdf(receiptform, Config.DataBase.TMP_PRINT_PDF_PATH)
 
+
+if __name__ == '__main__':
+    Logger = CreateLogger('test')
+    setting = ConfigSetting(Logger, 'test/')
+    printer = PrinterControl(Logger, setting)
