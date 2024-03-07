@@ -44,7 +44,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.setObjectName("MainWindow")
         self.resize(1121, 679)
         self.centralwidget = QtWidgets.QWidget(self)
-        self.centralwidget.setStyleSheet("border: 3px solid blue;")
+        # self.centralwidget.setStyleSheet("border: 3px solid blue;")
         self.centralwidget.setObjectName("centralwidget")
         self.SettingPanel = SettingPanel(self.centralwidget)
         self.SettingPanel.setVisible(False)
@@ -106,7 +106,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.setVisible(False)
 
         self.Receipt = Receipt(self.RightTopFrame)
-        # self.Receipt.setVisible(False)
+        self.Receipt.setVisible(False)
 
         self.setCentralWidget(self.centralwidget)
         self.toolbar = self.addToolBar("Panels")
@@ -181,6 +181,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
         self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
         self.FinalStatusPanel.PrintReceiptConnect(self.Receipt.print_me3)
+        self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -385,6 +386,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def ChangeDefaultSDiscountPercentB(self, Value):
         self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_B, Value)
         self.FinalStatusPanel.DefaultDiscountPercentB = Value
+
+    def CleanTable(self):
+        self.DataBase.FinishTable(self.TableNumber)
+        self.TableButClick(self.TableNumber)
 
 
 import QtApp.resource_rc

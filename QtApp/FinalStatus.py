@@ -111,12 +111,14 @@ class FinalStatusPanel(FinalStatusBase):
         self.LBTotalAmount.setText(str(round(self.total + ServiceCharge - DiscountAmount, 2)) +
                                    f" ({round(self.total, 2)})")
         LeftToPay = round(self.total + ServiceCharge - DiscountAmount - self.card - self.cash, 2)
-        if LeftToPay >= 0:
+        if LeftToPay > 0:
             self.EditBoxToPayAmount.setValue(LeftToPay)
             self.LBLablePayment.setText('未付')
+            self.BtnCleanTable.setEnabled(False)
         else:
             self.EditBoxToPayAmount.setValue(-LeftToPay)
             self.LBLablePayment.setText('找零')
+            self.BtnCleanTable.setEnabled(True)
 
     def ReopenConnect(self, Event):
         self.BtnReOpen.pressed.connect(Event)

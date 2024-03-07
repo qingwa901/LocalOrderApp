@@ -65,14 +65,14 @@ class Receipt(QtWidgets.QFrame):
                                     <td style="text-align: right;">
                                     £{SERVICE_CHARGE_AMOUNT}</td></tr>'''
                             .replace('{SERVICE_CHARGE_PERCENT}', str(round(TableInfo.ServiceCharge, 1)))
-                            .replace('{SERVICE_CHARGE_AMOUNT}', str(round(Total * TableInfo.ServiceCharge, 2))))
+                            .replace('{SERVICE_CHARGE_AMOUNT}', str(round(Total * TableInfo.ServiceCharge / 100, 2))))
             Total = Total * (1 + TableInfo.ServiceCharge)
         DiscountPercent = round(TableInfo.Discount)
         if DiscountPercent > 0:
             receiptform += ('''<tr><td style="flex-wrap: wrap;">{DISCOUNT_PERCENT}%DISCOUNT</td>
                                 <td style="text-align: right;">£{DISCOUNT_AMOUNT}}</td></tr>'''
                             .replace('{DISCOUNT_PERCENT}', str(round(TableInfo.Discount)))
-                            .replace('{DISCOUNT_AMOUNT}', str(round(Total * TableInfo.Discount, 2))))
+                            .replace('{DISCOUNT_AMOUNT}', str(round(Total * TableInfo.Discount / 100, 2))))
             Total = Total * (1 - DiscountPercent)
 
         receiptform += '''</table><hr><table width='100%'>
@@ -85,6 +85,7 @@ class Receipt(QtWidgets.QFrame):
                                 '''.replace('{TOTAL}', str(round(Total, 2)))
         self.HTML = receiptform
         return receiptform
+
     def LoadHtml(self, TableInfo: TableInfoStore):
         receiptform = ('''<html><body><style type="text/css">.receipt_main {display: grid;width = 100%;
                                 grid-template-columns: 1fr 1fr;align-items: center;}.itemname{flex-wrap: wrap;}

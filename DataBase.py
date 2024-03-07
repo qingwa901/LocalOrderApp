@@ -173,9 +173,10 @@ class DataBase(SQLControl):
                 NewData = data[~data[table.ID].isin(ExistIDList)]
                 if len(NewData) > 0:
                     self.SaveData(NewData, table.NAME)
+                IDstr = "','".join(data[table.ID].astype(str))
                 self.executeLocally(
-                    f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where "
-                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID].astype(str))})")
+                    f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where {table.ID_STORE} = "
+                    f"{self.STORE_ID} and {table.ID} in ('{IDstr}')")
 
     def Download_(self):
         for table in [self.config.OrderList, self.config.OrderMetaData, self.config.PendingOnlineOrder]:
@@ -482,6 +483,9 @@ class DataBase(SQLControl):
 
     def AddDiscountPercent(self, DiscountPercent, TableNumber):
         self.AddMetaTableValue(DiscountPercent, TableNumber, self.config.OrderMetaData.Fields.DISCOUNT_PERCENT)
+
+    def FinishTable(self, TableNumber):
+        self.AddMetaTableValue(True, TableNumber, Config.DataBase.OrderMetaData.Fields.IS_FINISHED)
 
     def AddMetaTableValue(self, Amount, TableNumber, Field):
         try:
