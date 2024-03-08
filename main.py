@@ -34,6 +34,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.TableNumber = None
         try:
             self.setupUi()
+            self.AddEvent()
         except Exception as e:
             self.DataBase.open = False
             self.DataBase.Setting.open = False
@@ -55,7 +56,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.splitter = QtWidgets.QSplitter(self.centralwidget)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.TablePanel = TablesPanel(self.splitter)
+        self.TablePanel = TablesPanel(self.splitter, self.Logger)
         self.TablePanel.setupUi(self.TableOrder)
         self.TablePanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.TablePanel.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -128,60 +129,65 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
-
-        self.TablePanel.BindEvent(self.TableButClick)
-        self.closeEvent = self.Close
         self.LayoutSetting()
 
-        self.SettingPanel.SetupPrinters(self.DataBase.Printer)
+    def AddEvent(self):
+        try:
+            self.TablePanel.BindEvent(self.TableButClick)
+            self.closeEvent = self.Close
 
-        CurrentServiceChargePercent = (
-            self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT))
-        if CurrentServiceChargePercent is None:
-            CurrentServiceChargePercent = 10
-        CurrentDiscountPercentA = (
-            self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_A))
-        if CurrentDiscountPercentA is None:
-            CurrentDiscountPercentA = 5
-        CurrentDiscountPercentB = (
-            self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_B))
-        if CurrentDiscountPercentB is None:
-            CurrentDiscountPercentB = 10
+            self.DataBase.SetUpTableColorUpdate(self.TablePanel.setupTableColor)
+            self.SettingPanel.SetupPrinters(self.DataBase.Printer)
 
-        self.SettingPanel.EventChangeDefaultServiceChargePercent = self.ChangeDefaultServiceChargePercent
-        self.SettingPanel.SetupServiceChargePercentList(Config.ValueSetting.TableOrder.SERVICE_CHARGE_PERCENT_LIST,
-                                                        CurrentServiceChargePercent)
-        self.SettingPanel.EventChangeDefaultDiscountPercentA = self.ChangeDefaultSDiscountPercentA
-        self.SettingPanel.SetupDiscountPercentAList(Config.ValueSetting.TableOrder.DISCOUNT_PERCENT_LIST,
-                                                    CurrentDiscountPercentA)
-        self.SettingPanel.EventChangeDefaultDiscountPercentB = self.ChangeDefaultSDiscountPercentB
-        self.SettingPanel.SetupDiscountPercentBList(Config.ValueSetting.TableOrder.DISCOUNT_PERCENT_LIST,
-                                                    CurrentDiscountPercentB)
+            CurrentServiceChargePercent = (
+                self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT))
+            if CurrentServiceChargePercent is None:
+                CurrentServiceChargePercent = 10
+            CurrentDiscountPercentA = (
+                self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_A))
+            if CurrentDiscountPercentA is None:
+                CurrentDiscountPercentA = 5
+            CurrentDiscountPercentB = (
+                self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_B))
+            if CurrentDiscountPercentB is None:
+                CurrentDiscountPercentB = 10
 
-        self.InitialPanel.AddConnect(self.OpenTable)
+            self.SettingPanel.EventChangeDefaultServiceChargePercent = self.ChangeDefaultServiceChargePercent
+            self.SettingPanel.SetupServiceChargePercentList(Config.ValueSetting.TableOrder.SERVICE_CHARGE_PERCENT_LIST,
+                                                            CurrentServiceChargePercent)
+            self.SettingPanel.EventChangeDefaultDiscountPercentA = self.ChangeDefaultSDiscountPercentA
+            self.SettingPanel.SetupDiscountPercentAList(Config.ValueSetting.TableOrder.DISCOUNT_PERCENT_LIST,
+                                                        CurrentDiscountPercentA)
+            self.SettingPanel.EventChangeDefaultDiscountPercentB = self.ChangeDefaultSDiscountPercentB
+            self.SettingPanel.SetupDiscountPercentBList(Config.ValueSetting.TableOrder.DISCOUNT_PERCENT_LIST,
+                                                        CurrentDiscountPercentB)
 
-        self.JumpWindow.InitialCloseEvent(self.CloseJumpWindow)
+            self.InitialPanel.AddConnect(self.OpenTable)
 
-        self.StatusPanel.CloseTableConnect(self.CloseTableEvent)
-        self.StatusPanel.NewOrderConnect(self.StartOrder)
-        self.StatusPanel.CheckOutConnect(self.CheckOut)
+            self.JumpWindow.InitialCloseEvent(self.CloseJumpWindow)
 
-        self.DataBase.MenuLoad.join()
-        self.MenuPanel.AddMenu(self.DataBase.menu)
-        self.MenuPanel.Connect(self.OrderFood)
+            self.StatusPanel.CloseTableConnect(self.CloseTableEvent)
+            self.StatusPanel.NewOrderConnect(self.StartOrder)
+            self.StatusPanel.CheckOutConnect(self.CheckOut)
 
-        self.OrderPanel.Connect(self.PlaceOrder)
+            self.DataBase.MenuLoad.join()
+            self.MenuPanel.AddMenu(self.DataBase.menu)
+            self.MenuPanel.Connect(self.OrderFood)
 
-        self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
-        self.FinalStatusPanel.AddCardConnect(self.AddCard)
-        self.FinalStatusPanel.AddCashConnect(self.AddCash)
-        self.FinalStatusPanel.AddDiscountConnect(self.AddDiscountPercent)
-        self.FinalStatusPanel.AddServiceChargeConnect(self.AddServiceChargePercent)
-        self.FinalStatusPanel.DefaultServiceChargePercent = CurrentServiceChargePercent
-        self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
-        self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
-        self.FinalStatusPanel.PrintReceiptConnect(self.Receipt.print_me3)
-        self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
+            self.OrderPanel.Connect(self.PlaceOrder)
+
+            self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
+            self.FinalStatusPanel.AddCardConnect(self.AddCard)
+            self.FinalStatusPanel.AddCashConnect(self.AddCash)
+            self.FinalStatusPanel.AddDiscountConnect(self.AddDiscountPercent)
+            self.FinalStatusPanel.AddServiceChargeConnect(self.AddServiceChargePercent)
+            self.FinalStatusPanel.DefaultServiceChargePercent = CurrentServiceChargePercent
+            self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
+            self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
+            self.FinalStatusPanel.PrintReceiptConnect(self.Receipt.print_me3)
+            self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
+        except Exception as e:
+            self.Logger.error(f'Error during Set up Event.', exc_info=e)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
@@ -223,10 +229,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.splitter.setVisible(True)
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
-
-    def setupTableColor(self):
-        self.DataBase.GetOpenTableInfo()
-        self.TablePanel.setupTableColor(self.DataBase.TableInfo)
 
     def TableButClick(self, TableNumber):
         try:
@@ -391,6 +393,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.DataBase.FinishTable(self.TableNumber)
         self.TableButClick(self.TableNumber)
 
+    def dragEnterEvent(self, e):
+        e.accept()
+
+    def dropEvent(self, event):
+        pos = event.pos()
+        widget = event.source()
+
+        for n in self.TablePanel.Tables:
+            w = self.TablePanel.Tables[n]
+            if w.x() + w.width() > pos.x() > w.x() and w.y() + w.height() > pos.y() - self.toolbar.height() > w.y():
+                if widget.TableNumber != n:
+                    self.DataBase.SwitchTable(widget.TableNumber, n)
+                    self.TableButClick(n)
+
 
 import QtApp.resource_rc
 
@@ -400,4 +416,4 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     ui = Ui_MainWindow()
     ui.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

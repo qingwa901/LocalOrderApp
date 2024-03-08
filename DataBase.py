@@ -27,6 +27,7 @@ class DataBase(SQLControl):
         self.config = Config.DataBase
         self.Setting = ConfigSetting(logger)
         self.Printer = PrinterControl(self.logger, self.Setting)
+        self.TableInfoLock = threading.Lock()
         self.TableInfo = AllTableInfoStore(self.logger)
         self.path = path
         if not os.path.exists(self.path):
@@ -197,9 +198,9 @@ class DataBase(SQLControl):
                              f"{table.ID_STORE}={self.STORE_ID} and {table.ID} in "
                              f"({','.join(data[table.ID].astype(str))})")
 
-            if table == self.config.OrderList:
-                if len(data) > 0:
-                    self.TableInfo.AddOrderInfo(data)
+            # if table == self.config.OrderList:
+            #     if len(data) > 0:
+            #         self.TableInfo.AddOrderInfo(data)
             if table == self.config.PendingOnlineOrder:
                 if len(data) > 0:
                     OrderData = data.apply(self.OnlineOrderConvert, axis=1)
@@ -254,25 +255,45 @@ class DataBase(SQLControl):
                         break
 
     def GetOpenTableInfo(self):
-        table = Config.DataBase.OrderMetaData
-        query = (f"select {table.ID_ORDER} from {table.NAME} where "
-                 f"{table.FIELD}='{table.Fields.IS_FINISHED}' and "
-                 f"{table.VALUE}='False' and "
-                 f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID} = true")
-        OpenTable = self.get_local_data(query)
-        OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].astype(str).to_list()
-        self.TableInfo.Clear()
-        query = (f"select * from {table.NAME} where {table.ID_ORDER} in ({','.join(OpenOrderList)})"
-                 f" and {table.VALID} = true;")
-        OrderMetaData = self.get_local_data(query)
-        self.TableInfo.AddOrderMetaInfo(OrderMetaData)
-        query = (f"select * from {Config.DataBase.OrderList.NAME} where {Config.DataBase.OrderList.ID_ORDER} "
-                 f"in ({','.join(OpenOrderList)})")
-        OrderList = self.get_local_data(query)
-        if len(OrderList) > 0:
-            self.TableInfo.AddOrderInfo(OrderList)
-        self.TableInfo.LoadMenu(self.menu)
-        self.TableInfo.UpdateTime = time.time()
+        # if (self.TableInfo is not None and self.TableInfo.UpdateTime is not None
+        #         and time.time() - self.TableInfo.UpdateTime < 1):
+        #     # Table State Change unable to apply on the first time. Cause display error.
+        #     return
+        with self.TableInfoLock:
+            table = Config.DataBase.OrderMetaData
+            query = (f"select {table.ID_ORDER} from {table.NAME} where "
+                     f"{table.FIELD}='{table.Fields.IS_FINISHED}' and "
+                     f"{table.VALUE}='False' and "
+                     f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID} = true")
+            OpenTable = self.get_local_data(query)
+            OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].astype(str).to_list()
+            self.TableInfo.Clear()
+            query = (f"select * from {table.NAME} where {table.ID_ORDER} in ({','.join(OpenOrderList)})"
+                     f" and {table.VALID} = true;")
+            OrderMetaData = self.get_local_data(query)
+            self.TableInfo.AddOrderMetaInfo(OrderMetaData)
+            query = (f"select * from {Config.DataBase.OrderList.NAME} where {Config.DataBase.OrderList.ID_ORDER} "
+                     f"in ({','.join(OpenOrderList)})")
+            OrderList = self.get_local_data(query)
+            if len(OrderList) > 0:
+                self.TableInfo.AddOrderInfo(OrderList)
+            self.TableInfo.LoadMenu(self.menu)
+            self.TableInfo.UpdateTime = time.time()
+
+    def SetUpTableColorUpdate(self, Event):
+        self.color_auto_update = threading.Thread(target=self.AotoUpdateTableColor, args=[Event])
+        self.color_auto_update.start()
+
+    def AotoUpdateTableColor(self, Event):
+        while self.open:
+            try:
+                self.GetOpenTableInfo()
+                Event(self.TableInfo)
+            except Exception as e:
+                self.logger.error(f'Error during AotoUpdateTableColor',
+                                  exc_info=e)
+            finally:
+                time.sleep(2)
 
     def DataBaseCheck(self):
         tablelist = self.get_local_data(f"SELECT name FROM sqlite_master WHERE type='table';")
@@ -519,4 +540,34 @@ class DataBase(SQLControl):
 
         except Exception as e:
             self.logger.error(f'Error during adding {Field} end time. TableID: {TableNumber}',
+                              exc_info=e)
+
+    def SwitchTable(self, TableIDA, TableIDB):
+        if TableIDA == TableIDB:
+            return
+        self.logger.info(f"switch Table {TableIDA}, {TableIDB}.")
+        try:
+            TableA = self.TableInfo.ByTableIDDict[TableIDA] if TableIDA in self.TableInfo.ByTableIDDict else None
+            TableB = self.TableInfo.ByTableIDDict[TableIDB] if TableIDB in self.TableInfo.ByTableIDDict else None
+            table = self.config.OrderMetaData
+            dataA = None
+            dataB = None
+            if TableA is not None:
+                query = (f"select * from {table.NAME} where `{table.FIELD}`='{table.Fields.ID_TABLE}' and "
+                         f"`{table.ID_ORDER}`='{TableA.OrderID}' and `{table.VALID}`='1'")
+                dataA = self.get_local_data(query)
+            if TableB is not None:
+                query = (f"select * from {table.NAME} where `{table.FIELD}`='{table.Fields.ID_TABLE}' and "
+                         f"`{table.ID_ORDER}`='{TableB.OrderID}' and `{table.VALID}`='1'")
+                dataB = self.get_local_data(query)
+            if dataB is not None and len(dataB) > 0:
+                dataB[table.VALUE] = TableIDA
+                dataB[self.config.LOADED] = False
+                self.UpdateOneLineLocally(dataB.iloc[0], table)
+            if dataA is not None and len(dataA) > 0:
+                dataA[table.VALUE] = TableIDB
+                dataA[self.config.LOADED] = False
+                self.UpdateOneLineLocally(dataA.iloc[0], table)
+        except Exception as e:
+            self.logger.error(f'Error during SwitchTable {TableIDA}, {TableIDB}',
                               exc_info=e)

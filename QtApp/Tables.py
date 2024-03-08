@@ -10,11 +10,13 @@
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.TableBut import TableBut, TableStatus
+from TableInfoStore import AllTableInfoStore
 
 
 class TablesPanel(QtWidgets.QFrame):
-    def __init__(self, parant):
+    def __init__(self, parant, logger):
         QtWidgets.QFrame.__init__(self, parant)
+        self.logger = logger
 
     def setupUi(self, TableOrder):
         self.setObjectName("Tables")
@@ -47,25 +49,29 @@ class TablesPanel(QtWidgets.QFrame):
         for i in self.Tables.values():
             i.BindEvent(Event)
 
-    def setupTableColor(self, TablesInfo):
-        for TableNumber in self.Tables:
-            TableInfo = None
-            if TableNumber in TablesInfo:
-                TableInfo = TablesInfo[TableNumber]
-            if TableInfo is None or TableInfo.StartTime is None:
-                # initial table
-                self.Tables[TableNumber].setupColor(TableStatus.Empty)
+    def setupTableColor(self, TablesInfo: AllTableInfoStore):
+        try:
+            for TableNumber in self.Tables:
+                TableInfo = None
+                if TableNumber in TablesInfo.ByTableIDDict:
+                    TableInfo = TablesInfo.ByTableIDDict[TableNumber]
+                if TableInfo is None or TableInfo.StartTime is None:
+                    # initial table
+                    self.Tables[TableNumber].setupColor(TableStatus.Empty)
 
-            elif TableInfo.EndTime is None:
-                # working table
-                self.Tables[TableNumber].setupColor(TableStatus.Started)
-            elif not TableInfo.IsFinished:
-                # end table
-                self.Tables[TableNumber].setupColor(TableStatus.Finishing)
+                elif TableInfo.EndTime is None:
+                    # working table
+                    self.Tables[TableNumber].setupColor(TableStatus.Started)
+                elif not TableInfo.IsFinished:
+                    # end table
+                    self.Tables[TableNumber].setupColor(TableStatus.Finishing)
+        except Exception as e:
+            self.logger.error(f'Error during setupTableColor', exc_info=e)
 
     def PrintReceipt(self):
         ReceiptStr = f'''icon
 '''
+
 
 if __name__ == "__main__":
     import sys
