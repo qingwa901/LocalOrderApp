@@ -9,11 +9,12 @@
 
 
 from PySide6 import QtCore, QtGui, QtWidgets
-
+from QtApp.Base.EditBox import EditBox, eValueType
 
 class InitialTable(QtWidgets.QFrame):
-    def __init__(self, parant):
+    def __init__(self, parant, logger):
         QtWidgets.QFrame.__init__(self, parant)
+        self.logger = logger
         self.setupUi()
 
     def setupUi(self):
@@ -34,7 +35,7 @@ class InitialTable(QtWidgets.QFrame):
         self.label_2 = QtWidgets.QLabel(self.formLayoutWidget)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
-        self.EditBoxNumOfPeople = QtWidgets.QSpinBox(self.formLayoutWidget)
+        self.EditBoxNumOfPeople = EditBox(self.formLayoutWidget, eValueType.Int, self.logger)
         self.EditBoxNumOfPeople.setMinimum(1)
         self.EditBoxNumOfPeople.setMaximum(30)
         self.EditBoxNumOfPeople.setObjectName("EditBoxNumOfPeople")
@@ -52,6 +53,9 @@ class InitialTable(QtWidgets.QFrame):
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
+    def setKeyBoardEvent(self, Event):
+        self.EditBoxNumOfPeople.OpenKeyboardEvent = Event
+
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("Form", "Form"))
@@ -63,6 +67,7 @@ class InitialTable(QtWidgets.QFrame):
     def DisplayTable(self, TableNumber):
         self.TableNumber = TableNumber
         self.LBTableNumber.setText(str(TableNumber))
+        self.EditBoxNumOfPeople.setText('2')
 
     def AddConnect(self, Event):
         self.OpenTable.pressed.connect(Event)

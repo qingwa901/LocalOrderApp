@@ -9,11 +9,14 @@
 
 
 from PySide6 import QtCore, QtGui, QtWidgets
+from QtApp.Base.EditBox import EditBox, eValueType
+from logging import Logger
 
 
 class FinalStatusBase(QtWidgets.QFrame):
-    def __init__(self, parant=None):
+    def __init__(self, parant=None, logger=Logger):
         QtWidgets.QFrame.__init__(self, parant)
+        self.logger = logger
         self.setupUi()
 
     def setupUi(self):
@@ -81,8 +84,8 @@ class FinalStatusBase(QtWidgets.QFrame):
         self.formLayout.setWidget(9, QtWidgets.QFormLayout.LabelRole, self.LBLablePayment)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.EditBoxToPayAmount = QtWidgets.QDoubleSpinBox(self.formLayoutWidget)
-        self.EditBoxToPayAmount.setMaximum(100000.0)
+        self.EditBoxToPayAmount = EditBox(self.formLayoutWidget, eValueType.Float, self.logger)
+        self.EditBoxToPayAmount.setMinimum(0)
         self.EditBoxToPayAmount.setObjectName("EditBoxToPayAmount")
         self.horizontalLayout_3.addWidget(self.EditBoxToPayAmount)
         self.BtnPayByCard = QtWidgets.QPushButton(self.formLayoutWidget)

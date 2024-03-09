@@ -11,11 +11,14 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.TableBut import TableBut, TableStatus
 from TableInfoStore import AllTableInfoStore
+from Logger import CreateLogger, logging
 
 
 class TablesPanel(QtWidgets.QFrame):
-    def __init__(self, parant, logger):
+    def __init__(self, parant, logger: logging.Logger = None):
         QtWidgets.QFrame.__init__(self, parant)
+        if logger is None:
+            logger = CreateLogger('temp')
         self.logger = logger
 
     def setupUi(self, TableOrder):
@@ -38,6 +41,7 @@ class TablesPanel(QtWidgets.QFrame):
                 ColNum += 1
             ColNum = 0
             RowNum += 1
+        self.setLayout(self.gridLayout)
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 

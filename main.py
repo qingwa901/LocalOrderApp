@@ -18,6 +18,7 @@ from QtApp.OrderList import OrderListPanel
 from QtApp.JumpWindow import JumpWindow
 from QtApp.FinalStatus import FinalStatusPanel
 from QtApp.receiptPanel import Receipt
+from QtApp.keyboard import KeyBoardPanel
 from DataBase import DataBase
 from Logger import CreateLogger
 from Config import Config
@@ -50,8 +51,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.SettingPanel = SettingPanel(self.centralwidget)
         self.SettingPanel.setVisible(False)
 
-        self.JumpWindow = JumpWindow(self.centralwidget)
+        self.JumpWindow = JumpWindow(self)
         self.JumpWindow.setVisible(False)
+
+        self.BlockPanel = QtWidgets.QWidget(self)
+        self.BlockPanel.setVisible(False)
+        self.BlockPanel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+
+        self.KeyBoard = KeyBoardPanel(self)
+        self.KeyBoard.setVisible(False)
 
         self.splitter = QtWidgets.QSplitter(self.centralwidget)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
@@ -76,7 +84,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.RightTopFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.RightTopFrame.setObjectName("RightTopFrame")
 
-        self.InitialPanel = InitialTable(self.RightTopFrame)
+        self.InitialPanel = InitialTable(self.RightTopFrame, self.Logger)
         self.InitialPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.InitialPanel.setFrameShadow(QtWidgets.QFrame.Raised)
 
@@ -101,7 +109,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.OrderPanel.setObjectName("OrderPanel")
         self.OrderPanel.setVisible(False)
 
-        self.FinalStatusPanel = FinalStatusPanel(self.RightTopFrame)
+        self.FinalStatusPanel = FinalStatusPanel(self.RightTopFrame, self.Logger)
         self.FinalStatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.FinalStatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.FinalStatusPanel.setVisible(False)
@@ -163,6 +171,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                                                         CurrentDiscountPercentB)
 
             self.InitialPanel.AddConnect(self.OpenTable)
+            self.InitialPanel.setKeyBoardEvent(self.ShowKeyboard)
 
             self.JumpWindow.InitialCloseEvent(self.CloseJumpWindow)
 
@@ -186,6 +195,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
             self.FinalStatusPanel.PrintReceiptConnect(self.Receipt.print_me3)
             self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
+            self.FinalStatusPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
         except Exception as e:
             self.Logger.error(f'Error during Set up Event.', exc_info=e)
 
@@ -193,7 +203,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hbox = QtWidgets.QHBoxLayout(self)
         hbox.addWidget(self.splitter)
         hbox.addWidget(self.SettingPanel)
-        hbox.addWidget(self.JumpWindow)
         self.centralwidget.setLayout(hbox)
 
         hbox = QtWidgets.QHBoxLayout(self.frame_2)
@@ -300,17 +309,76 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def ShowJumpWindow(self):
         try:
+            self.BlockPanel.setVisible(True)
             self.JumpWindow.setVisible(True)
-            self.SettingPanel.setVisible(False)
-            self.splitter.setVisible(False)
+            self.BlockPanel.resize(self.width(), self.height())
+            self.JumpWindow.resize(600, 300)
+            self.JumpWindow.move(self.width() // 2 - 300, self.height() // 2 - 150)
+
+            self.JumpWindow.raise_()
+            self.BlockPanel.lower()
+            self.BlockPanel.stackUnder(self.JumpWindow)
+            self.BlockPanel.mousePressEvent = lambda x: self.CloseJumpWindow()
         except Exception as e:
             self.Logger.error(f'Error during show jump window', exc_info=e)
 
     def CloseJumpWindow(self):
         try:
             self.JumpWindow.setVisible(False)
-            self.splitter.setVisible(True)
+            self.BlockPanel.setVisible(False)
             self.JumpWindow.BtnYes.pressed.disconnect()
+        except Exception as e:
+            self.Logger.error(f'Error during close jump window', exc_info=e)
+
+    def get4PointsPosition(self, target: QtWidgets.QWidget):
+        x1 = target.x()
+        y1 = target.y()
+        parent = target.parent()
+        while parent != self:
+            x1 += parent.x()
+            y1 += parent.y()
+            parent = parent.parent()
+        x2 = target.width() + x1
+        y2 = target.height() + y1
+        return x1, x2, y1, y2
+
+    def ShowKeyboard(self, target: QtWidgets.QLineEdit):
+        try:
+            self.KeyBoard.OriValue = target.text()
+            width = 300
+            height = 300
+            self.KeyBoard.setTarget(target)
+            self.BlockPanel.setVisible(True)
+            self.KeyBoard.setVisible(True)
+            self.BlockPanel.resize(self.width(), self.height())
+            self.KeyBoard.resize(width, height)
+            x1, x2, y1, y2 = self.get4PointsPosition(target)
+            x = x1
+            y = y2
+            if self.width() - x1 < width:
+                x = self.width() - width
+            if self.height() - y2 < height:
+                y = y1 - height
+            self.KeyBoard.move(x, y)
+            self.KeyBoard.raise_()
+            self.KeyBoard.focusWidget()
+            self.BlockPanel.lower()
+            self.BlockPanel.stackUnder(self.KeyBoard)
+            self.BlockPanel.mousePressEvent = lambda x: self.CloseKeyboard()
+        except Exception as e:
+            self.CloseKeyboard()
+            self.Logger.error(f'Error during show jump window', exc_info=e)
+
+    def CloseKeyboard(self):
+        try:
+            if self.KeyBoard.target is not None:
+                self.KeyBoard.target.clean(self.KeyBoard.OriValue)
+                self.KeyBoard.target.clearFocus()
+                self.KeyBoard.OriValue = None
+            self.KeyBoard.removeTarget()
+            self.KeyBoard.setVisible(False)
+            self.BlockPanel.setVisible(False)
+
         except Exception as e:
             self.Logger.error(f'Error during close jump window', exc_info=e)
 

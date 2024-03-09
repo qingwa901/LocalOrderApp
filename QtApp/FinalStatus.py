@@ -16,8 +16,8 @@ from functools import partial
 
 class FinalStatusPanel(FinalStatusBase):
 
-    def __init__(self, parant):
-        FinalStatusBase.__init__(self, parant)
+    def __init__(self, parant, logger):
+        FinalStatusBase.__init__(self, parant, logger)
         self.total = 0
         self.cash = 0
         self.card = 0
@@ -44,6 +44,9 @@ class FinalStatusPanel(FinalStatusBase):
         self.ButDiscountA.pressed.connect(self.AddDiscountA)
         self.ButDiscountB.pressed.connect(self.AddDiscountB)
         self.BtnAddRemoveServiceCharge.pressed.connect(self.ChangeServiceChargePercent)
+
+    def setUpOpenKeyboardEvent(self, event):
+        self.EditBoxToPayAmount.OpenKeyboardEvent = event
 
     def SetDefaultDiscountPercentA(self, Value):
         self._DefaultDisCountPercentA = Value
@@ -112,11 +115,11 @@ class FinalStatusPanel(FinalStatusBase):
                                    f" ({round(self.total, 2)})")
         LeftToPay = round(self.total + ServiceCharge - DiscountAmount - self.card - self.cash, 2)
         if LeftToPay > 0:
-            self.EditBoxToPayAmount.setValue(LeftToPay)
+            self.EditBoxToPayAmount.setText(str(LeftToPay))
             self.LBLablePayment.setText('未付')
             self.BtnCleanTable.setEnabled(False)
         else:
-            self.EditBoxToPayAmount.setValue(-LeftToPay)
+            self.EditBoxToPayAmount.setText(str(-LeftToPay))
             self.LBLablePayment.setText('找零')
             self.BtnCleanTable.setEnabled(True)
 
@@ -150,12 +153,12 @@ class FinalStatusPanel(FinalStatusBase):
         self.DisplayAllInfo()
 
     def AddRestCash(self):
-        self.cash += self.EditBoxToPayAmount.value()
+        self.cash += float(self.EditBoxToPayAmount.text())
         self.AddCashEvent(self.cash)
         self.DisplayAllInfo()
 
     def AddRestCard(self):
-        self.card += self.EditBoxToPayAmount.value()
+        self.card += float(self.EditBoxToPayAmount.text())
         self.AddCardEvent(self.card)
         self.DisplayAllInfo()
 
@@ -199,6 +202,6 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    ui = FinalStatusPanel(None)
+    ui = FinalStatusPanel(None, None)
     ui.show()
     sys.exit(app.exec_())

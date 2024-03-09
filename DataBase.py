@@ -86,6 +86,7 @@ class DataBase(SQLControl):
 
     def SaveMenu(self, data: pd.DataFrame):
         table = self.config.MenuList.NAME
+        self.executeLocally(f'DELETE FROM {table} where 1=1')
         self.SaveLocalData(data, table)
 
     def UpdateOneLineLocally(self, data, table):
