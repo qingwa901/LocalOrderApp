@@ -16,36 +16,37 @@ from Config import Config
 
 
 class Menu(QtWidgets.QFrame):
-    def __init__(self, parant):
+    def __init__(self, parant, setting):
         QtWidgets.QFrame.__init__(self, parant)
-        self.MenuENName = Config.DisplaySetting.MenuPage.MENU_EN_NAME
-        self.MenuCNName = Config.DisplaySetting.MenuPage.MENU_CN_NAME
+        self.MenuENName = setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
+        self.MenuCNName = setting.GetValue(Config.ValueSetting.Manu.CN_NAME)
         self.setupUi()
 
     def setupUi(self):
         self.setObjectName("Menu")
         self.resize(546, 338)
-        self.horizontalLayoutWidget = QtWidgets.QWidget(self)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 495, 41))
-        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.VLayout = QtWidgets.QVBoxLayout(self)
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.VLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.ButList = {}
         for i in self.MenuCNName:
-            But = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+            But = QtWidgets.QPushButton(self)
             But.setObjectName("Btn" + self.MenuENName[i])
             self.horizontalLayout.addWidget(But)
             self.ButList[i] = But
             But.pressed.connect(partial(self.ActivePage, i))
         self.MenuPageList = {}
+        self.PageLayout = QtWidgets.QVBoxLayout(self)
+        self.VLayout.addLayout(self.PageLayout)
         for type in self.MenuENName:
             Page = MenuPage(self, self.MenuENName[type])
             self.MenuPageList[type] = Page
-            Page.setGeometry(QtCore.QRect(19, 69, 481, 241))
-            Page.setFrameShape(QtWidgets.QFrame.StyledPanel)
-            Page.setFrameShadow(QtWidgets.QFrame.Raised)
-
+            self.PageLayout.addWidget(Page)
+            # Page.setFrameShape(QtWidgets.QFrame.StyledPanel)
+            # Page.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.setLayout(self.VLayout)
         self.ActivePage(1)
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)

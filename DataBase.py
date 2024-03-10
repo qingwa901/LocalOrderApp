@@ -26,7 +26,9 @@ class DataBase(SQLControl):
         self.logger = logger
         self.config = Config.DataBase
         self.Setting = ConfigSetting(logger)
-        self.Printer = PrinterControl(self.logger, self.Setting)
+        self.STORE_ID = self.config.STORE_ID  # Todo save store id to setting file
+        self.MenuPageLoad = threading.Thread(target=self.LoadMenuPage)
+        self.MenuPageLoad.start()
         self.TableInfoLock = threading.Lock()
         self.TableInfo = AllTableInfoStore(self.logger)
         self.path = path
@@ -35,7 +37,6 @@ class DataBase(SQLControl):
         self.tmp_path = path + '/tmp'
         if not os.path.exists(self.tmp_path):
             os.mkdir(self.tmp_path)
-        self.STORE_ID = self.config.STORE_ID  # Todo save store id to setting file
         self.menu = FullMenuList()
         self.DataBaseCheck()
         LoadStoreInfo = threading.Thread(target=self.LoadStoreInfo)
@@ -47,6 +48,8 @@ class DataBase(SQLControl):
         self.MaxOrderID = None
         self.MaxOrderListID = None
         self.MaxOrderMataListID = None
+        self.MenuPageLoad.join()
+        self.Printer = PrinterControl(self.logger, self.Setting)
         LoadStoreInfo.join()
 
     def LoadStoreInfo(self):
@@ -62,11 +65,27 @@ class DataBase(SQLControl):
         except:
             pass
 
+    def LoadMenuPage(self):
+        try:
+            query = (
+                f"select * from {self.config.ManuPageList.NAME} where `{self.config.ManuPageList.STORE_ID}` = '"
+                f"{self.STORE_ID}' and `{self.config.ManuPageList.VALID}` = '1'")
+            self.logger.info(query)
+            data = pd.read_sql(query, self.conn)
+            data = data.set_index(self.config.ManuPageList.ID)
+            self.Setting.SetValue(Config.ValueSetting.Manu.EN_NAME,
+                                  data[self.config.ManuPageList.EN_NAME].to_dict())
+            self.Setting.SetValue(Config.ValueSetting.Manu.CN_NAME,
+                                  data[self.config.ManuPageList.CN_NAME].to_dict())
+        except Exception as e:
+            self.logger.error('Connection issue during loading menu page. Start to use previous setting',
+                              exc_info=e)
+
     def RefreshMenu(self):
         with self.Lock:
             try:
-                query = (f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
-                         f'{self.STORE_ID}')
+                query = (f"select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = "
+                         f"'{self.STORE_ID}' and `{self.config.MenuList.VALID}` = '1'")
                 self.logger.info(query)
                 data = pd.read_sql(query, self.conn)
                 self.SaveMenu(data)
@@ -237,7 +256,7 @@ class DataBase(SQLControl):
 {Name}   X   {Qty}
 {Note}
 {Time}'''
-        if Type in Config.DisplaySetting.MenuPage.MENU_EN_NAME:
+        if Type in self.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME):
             self.Printer.SendOrder(text, self.Printer.DefaultKitchenPrinters[Type])
         else:
             self.Printer.SendOrder(text, self.Printer.DefaultCashierPrinter)

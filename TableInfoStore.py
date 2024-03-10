@@ -1,6 +1,7 @@
 import pandas as pd
 from Config import Config
 from MenuStore import FullMenuList
+import datetime
 
 
 class OrderInfo:
@@ -14,6 +15,7 @@ class OrderInfo:
     OriUnitPrice = None
     StaffID = None
     Note = None
+    MenuNote = None
     CreateTime = None
     OrderList = Config.DataBase.OrderList
 
@@ -25,7 +27,7 @@ class OrderInfo:
         self.UnitPrice = Order[self.OrderList.UNIT_PRICE]
         self.StaffID = Order[self.OrderList.ID_STAFF]
         self.Note = Order[self.OrderList.NOTE]
-        self.CreateTime = Order[self.OrderList.CREATE_TIME]
+        self.CreateTime = Order[self.OrderList.CREATE_TIME].tz_localize(datetime.timezone.utc)
 
     def getValue(self, Tag):
         conf = Config.DataBase.OrderList
@@ -43,6 +45,7 @@ class OrderInfo:
         self.NameCN = m.NameCN
         self.NameEN = m.NameEN
         self.OriUnitPrice = m.UnitPrice
+        self.MenuNote = m.Note
 
 
 class TableInfoStore:
@@ -152,6 +155,7 @@ class AllTableInfoStore:
         self.AddOrderInfo(Order)
 
     def AddOrderInfo(self, Order):
+        Order[Config.DataBase.OrderList.CREATE_TIME] = pd.to_datetime(Order[Config.DataBase.OrderList.CREATE_TIME])
         Order.apply(self._AddOrder, axis=1)
 
     def AddOrderMetaInfo(self, OrderMeta):

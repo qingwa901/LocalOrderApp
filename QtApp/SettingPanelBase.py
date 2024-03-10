@@ -13,10 +13,11 @@ from Config import Config
 
 
 class SettingPanelBase(QtWidgets.QFrame):
-    def __init__(self, parant):
+    def __init__(self, parant, Setting):
         QtWidgets.QFrame.__init__(self, parant)
-        self.MenuENName = Config.DisplaySetting.MenuPage.MENU_EN_NAME
-        self.MenuCNName = Config.DisplaySetting.MenuPage.MENU_CN_NAME
+        self.Setting = Setting
+        self.MenuENName = self.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
+        self.MenuCNName = self.Setting.GetValue(Config.ValueSetting.Manu.CN_NAME)
         self.setupUi()
 
     def setupUi(self):

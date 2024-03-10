@@ -1,6 +1,6 @@
 import pandas as pd
 from Config import Config
-from collections import defaultdict
+import json
 
 
 class Food:
@@ -20,18 +20,22 @@ class Food:
         self.NameEN = data[confg.NAME_EN]
         self.NameCN = data[confg.NAME_CN]
         self.RestQty = data[confg.QTY]
-        self.Note = data[confg.NOTE]
+        if data[confg.NOTE] is not None:
+            self.Note = json.loads(data[confg.NOTE])
+            #{"Tag":{Name: "", PriceAdd: ""}}
 
 
 class FullMenuList:
     def __init__(self):
-        self.Foods = defaultdict(Food)
+        self.Foods = dict()
 
     def clear(self):
-        self.Foods = defaultdict(Food)
+        self.Foods = dict()
 
     def _setUp(self, data: pd.Series):
         confg = Config.DataBase.MenuList
+        if data[confg.ID] not in self.Foods:
+            self.Foods[data[confg.ID]] = Food()
         self.Foods[data[confg.ID]].setUp(data)
 
     def setUp(self, data: pd.DataFrame):

@@ -16,8 +16,8 @@ from Config import Config
 
 
 class SettingPanel(SettingPanelBase):
-    def __init__(self, parant):
-        SettingPanelBase.__init__(self, parant)
+    def __init__(self, parant, Setting):
+        SettingPanelBase.__init__(self, parant, Setting)
         self.EventChangeDefaultServiceChargePercent = None
         self.EventChangeDefaultDiscountPercentA = None
         self.EventChangeDefaultDiscountPercentB = None
@@ -46,7 +46,7 @@ class SettingPanel(SettingPanelBase):
 
     def SendKitchenTestOrder(self, MenuID):
         self.Printer.SendTestOrder(self.Printer.DefaultKitchenPrinters[MenuID],
-                                   Config.DisplaySetting.MenuPage.MENU_EN_NAME[MenuID])
+                                   self.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME)[MenuID])
 
     def SendCashierTestOrder(self):
         self.Printer.SendTestOrder(self.Printer.DefaultCashierPrinter, 'Cashier')

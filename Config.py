@@ -148,6 +148,14 @@ class Config:
               `Updated` tinyint NOT NULL DEFAULT '1'
             );'''
 
+        class ManuPageList:
+            ID = 'id'
+            NAME = 'ManuPageList'
+            STORE_ID = 'StoreID'
+            EN_NAME = 'ENName'
+            CN_NAME = 'CNName'
+            VALID = 'Valid'
+
     class UI:
         class EatInPage:
             ToolBarSize = 35
@@ -159,9 +167,9 @@ class Config:
             COL_NAME_EN = ['FoodName', 'Qty', 'UnitPrice', 'Note']
             COL_NAME_CN = ['菜名', '数量', '单价', '备注']
 
-        class MenuPage:
-            MENU_EN_NAME = {1: "ColdFood", 2: "HotFood", 3: "MainFood", 4: "Desert", 5: "Drink"}
-            MENU_CN_NAME = {1: "冷菜", 2: "热菜", 3: "主食", 4: "甜品", 5: "饮品"}
+        class MenuTag:
+            NAME = "Name"
+            PRICE_ADD = "PriceAdd"
 
     class ValueSetting:
         class TableOrder:
@@ -170,6 +178,10 @@ class Config:
             STR_DEFAULT_SERVICE_CHARGE_PERCENT = 'DefaultServiceChargePercent'
             STR_DEFAULT_DISCOUNT_PERCENT_A = 'DefaultDiscountPercentA'
             STR_DEFAULT_DISCOUNT_PERCENT_B = 'DefaultDiscountPercentB'
+
+        class Manu:
+            EN_NAME = 'Menu.ENName'
+            CN_NAME = 'Menu.CNName'
 
         class Printer:
             STR_CASHIER_PRINTER = 'Printer.DefaultCashierPrinter'

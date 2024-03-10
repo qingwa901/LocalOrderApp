@@ -48,7 +48,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.centralwidget = QtWidgets.QWidget(self)
         # self.centralwidget.setStyleSheet("border: 3px solid blue;")
         self.centralwidget.setObjectName("centralwidget")
-        self.SettingPanel = SettingPanel(self.centralwidget)
+        self.SettingPanel = SettingPanel(self.centralwidget, self.DataBase.Setting)
         self.SettingPanel.setVisible(False)
 
         self.JumpWindow = JumpWindow(self)
@@ -87,13 +87,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.InitialPanel = InitialTable(self.RightTopFrame, self.Logger)
         self.InitialPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.InitialPanel.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.InitialPanel.setVisible(False)
 
         self.StatusPanel = StatusPanel(self.RightTopFrame)
         self.StatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.StatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.StatusPanel.setVisible(False)
 
-        self.MenuPanel = Menu(self.RightTopFrame)
+        self.MenuPanel = Menu(self.RightTopFrame, self.DataBase.Setting)
         self.MenuPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.MenuPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.MenuPanel.setVisible(False)
@@ -131,9 +132,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.toolbar.addAction(self.TableAction)
         self.TableAction.triggered.connect(self.menuTable_onClick)
 
-        self.TestAction = QtGui.QAction("Test", self)
-        self.toolbar.addAction(self.TestAction)
-        self.TestAction.triggered.connect(self.ShowJumpWindow)
+        # self.TestAction = QtGui.QAction("Test", self)
+        # self.toolbar.addAction(self.TestAction)
+        # self.TestAction.triggered.connect(self.ShowJumpWindow)
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)

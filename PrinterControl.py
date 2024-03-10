@@ -29,7 +29,7 @@ class PrinterControl:
     def SetDefaultKitchenPrinter(self, value: str, MenuID):
         if value in self.PrinterList():
             self.DefaultKitchenPrinters[MenuID] = value
-            MenuName = Config.DisplaySetting.MenuPage.MENU_EN_NAME[MenuID]
+            MenuName = self.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
             self.logger.info(f'change Kitchen {MenuName} printer to {value}')
             self.Setting.SetValue(Config.ValueSetting.Printer.STR_KITCHEN_PRINTER + MenuName, value)
 
@@ -47,7 +47,7 @@ class PrinterControl:
             self.DefaultCashierPrinter = None
         logstr += f'{Config.ValueSetting.Printer.STR_CASHIER_PRINTER}: {self.DefaultCashierPrinter}, '
         self.DefaultKitchenPrinters = {}
-        ManeList = Config.DisplaySetting.MenuPage.MENU_EN_NAME
+        ManeList = self.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
         for i in ManeList:
             self.DefaultKitchenPrinters[i] = self.Setting.GetValue(
                 Config.ValueSetting.Printer.STR_KITCHEN_PRINTER + ManeList[i])

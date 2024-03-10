@@ -10,7 +10,7 @@
 
 from PySide6 import QtCore, QtGui, QtWidgets
 import pandas as pd
-from functools import partial
+from QtApp.Base.FlowLayout import FlowLayout
 from QtApp.MenuBut import MenuBut
 
 
@@ -26,31 +26,28 @@ class MenuPage(QtWidgets.QFrame):
     def setupUi(self):
         self.setObjectName(self.Name)
         self.resize(400, 300)
-        self.gridLayoutWidget = QtWidgets.QWidget(self)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(0, 10, 391, 281))
-        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout.setObjectName("gridLayout")
+        self.FlowLayout = FlowLayout(self)
+        self.FlowLayout.setContentsMargins(0, 0, 0, 0)
+        self.FlowLayout.setObjectName("gridLayout")
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def AddMenu(self, data):
         if self.Count >= len(self.ButList):
-            But = MenuBut(self.gridLayoutWidget)
+            But = MenuBut(self)
             self.ButList.append(But)
-            self.gridLayout.addWidget(But, self.Count // self.gridSize, self.Count % self.gridSize, 1, 1)
+            self.FlowLayout.addWidget(But)
         else:
             But = self.ButList[self.Count]
         self.Count += 1
         But.setupUi(data)
 
     def AddItem(self, data: pd.Series):
-        But = QtWidgets.QPushButton(self.gridLayoutWidget)
+        But = QtWidgets.QPushButton(self)
         But.setObjectName(data['FoodENName'])
         self.ButList.append(But)
-        self.gridLayout.addWidget(But, self.Count // self.gridSize, self.Count % self.gridSize, 1, 1)
+        self.FlowLayout.addWidget(But)
         self.Count += 1
         But.setText(self._translate("Form", data['FoodCNName']))
 

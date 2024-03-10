@@ -1,5 +1,4 @@
 from PySide6 import QtCore, QtWidgets
-from functools import partial
 
 
 class KeyBoardBtn(QtWidgets.QPushButton):
