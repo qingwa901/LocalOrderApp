@@ -595,6 +595,7 @@ class DataBase(SQLControl):
     def EditOrder(self, aOrderInfo: OrderInfo):
         table = self.config.OrderList
         query = (f"Update {table.NAME} set `{table.QTY}` = '{aOrderInfo.Qty}', "
-                 f"`{table.UNIT_PRICE}` = '{aOrderInfo.UnitPrice}', `{table.NOTE}`='{aOrderInfo.Note}' where "
+                 f"`{table.UNIT_PRICE}` = '{aOrderInfo.UnitPrice}', `{table.NOTE}`='{aOrderInfo.Note}', "
+                 f"`{self.config.LOADED}`='0' where "
                  f"`{table.ID}`='{aOrderInfo.ID}' and `{table.ID_STORE}`='{self.STORE_ID}'")
         self.executeLocally(query)
