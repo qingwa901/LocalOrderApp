@@ -15,13 +15,14 @@ class OrderDetail(OrderDetailBasePanel):
         self.BtnReduceQty.pressed.connect(self.ReduceQty)
         self.BtnCancel.pressed.connect(self.Cancel)
         self.BtnConfirm.pressed.connect(self.Confirm)
+        self.EditOrderInDataBase = None
 
     def SetupOrder(self, Orderinfo: OrderInfo, TableID: int):
-        self.OrderInfo = OrderInfo
+        self.OrderInfo = Orderinfo
         self.TableID = TableID
         self.LBTableID.setText(str(TableID))
         self.LBFoodName.setText(Orderinfo.NameCN)
-        self.LBUnitPrice.setText(str(round(Orderinfo.UnitPrice, 2)))
+        self.EditPrice.setText(str(round(Orderinfo.UnitPrice, 2)))
         self.EditQty.setText(str(int(Orderinfo.Qty)))
         self.LBCashier.setText(str(int(Orderinfo.StaffID)))
         self.LBCreateTime.setText(str(Orderinfo.CreateTime.tz_convert(LocalTimeZone)))
@@ -29,11 +30,12 @@ class OrderDetail(OrderDetailBasePanel):
         for TagBtn in self.TagList:
             TagBtn.Clear()
         i = 0
-        for TagInfo in OrderInfo.MenuNote:
-            while len(self.TagList) <= i:
-                self.AddNewTag()
-            self.TagList[i].SetTag(TagInfo)
-            i += 1
+        if Orderinfo.MenuNote != None:
+            for TagInfo in OrderInfo.MenuNote:
+                while len(self.TagList) <= i:
+                    self.AddNewTag()
+                self.TagList[i].SetTag(TagInfo)
+                i += 1
 
     def AddQty(self):
         self.EditQty.setText(str(int(self.EditQty.text()) + 1))
@@ -46,5 +48,7 @@ class OrderDetail(OrderDetailBasePanel):
 
     def Confirm(self):
         self.OrderInfo.Qty = int(self.EditQty.text())
-        self.OrderInfo.UnitPrice = round(self.OrderInfo.UnitPrice, 2)
+        self.OrderInfo.UnitPrice = round(float(self.EditPrice.text()), 2)
+        self.OrderInfo.Note = self.LBExtraRequirement.text()
+        self.EditOrderInDataBase(self.OrderInfo)
         self.Cancel()

@@ -19,6 +19,7 @@ from QtApp.JumpWindow import JumpWindow
 from QtApp.FinalStatus import FinalStatusPanel
 from QtApp.receiptPanel import Receipt
 from QtApp.keyboard import KeyBoardPanel
+from QtApp.OrderDetail import OrderDetail
 from DataBase import DataBase
 from Logger import CreateLogger
 from Config import Config
@@ -50,6 +51,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.centralwidget.setObjectName("centralwidget")
         self.SettingPanel = SettingPanel(self.centralwidget, self.DataBase.Setting)
         self.SettingPanel.setVisible(False)
+
+        self.OrderDetailPanel = OrderDetail(self.centralwidget, self.Logger)
+        self.OrderDetailPanel.setVisible(False)
 
         self.JumpWindow = JumpWindow(self)
         self.JumpWindow.setVisible(False)
@@ -197,6 +201,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.FinalStatusPanel.PrintReceiptConnect(self.Receipt.print_me3)
             self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
             self.FinalStatusPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
+
+            self.OrderPanel.OrderEditEvent = self.OpenOrderEdit
+            self.OrderDetailPanel.EditOrderInDataBase = self.confirmOrderEdit
         except Exception as e:
             self.Logger.error(f'Error during Set up Event.', exc_info=e)
 
@@ -264,6 +271,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.StatusPanel.DisplayTable(TableInfo)
                 self.OrderPanel.setVisible(True)
                 self.OrderPanel.DisplayTable(TableInfo)
+                self.OrderPanel.IsEditable = True
                 self.FinalStatusPanel.setVisible(False)
             elif not TableInfo.IsFinished:
                 # finishing table
@@ -271,6 +279,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.StatusPanel.setVisible(False)
                 self.OrderPanel.setVisible(True)
                 self.OrderPanel.DisplayTable(TableInfo)
+                self.OrderPanel.IsEditable = False
                 self.FinalStatusPanel.setVisible(True)
                 self.FinalStatusPanel.DisplayTable(TableInfo)
                 self.Receipt.LoadTable(TableInfo)
@@ -476,6 +485,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     self.DataBase.SwitchTable(widget.TableNumber, n)
                     self.TableButClick(n)
 
+    def OpenOrderEdit(self, OrderInfo):
+        self.OrderDetailPanel.setVisible(True)
+        self.OrderDetailPanel.SetupOrder(OrderInfo, self.TableNumber)
+        self.OrderDetailPanel.raise_()
+        self.OrderDetailPanel.setFixedWidth(self.width())
+        self.OrderDetailPanel.setFixedHeight(self.height())
+
+    def confirmOrderEdit(self, Order):
+        self.DataBase.EditOrder(Order)
+        self.TableButClick(self.TableNumber)
 
 import QtApp.resource_rc
 

@@ -15,6 +15,7 @@ from TableInfoStore import OrderInfo
 from functools import partial
 from Logger import CreateLogger
 
+
 class OrderListPanel(QtWidgets.QFrame):
     def __init__(self, parent, logger=None):
         QtWidgets.QFrame.__init__(self, parent)
@@ -23,7 +24,11 @@ class OrderListPanel(QtWidgets.QFrame):
         else:
             self.logger = CreateLogger('test')
         self.setupUi()
+        self.OrderEditEvent = None
+        self.IsEditable = True
         self.Orders = []
+        self.TableInfo = None
+        self.tableView.cellClicked.connect(self.OpenOrderEditor)
 
     def setupUi(self):
         self.setObjectName("orderList")
@@ -67,6 +72,11 @@ class OrderListPanel(QtWidgets.QFrame):
 
     def Connect(self, Event):
         self.BtnPlaceOrder.pressed.connect(partial(Event, self.Orders))
+
+    def OpenOrderEditor(self, row, column):
+        if self.IsEditable:
+            Order = self.Orders[row]
+            self.OrderEditEvent(Order)
 
 
 if __name__ == "__main__":

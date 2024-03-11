@@ -22,7 +22,8 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
 
     def setupUi(self):
         self.setObjectName("Form")
-        self.resize(611, 552)
+        self.setAutoFillBackground(True)
+        self.setStyleSheet('background-color: lightgrey;')
         vlayout = QtWidgets.QVBoxLayout(self)
         self.splitter = QtWidgets.QSplitter(parent=self)
         self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
@@ -82,9 +83,9 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_5)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.LBUnitPrice = QtWidgets.QLabel(parent=self.formLayoutWidget)
-        self.LBUnitPrice.setObjectName("LBUnitPrice")
-        self.horizontalLayout_3.addWidget(self.LBUnitPrice)
+        # self.LBUnitPrice = QtWidgets.QLabel(parent=self.formLayoutWidget)
+        # self.LBUnitPrice.setObjectName("LBUnitPrice")
+        # self.horizontalLayout_3.addWidget(self.LBUnitPrice)
         self.EditPrice = EditBox(parent=self.formLayoutWidget, ValueType=eValueType.Int, logger=self.logger)
         self.EditPrice.setObjectName("lineEdit_2")
         self.horizontalLayout_3.addWidget(self.EditPrice)
@@ -165,7 +166,7 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         self.BtnAddQty.setText(_translate("Form", "+"))
         self.BtnReduceQty.setText(_translate("Form", "-"))
         self.label_5.setText(_translate("Form", "单价"))
-        self.LBUnitPrice.setText(_translate("Form", "TextLabel"))
+        # self.LBUnitPrice.setText(_translate("Form", "TextLabel"))
         self.label_4.setText(_translate("Form", "额外要求"))
         self.LBExtraRequirement.setText(_translate("Form", "TextLabel"))
 
