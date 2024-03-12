@@ -10,7 +10,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.Base.FlowLayout import FlowLayout
 from QtApp.Base.EditBox import EditBox, eValueType
 from Logger import CreateLogger
-from QtApp.Base.TagBut import TagBtn
+from QtApp.Base.TagBut import CTagBtn
 
 
 class OrderDetailBasePanel(QtWidgets.QFrame):
@@ -184,8 +184,10 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         # self.pushButton_4.setText(_translate("Form", "PushButton"))
 
     def AddNewTag(self):
-        TagBVtn = TagBtn(self.FlowLayout, len(self.TagList))
-        self.FlowLayout.addWidget(TagBVtn)
+        TagBtn = CTagBtn(self, len(self.TagList))
+        TagBtn.NoteWeidget = self.LBExtraRequirement
+        TagBtn.PriceWeidget = self.EditPrice
+        self.FlowLayout.addWidget(TagBtn)
         self.TagList.append(TagBtn)
 
 

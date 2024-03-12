@@ -202,6 +202,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
             self.FinalStatusPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
 
+            self.OrderDetailPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
             self.OrderPanel.OrderEditEvent = self.OpenOrderEdit
             self.OrderDetailPanel.EditOrderInDataBase = self.confirmOrderEdit
         except Exception as e:

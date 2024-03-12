@@ -34,13 +34,21 @@ class OrderListPanel(QtWidgets.QFrame):
         self.setObjectName("orderList")
         self.tableView = TableWdiget(self)
         self.tableView.setObjectName("tableView")
+        hLayout = QtWidgets.QHBoxLayout()
         mainLayout = QtWidgets.QVBoxLayout()
+        hLayout.addLayout(mainLayout)
         mainLayout.addWidget(self.tableView)
         self.BtnPlaceOrder = QtWidgets.QPushButton(self)
         self.BtnPlaceOrder.setObjectName("BtnPlacecOrder")
         self.BtnPlaceOrder.setMaximumWidth(300)
         mainLayout.addWidget(self.BtnPlaceOrder)
-        self.setLayout(mainLayout)
+        vLayout = QtWidgets.QVBoxLayout()
+        hLayout.addLayout(vLayout)
+        self.Btnup = QtWidgets.QPushButton(self)
+        vLayout.addWidget(self.Btnup)
+        self.Btndown = QtWidgets.QPushButton(self)
+        vLayout.addWidget(self.Btndown)
+        self.setLayout(hLayout)
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -48,6 +56,8 @@ class OrderListPanel(QtWidgets.QFrame):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("Form", "OrderList"))
         self.BtnPlaceOrder.setText(_translate("Form", "下单"))
+        self.Btnup.setText(_translate("Form", "^"))
+        self.Btndown.setText(_translate("Form", "v"))
 
     def selectedRow(self):
         return self.tableView.selectedRow

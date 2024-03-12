@@ -1,6 +1,7 @@
 from QtApp.OrderDetailBase import OrderDetailBasePanel
 from TableInfoStore import OrderInfo
 import datetime
+from Config import Config
 
 LocalTimeZone = datetime.datetime.now().astimezone().tzinfo
 
@@ -31,11 +32,15 @@ class OrderDetail(OrderDetailBasePanel):
             TagBtn.Clear()
         i = 0
         if Orderinfo.MenuNote != None:
-            for TagInfo in OrderInfo.MenuNote:
+            for TagInfo in Orderinfo.MenuNote[Config.DisplaySetting.MenuTag.TAG]:
                 while len(self.TagList) <= i:
                     self.AddNewTag()
                 self.TagList[i].SetTag(TagInfo)
                 i += 1
+
+    def setUpOpenKeyboardEvent(self, Event):
+        self.EditQty.OpenKeyboardEvent = Event
+        self.EditPrice.OpenKeyboardEvent = Event
 
     def AddQty(self):
         self.EditQty.setText(str(int(self.EditQty.text()) + 1))

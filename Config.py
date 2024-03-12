@@ -168,6 +168,7 @@ class Config:
             COL_NAME_CN = ['菜名', '数量', '单价', '备注']
 
         class MenuTag:
+            TAG = "tag"
             NAME = "Name"
             PRICE_ADD = "PriceAdd"
 

@@ -2,7 +2,7 @@ from PySide6 import QtCore, QtWidgets
 from Config import Config
 
 
-class TagBtn(QtWidgets.QPushButton):
+class CTagBtn(QtWidgets.QPushButton):
     def __init__(self, parent, ID):
         self.ID = ID
         QtWidgets.QPushButton.__init__(self, parent)
