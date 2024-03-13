@@ -3,16 +3,16 @@ from PySide6.QtWidgets import QApplication, QWidget, QHeaderView, QAbstractItemV
     QTableWidgetItem
 from PySide6.QtGui import QColor
 from Config import Config
-from TableInfoStore import OrderInfo
-from QtApp.Base import CTableWidget
+from TableInfoStore import TableInfoStore
+from QtApp.Base import CTableWidget,CWidget
 
 
-class TableWdiget(CTableWidget):
+class TableWidget(CTableWidget):
     def __init__(self, aParent):
-        super().__init__(aParent, 0, len(Config.DisplaySetting.OrderTable.COL_NAME_CN))
+        super().__init__(aParent, 0, len(Config.DisplaySetting.HistoryOrderTable.COL_NAME_CN))
         self.verticalHeader().setDefaultSectionSize(25)
         self.horizontalHeader().setDefaultSectionSize(150)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setupUI()
         self.selectedRow = None
@@ -21,20 +21,24 @@ class TableWdiget(CTableWidget):
     def test(self):
         for i in range(20):
             self.insertRow(i)
-            for j in range(4):
+            for j in range(8):
                 self.setItem(i, j, QTableWidgetItem(i))
 
     def setupUI(self):
-        self.setHorizontalHeaderLabels(Config.DisplaySetting.OrderTable.COL_NAME_CN)
+        self.setHorizontalHeaderLabels(Config.DisplaySetting.HistoryOrderTable.COL_NAME_CN)
 
-    def addRow(self, Order: OrderInfo):
-        self.Logger.info(f"{Order.ID}, {Order.NameCN}, {Order.Qty}, {Order.UnitPrice}, {Order.Note}")
+    def addRow(self, Order: TableInfoStore):
+        self.Logger.info(f"{Order.OrderID}, {Order.TableID}, {Order.GetTotalAmount()}, {Order.EndTime}")
         rowCount = self.rowCount()
         self.insertRow(rowCount)
-        self.setItem(rowCount, 0, QTableWidgetItem(str(Order.NameCN)))
-        self.setItem(rowCount, 1, QTableWidgetItem(str(Order.Qty)))
-        self.setItem(rowCount, 2, QTableWidgetItem(str(Order.UnitPrice)))
-        self.setItem(rowCount, 3, QTableWidgetItem(str(Order.Note)))
+        self.setItem(rowCount, 0, QTableWidgetItem(str(Order.EndTime)))
+        self.setItem(rowCount, 1, QTableWidgetItem(str(Order.OrderID)))
+        self.setItem(rowCount, 2, QTableWidgetItem(str(Order.TableID)))
+        self.setItem(rowCount, 3, QTableWidgetItem(str(Order.GetTotalAmount())))
+        self.setItem(rowCount, 4, QTableWidgetItem(str(Order.ServiceCharge*Order.GetTotalAmount()/100)))
+        self.setItem(rowCount, 5, QTableWidgetItem(str(Order.GetTotalAmount()*Order.Discount/100)))
+        self.setItem(rowCount, 6, QTableWidgetItem(str(Order.Cash)))
+        self.setItem(rowCount, 7, QTableWidgetItem(str(Order.Card)))
 
     def Clear(self):
         self.selectedRow = None
@@ -60,12 +64,12 @@ class TableWdiget(CTableWidget):
             self.item(row, i).setBackground(color)
 
 
-class AppDemo(QWidget):
+class AppDemo(CWidget):
     def __init__(self):
-        super().__init__()
+        super().__init__(None)
         self.resize(1600, 600)
         mainLayout = QHBoxLayout()
-        table = TableWdiget(self)
+        table = TableWidget(self)
         mainLayout.addWidget(table)
         self.setLayout(mainLayout)
 

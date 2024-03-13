@@ -8,6 +8,9 @@ class CFrame(QtWidgets.QFrame):
         if aParent is not None:
             self.Logger = aParent.Logger
             self.DataBase = aParent.DataBase
+        else:
+            self.Logger = None
+            self.DataBase = None
 
     def AbsX(self):
         return self.x() + self.parent().AbsX()

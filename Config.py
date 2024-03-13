@@ -167,6 +167,11 @@ class Config:
             COL_NAME_EN = ['FoodName', 'Qty', 'UnitPrice', 'Note']
             COL_NAME_CN = ['菜名', '数量', '单价', '备注']
 
+        class HistoryOrderTable:
+            COL_NAME_EN = ['FinishTime', 'OrderID', 'TableID', 'TotalAmount', 'ServiceCharge', 'Discount', 'Cash',
+                           'Card']
+            COL_NAME_CN = ['结束时间', '订单号', '桌号', '总价', '服务费', '折扣', '现金', '刷卡']
+
         class MenuTag:
             TAG = "tag"
             NAME = "Name"

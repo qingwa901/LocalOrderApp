@@ -9,7 +9,7 @@
 
 
 from PySide6 import QtCore, QtWidgets
-from QtApp.Base.OrderTableWdiget import TableWdiget
+from QtApp.Base.OrderTableWidget import TableWidget
 from collections import defaultdict
 from TableInfoStore import OrderInfo
 from functools import partial
@@ -31,7 +31,7 @@ class OrderListPanel(CFrame):
 
     def setupUi(self):
         self.setObjectName("orderList")
-        self.tableView = TableWdiget(self)
+        self.tableView = TableWidget(self)
         self.tableView.setObjectName("tableView")
         hLayout = QtWidgets.QHBoxLayout()
         mainLayout = QtWidgets.QVBoxLayout()
