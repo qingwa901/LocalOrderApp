@@ -7,16 +7,13 @@
 
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from Logger import CreateLogger, logging
 from QtApp.Base.KeyBoardBut import KeyBoardBtn
+from QtApp.Base import CFrame, CWidget
 
 
-class KeyBoardPanel(QtWidgets.QFrame):
-    def __init__(self, parant, logger: logging.Logger = None):
-        QtWidgets.QFrame.__init__(self, parant)
-        if logger is None:
-            logger = CreateLogger('temp')
-        self.logger = logger
+class KeyBoardPanel(CFrame):
+    def __init__(self, aParant):
+        CFrame.__init__(self, aParant)
         self.Btns = {}
         self.target = None
         self.setupUi()
@@ -25,17 +22,16 @@ class KeyBoardPanel(QtWidgets.QFrame):
     def setupUi(self):
         self.setObjectName("Form")
         self.resize(400, 300)
-        self.gridLayoutWidget = QtWidgets.QWidget(parent=self)
+        self.gridLayoutWidget = CWidget(aParent=self)
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
-        self.setAutoFillBackground(True)
-        self.setStyleSheet('background-color: yellow;')
+        self.SetBackgoundColor('Yellow')
         k = 0
         for i in [7, 8, 9, 4, 5, 6, 1, 2, 3, 0, 'Dot', 'Delete']:
             # 'Enter': No need Enter. As user can click other place to quit.
-            Btn = KeyBoardBtn(parent=self.gridLayoutWidget)
+            Btn = KeyBoardBtn(aParent=self.gridLayoutWidget)
             Btn.setObjectName(f"Btn{i}")
             Btn.setupUi(i)
             self.gridLayout.addWidget(Btn, k // 3, k % 3, 1, 1)

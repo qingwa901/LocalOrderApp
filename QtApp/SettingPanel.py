@@ -16,8 +16,8 @@ from Config import Config
 
 
 class SettingPanel(SettingPanelBase):
-    def __init__(self, parant, Setting):
-        SettingPanelBase.__init__(self, parant, Setting)
+    def __init__(self, parant):
+        SettingPanelBase.__init__(self, parant)
         self.EventChangeDefaultServiceChargePercent = None
         self.EventChangeDefaultDiscountPercentA = None
         self.EventChangeDefaultDiscountPercentB = None

@@ -20,6 +20,8 @@ from QtApp.FinalStatus import FinalStatusPanel
 from QtApp.receiptPanel import Receipt
 from QtApp.keyboard import KeyBoardPanel
 from QtApp.OrderDetail import OrderDetail
+from QtApp.Base.EditBox import EditBox
+from QtApp.Base import CWidget, CFrame, CSplitter
 from DataBase import DataBase
 from Logger import CreateLogger
 from Config import Config
@@ -46,49 +48,49 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def setupUi(self):
         self.setObjectName("MainWindow")
         self.resize(1121, 679)
-        self.centralwidget = QtWidgets.QWidget(self)
+        self.centralwidget = CWidget(aParent=self)
         # self.centralwidget.setStyleSheet("border: 3px solid blue;")
         self.centralwidget.setObjectName("centralwidget")
-        self.SettingPanel = SettingPanel(self.centralwidget, self.DataBase.Setting)
+        self.SettingPanel = SettingPanel(self.centralwidget)
         self.SettingPanel.setVisible(False)
 
-        self.OrderDetailPanel = OrderDetail(self.centralwidget, self.Logger)
+        self.OrderDetailPanel = OrderDetail(self.centralwidget)
         self.OrderDetailPanel.setVisible(False)
 
         self.JumpWindow = JumpWindow(self)
         self.JumpWindow.setVisible(False)
 
-        self.BlockPanel = QtWidgets.QWidget(self)
+        self.BlockPanel = CWidget(self)
         self.BlockPanel.setVisible(False)
         self.BlockPanel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
         self.KeyBoard = KeyBoardPanel(self)
         self.KeyBoard.setVisible(False)
 
-        self.splitter = QtWidgets.QSplitter(self.centralwidget)
+        self.splitter = CSplitter(self.centralwidget)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.TablePanel = TablesPanel(self.splitter, self.Logger)
+        self.TablePanel = TablesPanel(self.splitter)
         self.TablePanel.setupUi(self.TableOrder)
         self.TablePanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.TablePanel.setFrameShadow(QtWidgets.QFrame.Raised)
 
-        self.frame_2 = QtWidgets.QFrame(self.splitter)
+        self.frame_2 = CFrame(self.splitter)
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
 
-        self.splitter_2 = QtWidgets.QSplitter(self.frame_2)
+        self.splitter_2 = CSplitter(self.frame_2)
         self.splitter_2.setGeometry(QtCore.QRect(0, 10, 451, 621))
         self.splitter_2.setOrientation(QtCore.Qt.Vertical)
         self.splitter_2.setObjectName("splitter_2")
 
-        self.RightTopFrame = QtWidgets.QFrame(self.splitter_2)
+        self.RightTopFrame = CFrame(self.splitter_2)
         self.RightTopFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.RightTopFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.RightTopFrame.setObjectName("RightTopFrame")
 
-        self.InitialPanel = InitialTable(self.RightTopFrame, self.Logger)
+        self.InitialPanel = InitialTable(self.RightTopFrame)
         self.InitialPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.InitialPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.InitialPanel.setVisible(False)
@@ -98,23 +100,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.StatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.StatusPanel.setVisible(False)
 
-        self.MenuPanel = Menu(self.RightTopFrame, self.DataBase.Setting)
+        self.MenuPanel = Menu(self.RightTopFrame)
         self.MenuPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.MenuPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.MenuPanel.setVisible(False)
 
-        self.RightBottomFrame = QtWidgets.QFrame(self.splitter_2)
+        self.RightBottomFrame = CFrame(self.splitter_2)
         self.RightBottomFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.RightBottomFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.RightBottomFrame.setObjectName("RightBottomFrame")
 
-        self.OrderPanel = OrderListPanel(self.RightBottomFrame, self.Logger)
+        self.OrderPanel = OrderListPanel(self.RightBottomFrame)
         self.OrderPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.OrderPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.OrderPanel.setObjectName("OrderPanel")
         self.OrderPanel.setVisible(False)
 
-        self.FinalStatusPanel = FinalStatusPanel(self.RightTopFrame, self.Logger)
+        self.FinalStatusPanel = FinalStatusPanel(self.RightTopFrame)
         self.FinalStatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.FinalStatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.FinalStatusPanel.setVisible(False)
@@ -341,19 +343,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         except Exception as e:
             self.Logger.error(f'Error during close jump window', exc_info=e)
 
-    def get4PointsPosition(self, target: QtWidgets.QWidget):
-        x1 = target.x()
-        y1 = target.y()
-        parent = target.parent()
-        while parent != self:
-            x1 += parent.x()
-            y1 += parent.y()
-            parent = parent.parent()
-        x2 = target.width() + x1
-        y2 = target.height() + y1
-        return x1, x2, y1, y2
+    def AbsX(self):
+        return 0
 
-    def ShowKeyboard(self, target: QtWidgets.QLineEdit):
+    def AbsY(self):
+        return 0
+
+    def ShowKeyboard(self, target: EditBox):
         try:
             self.KeyBoard.OriValue = target.text()
             width = 300
@@ -363,7 +359,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.KeyBoard.setVisible(True)
             self.BlockPanel.resize(self.width(), self.height())
             self.KeyBoard.resize(width, height)
-            x1, x2, y1, y2 = self.get4PointsPosition(target)
+            x1 = target.AbsX()
+            x2 = x1 + target.width()
+            y1 = target.AbsY()
+            y2 = y1 + target.height()
             x = x1
             y = y2
             if self.width() - x1 < width:
@@ -496,6 +495,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def confirmOrderEdit(self, Order):
         self.DataBase.EditOrder(Order)
         self.TableButClick(self.TableNumber)
+
 
 import QtApp.resource_rc
 

@@ -1,9 +1,10 @@
 from PySide6 import QtCore, QtWidgets
+from QtApp.Base import CPushButton
 
 
-class KeyBoardBtn(QtWidgets.QPushButton):
-    def __init__(self, parent):
-        QtWidgets.QPushButton.__init__(self, parent)
+class KeyBoardBtn(CPushButton):
+    def __init__(self, aParent):
+        CPushButton.__init__(self, aParent)
         self.target = None
 
     def setupUi(self, Number):

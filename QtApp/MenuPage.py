@@ -12,11 +12,12 @@ from PySide6 import QtCore, QtGui, QtWidgets
 import pandas as pd
 from QtApp.Base.FlowLayout import FlowLayout
 from QtApp.MenuBut import MenuBut
+from QtApp.Base import CFrame, CPushButton
 
 
-class MenuPage(QtWidgets.QFrame):
-    def __init__(self, parent, Name='MenuPage'):
-        QtWidgets.QFrame.__init__(self, parent)
+class MenuPage(CFrame):
+    def __init__(self, aParent, Name='MenuPage'):
+        CFrame.__init__(self, aParent)
         self.Name = Name
         self.ButList = []
         self.Count = 0
@@ -44,7 +45,7 @@ class MenuPage(QtWidgets.QFrame):
         But.setupUi(data)
 
     def AddItem(self, data: pd.Series):
-        But = QtWidgets.QPushButton(self)
+        But = CPushButton(self)
         But.setObjectName(data['FoodENName'])
         self.ButList.append(But)
         self.FlowLayout.addWidget(But)

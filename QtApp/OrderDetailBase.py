@@ -11,12 +11,11 @@ from QtApp.Base.FlowLayout import FlowLayout
 from QtApp.Base.EditBox import EditBox, eValueType
 from Logger import CreateLogger
 from QtApp.Base.TagBut import CTagBtn
+from QtApp.Base import CFrame, CWidget, CPushButton, CSplitter
 
-
-class OrderDetailBasePanel(QtWidgets.QFrame):
-    def __init__(self, parant, logger):
-        QtWidgets.QFrame.__init__(self, parant)
-        self.logger = logger
+class OrderDetailBasePanel(CFrame):
+    def __init__(self, aParant):
+        CFrame.__init__(self, aParant)
         self.TagList = []
         self.setupUi()
 
@@ -25,18 +24,18 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         self.setAutoFillBackground(True)
         self.setStyleSheet('background-color: lightgrey;')
         vlayout = QtWidgets.QVBoxLayout(self)
-        self.splitter = QtWidgets.QSplitter(parent=self)
+        self.splitter = CSplitter(aParent=self)
         self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.splitter.setObjectName("splitter")
         vlayout.addWidget(self.splitter)
         self.setLayout(vlayout)
-        self.frame = QtWidgets.QFrame(parent=self.splitter)
+        self.frame = CFrame(aParent=self.splitter)
         self.frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
         self.frame.setObjectName("frame")
         vlayout = QtWidgets.QHBoxLayout(self.frame)
 
-        self.formLayoutWidget = QtWidgets.QWidget(parent=self.frame)
+        self.formLayoutWidget = CWidget(aParent=self.frame)
         vlayout.addWidget(self.formLayoutWidget)
         vlayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
         self.frame.setLayout(vlayout)
@@ -64,16 +63,16 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_3)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.EditQty = EditBox(parent=self.formLayoutWidget, ValueType=eValueType.Int, logger=self.logger)
+        self.EditQty = EditBox(aParent=self.formLayoutWidget, aValueType=eValueType.Int)
         self.EditQty.setObjectName("EditQty")
         self.EditQty.setMinimum(0)
         self.horizontalLayout_4.addWidget(self.EditQty)
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
-        self.BtnAddQty = QtWidgets.QPushButton(parent=self.formLayoutWidget)
+        self.BtnAddQty = CPushButton(aParent=self.formLayoutWidget)
         self.BtnAddQty.setObjectName("pushButton_6")
         self.verticalLayout.addWidget(self.BtnAddQty)
-        self.BtnReduceQty = QtWidgets.QPushButton(parent=self.formLayoutWidget)
+        self.BtnReduceQty = CPushButton(aParent=self.formLayoutWidget)
         self.BtnReduceQty.setObjectName("pushButton_7")
         self.verticalLayout.addWidget(self.BtnReduceQty)
         self.horizontalLayout_4.addLayout(self.verticalLayout)
@@ -86,7 +85,7 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         # self.LBUnitPrice = QtWidgets.QLabel(parent=self.formLayoutWidget)
         # self.LBUnitPrice.setObjectName("LBUnitPrice")
         # self.horizontalLayout_3.addWidget(self.LBUnitPrice)
-        self.EditPrice = EditBox(parent=self.formLayoutWidget, ValueType=eValueType.Int, logger=self.logger)
+        self.EditPrice = EditBox(aParent=self.formLayoutWidget, aValueType=eValueType.Int)
         self.EditPrice.setObjectName("lineEdit_2")
         self.horizontalLayout_3.addWidget(self.EditPrice)
         self.formLayout.setLayout(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.horizontalLayout_3)
@@ -117,13 +116,13 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         self.LBCreateTime.setObjectName("LBCreateTime")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.ItemRole.FieldRole, self.LBCreateTime)
 
-        self.BtnConfirm = QtWidgets.QPushButton(parent=self.formLayoutWidget)
+        self.BtnConfirm = CPushButton(aParent=self.formLayoutWidget)
         self.BtnConfirm.setObjectName("pushButton_9")
         self.formLayout.setWidget(7, QtWidgets.QFormLayout.ItemRole.FieldRole, self.BtnConfirm)
-        self.BtnCancel = QtWidgets.QPushButton(parent=self.formLayoutWidget)
+        self.BtnCancel = CPushButton(aParent=self.formLayoutWidget)
         self.BtnCancel.setObjectName("BtnCancel")
         self.formLayout.setWidget(8, QtWidgets.QFormLayout.ItemRole.FieldRole, self.BtnCancel)
-        self.frame_2 = QtWidgets.QFrame(parent=self.splitter)
+        self.frame_2 = CFrame(aParent=self.splitter)
         self.frame_2.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
         self.frame_2.setObjectName("frame_2")
@@ -132,14 +131,14 @@ class OrderDetailBasePanel(QtWidgets.QFrame):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
-        self.EditSpecialNote = EditBox(parent=self.frame_2, ValueType=eValueType.String, logger=self.logger)
+        self.EditSpecialNote = EditBox(aParent=self.frame_2, aValueType=eValueType.String)
         self.EditSpecialNote.setObjectName("EditBoxSpecialNote")
         self.horizontalLayout_6.addWidget(self.EditSpecialNote)
-        self.BtnAddLabel = QtWidgets.QPushButton(parent=self.frame_2)
+        self.BtnAddLabel = CPushButton(aParent=self.frame_2)
         self.BtnAddLabel.setObjectName("BtnAddLabel")
         self.horizontalLayout_6.addWidget(self.BtnAddLabel)
         self.verticalLayout_2.addLayout(self.horizontalLayout_6)
-        self.widget1 = QtWidgets.QWidget(parent=self.frame_2)
+        self.widget1 = CWidget(aParent=self.frame_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred,
                                            QtWidgets.QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -196,6 +195,6 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     logger = CreateLogger('test')
-    ui = OrderDetailBasePanel(None, logger)
+    ui = OrderDetailBasePanel(None)
     ui.show()
     sys.exit(app.exec())

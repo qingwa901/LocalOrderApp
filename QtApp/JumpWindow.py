@@ -9,11 +9,11 @@
 
 
 from PySide6 import QtCore, QtGui, QtWidgets
+from QtApp.Base import CFrame, CPushButton
 
-
-class JumpWindow(QtWidgets.QFrame):
-    def __init__(self, parant):
-        QtWidgets.QFrame.__init__(self, parant)
+class JumpWindow(CFrame):
+    def __init__(self, aParant):
+        CFrame.__init__(self, aParant)
         self.setupUi()
 
     def setupUi(self):
@@ -28,7 +28,7 @@ class JumpWindow(QtWidgets.QFrame):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.LBQuestion = QtWidgets.QLabel(self)
-        self.LBQuestion.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.LBQuestion.setLayoutDirection(QtCore.Qt.LayoutDirection.LeftToRight)
         self.LBQuestion.setAlignment(QtCore.Qt.AlignCenter)
         self.LBQuestion.setObjectName("LBQuestion")
         self.LBQuestion.setMaximumSize(QtCore.QSize(16777215, 300))
@@ -36,12 +36,12 @@ class JumpWindow(QtWidgets.QFrame):
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.BtnYes = QtWidgets.QPushButton(self)
+        self.BtnYes = CPushButton(self)
         self.BtnYes.setMaximumSize(QtCore.QSize(150, 16777215))
         self.BtnYes.setMinimumSize(QtCore.QSize(100, 50))
         self.BtnYes.setObjectName("BtnYes")
         self.horizontalLayout_2.addWidget(self.BtnYes)
-        self.BtnNo = QtWidgets.QPushButton(self)
+        self.BtnNo = CPushButton(self)
         self.BtnNo.setMaximumSize(QtCore.QSize(150, 16777215))
         self.BtnNo.setMinimumSize(QtCore.QSize(100, 50))
         self.BtnNo.setObjectName("BtnNo")

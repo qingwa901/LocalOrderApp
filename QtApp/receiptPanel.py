@@ -10,12 +10,12 @@
 
 from PySide6 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets, QtPrintSupport
 from TableInfoStore import TableInfoStore
-from functools import partial
+from QtApp.Base import CFrame
 
 
-class Receipt(QtWidgets.QFrame):
-    def __init__(self, parant):
-        QtWidgets.QFrame.__init__(self, parant)
+class Receipt(CFrame):
+    def __init__(self, aParent):
+        CFrame.__init__(self, aParent)
         self.TableNumber = None
         self.setupUi()
         self.HTML = ''

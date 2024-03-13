@@ -1,6 +1,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 from functools import partial
 from Config import Config
+from QtApp.Base import CPushButton
 
 
 class OrderType:
@@ -8,9 +9,9 @@ class OrderType:
     RunOut = 1
 
 
-class MenuBut(QtWidgets.QPushButton):
+class MenuBut(CPushButton):
     def __init__(self, parent):
-        QtWidgets.QPushButton.__init__(self, parent)
+        CPushButton.__init__(self, parent)
 
     def setupUi(self, Menu):
         table = Config.DataBase.MenuList
@@ -27,11 +28,10 @@ class MenuBut(QtWidgets.QPushButton):
         self.setEnabled(True)
 
     def setupColor(self, OrderType):
-        self.setAttribute(self.Qt.WA_StyledBackground, True)
         if OrderType == 0:
-            self.setStyleSheet('background-color: white;')
+            self.SetBackgoundColor('white')
         elif OrderType == 1:
-            self.setStyleSheet('background-color: Gray;')
+            self.SetBackgoundColor('Gray')
 
     def BindEvent(self, Event):
         self.pressed.connect(partial(Event, self.FoodID))

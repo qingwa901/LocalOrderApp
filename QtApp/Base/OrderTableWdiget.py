@@ -4,11 +4,12 @@ from PySide6.QtWidgets import QApplication, QWidget, QHeaderView, QAbstractItemV
 from PySide6.QtGui import QColor
 from Config import Config
 from TableInfoStore import OrderInfo
+from QtApp.Base import CTableWidget
 
 
-class TableWdiget(QTableWidget):
-    def __init__(self, parent):
-        super().__init__(0, len(Config.DisplaySetting.OrderTable.COL_NAME_CN), parent=parent)
+class TableWdiget(CTableWidget):
+    def __init__(self, aParent):
+        super().__init__(aParent, 0, len(Config.DisplaySetting.OrderTable.COL_NAME_CN))
         self.verticalHeader().setDefaultSectionSize(25)
         self.horizontalHeader().setDefaultSectionSize(150)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -27,6 +28,7 @@ class TableWdiget(QTableWidget):
         self.setHorizontalHeaderLabels(Config.DisplaySetting.OrderTable.COL_NAME_CN)
 
     def addRow(self, Order: OrderInfo):
+        self.Logger.info(f"{Order.ID}, {Order.NameCN}, {Order.Qty}, {Order.UnitPrice}, {Order.Note}")
         rowCount = self.rowCount()
         self.insertRow(rowCount)
         self.setItem(rowCount, 0, QTableWidgetItem(str(Order.NameCN)))

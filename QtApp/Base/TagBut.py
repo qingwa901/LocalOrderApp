@@ -1,11 +1,12 @@
 from PySide6 import QtCore, QtWidgets
 from Config import Config
+from QtApp.Base import CPushButton
 
 
-class CTagBtn(QtWidgets.QPushButton):
-    def __init__(self, parent, ID):
+class CTagBtn(CPushButton):
+    def __init__(self, aParent, ID):
         self.ID = ID
-        QtWidgets.QPushButton.__init__(self, parent)
+        CPushButton.__init__(self, aParent)
         self.target = None
         self.NoteWeidget = None
         self.PriceWeidget = None

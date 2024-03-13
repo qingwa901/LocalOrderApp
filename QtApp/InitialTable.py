@@ -10,17 +10,18 @@
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.Base.EditBox import EditBox, eValueType
+from QtApp.Base import CFrame, CWidget
 
-class InitialTable(QtWidgets.QFrame):
-    def __init__(self, parant, logger):
-        QtWidgets.QFrame.__init__(self, parant)
-        self.logger = logger
+
+class InitialTable(CFrame):
+    def __init__(self, aParant):
+        CFrame.__init__(self, aParant)
         self.setupUi()
 
     def setupUi(self):
         self.setObjectName("InitialTable")
         self.resize(469, 361)
-        self.formLayoutWidget = QtWidgets.QWidget(self)
+        self.formLayoutWidget = CWidget(self)
         self.formLayoutWidget.setGeometry(QtCore.QRect(10, 10, 281, 133))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
@@ -35,12 +36,12 @@ class InitialTable(QtWidgets.QFrame):
         self.label_2 = QtWidgets.QLabel(self.formLayoutWidget)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
-        self.EditBoxNumOfPeople = EditBox(self.formLayoutWidget, eValueType.Int, self.logger)
+        self.EditBoxNumOfPeople = EditBox(self.formLayoutWidget, eValueType.Int)
         self.EditBoxNumOfPeople.setMinimum(1)
         self.EditBoxNumOfPeople.setMaximum(30)
         self.EditBoxNumOfPeople.setObjectName("EditBoxNumOfPeople")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.EditBoxNumOfPeople)
-        self.gridLayoutWidget = QtWidgets.QWidget(self)
+        self.gridLayoutWidget = CWidget(self)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 220, 121, 80))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)

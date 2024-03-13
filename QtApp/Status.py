@@ -9,18 +9,19 @@
 
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from functools import partial
+from QtApp.Base import CFrame, CPushButton, CWidget
 
-class StatusPanel(QtWidgets.QFrame):
-    def __init__(self, parant):
-        QtWidgets.QFrame.__init__(self, parant)
+
+class StatusPanel(CFrame):
+    def __init__(self, aParent):
+        CFrame.__init__(self, aParent)
         self.setupUi()
         self.TableNumber = None
 
     def setupUi(self):
         self.setObjectName("Form")
         self.resize(468, 232)
-        self.formLayoutWidget = QtWidgets.QWidget(self)
+        self.formLayoutWidget = CWidget(self)
         self.formLayoutWidget.setGeometry(QtCore.QRect(9, 9, 281, 131))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
@@ -45,19 +46,19 @@ class StatusPanel(QtWidgets.QFrame):
         self.LBStartTime = QtWidgets.QLabel(self.formLayoutWidget)
         self.LBStartTime.setObjectName("LBStartTime")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.LBStartTime)
-        self.gridLayoutWidget = QtWidgets.QWidget(self)
+        self.gridLayoutWidget = CWidget(self)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 150, 295, 80))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
-        self.BtnCleanTable = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.BtnCleanTable = CPushButton(self.gridLayoutWidget)
         self.BtnCleanTable.setObjectName("BtnCleanTable")
         self.gridLayout.addWidget(self.BtnCleanTable, 0, 1, 1, 1)
-        self.BtnNewOrder = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.BtnNewOrder = CPushButton(self.gridLayoutWidget)
         self.BtnNewOrder.setObjectName("BtnNewOrder")
         self.gridLayout.addWidget(self.BtnNewOrder, 0, 0, 1, 1)
-        self.BtnCheckOut = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.BtnCheckOut = CPushButton(self.gridLayoutWidget)
         self.BtnCheckOut.setObjectName("BtnCheckOut")
         self.gridLayout.addWidget(self.BtnCheckOut, 0, 2, 1, 1)
 

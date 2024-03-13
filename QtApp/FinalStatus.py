@@ -16,8 +16,8 @@ from functools import partial
 
 class FinalStatusPanel(FinalStatusBase):
 
-    def __init__(self, parant, logger):
-        FinalStatusBase.__init__(self, parant, logger)
+    def __init__(self, aParent):
+        FinalStatusBase.__init__(self, aParent)
         self.total = 0
         self.cash = 0
         self.card = 0

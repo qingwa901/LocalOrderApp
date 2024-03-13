@@ -13,13 +13,14 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.MenuPage import MenuPage
 from DataBase import FullMenuList
 from Config import Config
+from QtApp.Base import CFrame, CWidget, CPushButton
 
 
-class Menu(QtWidgets.QFrame):
-    def __init__(self, parant, setting):
-        QtWidgets.QFrame.__init__(self, parant)
-        self.MenuENName = setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
-        self.MenuCNName = setting.GetValue(Config.ValueSetting.Manu.CN_NAME)
+class Menu(CFrame):
+    def __init__(self, aParant):
+        CFrame.__init__(self, aParant)
+        self.MenuENName = self.DataBase.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
+        self.MenuCNName = self.DataBase.Setting.GetValue(Config.ValueSetting.Manu.CN_NAME)
         self.setupUi()
 
     def setupUi(self):
@@ -32,7 +33,7 @@ class Menu(QtWidgets.QFrame):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.ButList = {}
         for i in self.MenuCNName:
-            But = QtWidgets.QPushButton(self)
+            But = CPushButton(self)
             But.setObjectName("Btn" + self.MenuENName[i])
             self.horizontalLayout.addWidget(But)
             self.ButList[i] = But

@@ -1,7 +1,5 @@
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QMimeData
-from PySide6.QtGui import QDrag, QPixmap
-from functools import partial
+from QtApp.Base import CLineEdit
 
 
 class eValueType:
@@ -10,17 +8,16 @@ class eValueType:
     String = 3
 
 
-class EditBox(QtWidgets.QLineEdit):
-    def __init__(self, parent, ValueType, logger):
-        QtWidgets.QLineEdit.__init__(self, parent)
-        self.logger = logger
-        self.ValueType = ValueType
+class EditBox(CLineEdit):
+    def __init__(self, aParent, aValueType):
+        CLineEdit.__init__(self, aParent)
+        self.ValueType = aValueType
         self.OpenKeyboardEvent = None
         self.Max = None
         self.Min = None
 
-    def focusInEvent(self, e: QtGui.QFocusEvent):
-        if e.gotFocus() and e.reason().value != 3:
+    def focusInEvent(self, aEvent: QtGui.QFocusEvent):
+        if aEvent.gotFocus() and aEvent.reason().value != 3:
             if self.OpenKeyboardEvent is None:
                 return
             else:
@@ -54,4 +51,12 @@ class EditBox(QtWidgets.QLineEdit):
                 return
         except Exception as e:
             self.setText(value)
-            self.logger.error(f'Error during clean {self.objectName()} value {self.text()}', exc_info=e)
+            self.Logger.error(f'Error during clean {self.objectName()} value {self.text()}', exc_info=e)
+
+    def value(self):
+        if self.ValueType == eValueType.Int:
+            return int(self.text())
+        elif self.ValueType == eValueType.Float:
+            return float(self.text())
+        elif self.ValueType == eValueType.String:
+            return self.text()

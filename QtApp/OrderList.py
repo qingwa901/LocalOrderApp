@@ -14,21 +14,20 @@ from collections import defaultdict
 from TableInfoStore import OrderInfo
 from functools import partial
 from Logger import CreateLogger
+from QtApp.Base import CFrame, CPushButton
 
 
-class OrderListPanel(QtWidgets.QFrame):
-    def __init__(self, parent, logger=None):
-        QtWidgets.QFrame.__init__(self, parent)
-        if logger is not None:
-            self.logger = logger
-        else:
-            self.logger = CreateLogger('test')
+class OrderListPanel(CFrame):
+    def __init__(self, aParent):
+        CFrame.__init__(self, aParent)
         self.setupUi()
         self.OrderEditEvent = None
         self.IsEditable = True
         self.Orders = []
         self.TableInfo = None
         self.tableView.cellClicked.connect(self.OpenOrderEditor)
+        self.Btnup.pressed.connect(self.btn_page_up)
+        self.Btndown.pressed.connect(self.btn_page_down)
 
     def setupUi(self):
         self.setObjectName("orderList")
@@ -38,15 +37,15 @@ class OrderListPanel(QtWidgets.QFrame):
         mainLayout = QtWidgets.QVBoxLayout()
         hLayout.addLayout(mainLayout)
         mainLayout.addWidget(self.tableView)
-        self.BtnPlaceOrder = QtWidgets.QPushButton(self)
+        self.BtnPlaceOrder = CPushButton(self)
         self.BtnPlaceOrder.setObjectName("BtnPlacecOrder")
         self.BtnPlaceOrder.setMaximumWidth(300)
         mainLayout.addWidget(self.BtnPlaceOrder)
         vLayout = QtWidgets.QVBoxLayout()
         hLayout.addLayout(vLayout)
-        self.Btnup = QtWidgets.QPushButton(self)
+        self.Btnup = CPushButton(self)
         vLayout.addWidget(self.Btnup)
-        self.Btndown = QtWidgets.QPushButton(self)
+        self.Btndown = CPushButton(self)
         vLayout.addWidget(self.Btndown)
         self.setLayout(hLayout)
         self.retranslateUi()
@@ -63,7 +62,7 @@ class OrderListPanel(QtWidgets.QFrame):
         return self.tableView.selectedRow
 
     def DisplayTable(self, TableInfo):
-        self.logger.debug(f'Display Order:ID {TableInfo.OrderID}, table: {TableInfo.TableID}')
+        self.Logger.debug(f'Display Order:ID {TableInfo.OrderID}, table: {TableInfo.TableID}')
         self.tableView.Clear()
         self.BtnPlaceOrder.setVisible(False)
         for order in TableInfo.Orders.values():
@@ -71,7 +70,7 @@ class OrderListPanel(QtWidgets.QFrame):
             self.tableView.addRow(order)
 
     def Clear(self):
-        self.logger.info('clear OrderList panel')
+        self.Logger.info('clear OrderList panel')
         self.tableView.Clear()
         self.BtnPlaceOrder.setVisible(True)
         self.Orders.clear()
@@ -87,6 +86,14 @@ class OrderListPanel(QtWidgets.QFrame):
         if self.IsEditable:
             Order = self.Orders[row]
             self.OrderEditEvent(Order)
+
+    def btn_page_up(self):
+        scrollBar = self.tableView.verticalScrollBar()
+        scrollBar.setValue(scrollBar.value() - scrollBar.pageStep())
+
+    def btn_page_down(self):
+        scrollBar = self.tableView.verticalScrollBar()
+        scrollBar.setValue(scrollBar.value() + scrollBar.pageStep())
 
 
 if __name__ == "__main__":

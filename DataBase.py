@@ -66,20 +66,21 @@ class DataBase(SQLControl):
             pass
 
     def LoadMenuPage(self):
-        try:
-            query = (
-                f"select * from {self.config.ManuPageList.NAME} where `{self.config.ManuPageList.STORE_ID}` = '"
-                f"{self.STORE_ID}' and `{self.config.ManuPageList.VALID}` = '1'")
-            self.logger.info(query)
-            data = pd.read_sql(query, self.conn)
-            data = data.set_index(self.config.ManuPageList.ID)
-            self.Setting.SetValue(Config.ValueSetting.Manu.EN_NAME,
-                                  data[self.config.ManuPageList.EN_NAME].to_dict())
-            self.Setting.SetValue(Config.ValueSetting.Manu.CN_NAME,
-                                  data[self.config.ManuPageList.CN_NAME].to_dict())
-        except Exception as e:
-            self.logger.error('Connection issue during loading menu page. Start to use previous setting',
-                              exc_info=e)
+        with self.Lock:
+            try:
+                query = (
+                    f"select * from {self.config.ManuPageList.NAME} where `{self.config.ManuPageList.STORE_ID}` = '"
+                    f"{self.STORE_ID}' and `{self.config.ManuPageList.VALID}` = '1'")
+                self.logger.info(query)
+                data = pd.read_sql(query, self.conn)
+                data = data.set_index(self.config.ManuPageList.ID)
+                self.Setting.SetValue(Config.ValueSetting.Manu.EN_NAME,
+                                      data[self.config.ManuPageList.EN_NAME].to_dict())
+                self.Setting.SetValue(Config.ValueSetting.Manu.CN_NAME,
+                                      data[self.config.ManuPageList.CN_NAME].to_dict())
+            except Exception as e:
+                self.logger.error('Connection issue during loading menu page. Start to use previous setting',
+                                  exc_info=e)
 
     def RefreshMenu(self):
         with self.Lock:

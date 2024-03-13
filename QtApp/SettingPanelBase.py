@@ -10,12 +10,13 @@
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from Config import Config
+from QtApp.Base import CFrame, CWidget, CPushButton
 
 
-class SettingPanelBase(QtWidgets.QFrame):
-    def __init__(self, parant, Setting):
-        QtWidgets.QFrame.__init__(self, parant)
-        self.Setting = Setting
+class SettingPanelBase(CFrame):
+    def __init__(self, aParent):
+        CFrame.__init__(self, aParent)
+        self.Setting = self.DataBase.Setting
         self.MenuENName = self.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
         self.MenuCNName = self.Setting.GetValue(Config.ValueSetting.Manu.CN_NAME)
         self.setupUi()
@@ -23,7 +24,7 @@ class SettingPanelBase(QtWidgets.QFrame):
     def setupUi(self):
         self.setObjectName("Form")
         self.resize(396, 291)
-        self.formLayoutWidget = QtWidgets.QWidget(self)
+        self.formLayoutWidget = CWidget(self)
         self.formLayoutWidget.setGeometry(QtCore.QRect(-1, -1, 301, 281))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
@@ -41,7 +42,7 @@ class SettingPanelBase(QtWidgets.QFrame):
         self.CBCashierPrinter = QtWidgets.QComboBox(self.formLayoutWidget)
         self.CBCashierPrinter.setObjectName("CBCashierPrinter")
         self.horizontalLayout_2.addWidget(self.CBCashierPrinter)
-        self.BtnCashierTestPrint = QtWidgets.QPushButton(self.formLayoutWidget)
+        self.BtnCashierTestPrint = CPushButton(self.formLayoutWidget)
         self.BtnCashierTestPrint.setObjectName("BtnCashierTestPrint")
         self.horizontalLayout_2.addWidget(self.BtnCashierTestPrint)
         self.formLayout.setLayout(row, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_2)
@@ -61,7 +62,7 @@ class SettingPanelBase(QtWidgets.QFrame):
             CBPrinter = QtWidgets.QComboBox(self.formLayoutWidget)
             CBPrinter.setObjectName(f"CB{self.MenuENName}Printer")
             horizontalLayout.addWidget(CBPrinter)
-            BtnTestPrinter = QtWidgets.QPushButton(self.formLayoutWidget)
+            BtnTestPrinter = CPushButton(self.formLayoutWidget)
             BtnTestPrinter.setObjectName(f"Btn{self.MenuENName}TestPrint")
             horizontalLayout.addWidget(BtnTestPrinter)
             self.formLayout.setLayout(row, QtWidgets.QFormLayout.FieldRole, horizontalLayout)

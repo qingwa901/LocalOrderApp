@@ -7,9 +7,8 @@ LocalTimeZone = datetime.datetime.now().astimezone().tzinfo
 
 
 class OrderDetail(OrderDetailBasePanel):
-    def __init__(self, parent, logger):
-        self.logger = logger
-        OrderDetailBasePanel.__init__(self, parent, logger)
+    def __init__(self, aParent):
+        OrderDetailBasePanel.__init__(self, aParent)
         self.OrderInfo = None
         self.TableID = None
         self.BtnAddQty.pressed.connect(self.AddQty)
