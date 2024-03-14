@@ -24,7 +24,7 @@ class OrderDetail(OrderDetailBasePanel):
         self.LBFoodName.setText(Orderinfo.NameCN)
         self.EditPrice.setText(str(round(Orderinfo.UnitPrice, 2)))
         self.EditQty.setText(str(int(Orderinfo.Qty)))
-        self.LBCashier.setText(str(int(Orderinfo.StaffID)))
+        self.LBStaff.setText(self.DataBase.GetStaffName(Orderinfo.StaffID))
         self.LBCreateTime.setText(str(Orderinfo.CreateTime.tz_convert(LocalTimeZone)))
         self.LBExtraRequirement.setText(Orderinfo.Note)
         for TagBtn in self.TagList:

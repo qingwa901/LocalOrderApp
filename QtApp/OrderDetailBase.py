@@ -105,9 +105,9 @@ class OrderDetailBasePanel(CFrame):
         self.LBCahierTag = QtWidgets.QLabel(parent=self.formLayoutWidget)
         self.LBCahierTag.setObjectName("LBCahierTag")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.ItemRole.LabelRole, self.LBCahierTag)
-        self.LBCashier = QtWidgets.QLabel(parent=self.formLayoutWidget)
-        self.LBCashier.setObjectName("LBCashier")
-        self.formLayout.setWidget(5, QtWidgets.QFormLayout.ItemRole.FieldRole, self.LBCashier)
+        self.LBStaff = QtWidgets.QLabel(parent=self.formLayoutWidget)
+        self.LBStaff.setObjectName("LBCashier")
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.ItemRole.FieldRole, self.LBStaff)
 
         self.LBCreateTimeTag = QtWidgets.QLabel(parent=self.formLayoutWidget)
         self.LBCreateTimeTag.setObjectName("LBCreateTimeTag")
@@ -170,7 +170,7 @@ class OrderDetailBasePanel(CFrame):
         self.LBExtraRequirement.setText(_translate("Form", "TextLabel"))
 
         self.LBCahierTag.setText(_translate("Form", "服务员"))
-        self.LBCashier.setText(_translate("Form", ""))
+        self.LBStaff.setText(_translate("Form", ""))
         self.LBCreateTimeTag.setText(_translate("Form", "下单时间"))
         self.LBCreateTime.setText(_translate("Form", ""))
         # self.pushButton_5.setText(_translate("Form", "PushButton"))

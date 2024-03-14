@@ -18,7 +18,7 @@ class Config:
         class MenuList:
             NAME = 'MenuList'
             ID = 'ID'
-            STORE_ID = 'IDStore'
+            ID_STORE = 'IDStore'
             NAME_CN = 'NameCN'
             NAME_EN = 'NameEN'
             PRICE = 'Price'
@@ -26,7 +26,7 @@ class Config:
             QTY = 'Qty'
             NOTE = 'Note'
             VALID = 'Valid'
-            COLUMNS = [STORE_ID, NAME_CN, NAME_EN,
+            COLUMNS = [ID_STORE, NAME_CN, NAME_EN,
                        PRICE, FOOD_TYPE, QTY, NOTE, VALID]
             DISPLAYLIST = [NAME_CN, QTY, PRICE, NOTE]
 
@@ -151,10 +151,30 @@ class Config:
         class ManuPageList:
             ID = 'id'
             NAME = 'ManuPageList'
-            STORE_ID = 'StoreID'
+            ID_STORE = 'StoreID'
             EN_NAME = 'ENName'
             CN_NAME = 'CNName'
             VALID = 'Valid'
+            INITIAL_QUERY = '''CREATE TABLE `ManuPageList` (
+          `id` int NOT NULL,
+          `StoreID` int NOT NULL,
+          `ENName` varchar(225) NOT NULL,
+          `CNName` varchar(225) NOT NULL,
+          `Valid` tinyint NOT NULL DEFAULT '1'
+        )'''
+
+        class Staff:
+            NAME = 'Staff'
+            ID = 'ID'
+            ID_STORE = 'StoreID'
+            STAFF_NAME = 'StaffName'
+            VALID = 'Valid'
+            INITIAL_QUERY = '''CREATE TABLE `Staff` (
+              `ID` int NOT NULL,
+              `StoreID` int NOT NULL,
+              `StaffName` varchar(225) NOT NULL,
+              `Valid` tinyint NOT NULL DEFAULT '1'
+            ) '''
 
     class UI:
         class EatInPage:

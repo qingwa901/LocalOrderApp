@@ -21,6 +21,8 @@ from QtApp.receiptPanel import Receipt
 from QtApp.keyboard import KeyBoardPanel
 from QtApp.OrderDetail import OrderDetail
 from QtApp.Base.EditBox import EditBox
+from QtApp.Base.ConnectionLabel import ConnectionLabel
+from QtApp.Base.StaffBox import Staffbox
 from QtApp.Base import CWidget, CFrame, CSplitter
 from DataBase import DataBase
 from Logger import CreateLogger
@@ -43,7 +45,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.DataBase.open = False
             self.DataBase.Setting.open = False
             raise e
-        self.StaffID = 1
 
     def setupUi(self):
         self.setObjectName("MainWindow")
@@ -138,6 +139,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.toolbar.addAction(self.TableAction)
         self.TableAction.triggered.connect(self.menuTable_onClick)
 
+        label = QtWidgets.QLabel(self)
+        label.setText("值班：")
+        self.toolbar.addWidget(label)
+        self.Staff = Staffbox(self)
+        # checkableAction = QtWidgets.QWidgetAction(self)
+        # checkableAction.setDefaultWidget(self.Staff)
+        # self.toolbar.addAction(checkableAction)
+        self.toolbar.addWidget(self.Staff)
+
+        spacer = QtWidgets.QWidget()
+        spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.toolbar.addWidget(spacer)
+
+        self.Connection = ConnectionLabel(self)
+        self.toolbar.addWidget(self.Connection)
         # self.TestAction = QtGui.QAction("Test", self)
         # self.toolbar.addAction(self.TestAction)
         # self.TestAction.triggered.connect(self.ShowJumpWindow)
@@ -424,7 +440,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.Logger.info(f'Place order')
             for order in Orders:
                 order.OrderID = self.OrderID
-                order.StaffID = self.StaffID
+                order.StaffID = self.DataBase.StaffList[self.DataBase.StaffName]
             self.DataBase.PlaceOrder(Orders)
             self.TableButClick(self.TableNumber)
         except Exception as e:

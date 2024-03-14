@@ -34,13 +34,26 @@ class SQLControl:
         self.engine = create_engine("mysql+pymysql://{0}:{1}@{2}:{3}/{4}".format(
             _user, _password, _host, _port, _database
         ))
-        self.Connected = False
+        self.m_Connected = False
         self.Local_Connected = False
+        self.StatusLabel = None
         try:
             self.conn = self.engine.connect()
+            self.Connected = True
+            self.logger.info('Connect')
         except sqlalchemy.exc.OperationalError:
             self.conn = None
         # threading.Thread(target=self.build_connection).start()
+
+    def setConnection(self, value):
+        self.m_Connected = value
+        if self.StatusLabel is not None:
+            self.StatusLabel.Connection(value)
+
+    def getConnection(self):
+        return self.m_Connected
+
+    Connected = property(getConnection, setConnection)
 
     def get_local_data(self, query):
         while self.open:

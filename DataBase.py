@@ -29,9 +29,13 @@ class DataBase(SQLControl):
         self.STORE_ID = self.config.STORE_ID  # Todo save store id to setting file
         self.MenuPageLoad = threading.Thread(target=self.LoadMenuPage)
         self.MenuPageLoad.start()
+        self.StaffLoad = threading.Thread(target=self.LoadStaffInfo)
+        self.StaffLoad.start()
         self.TableInfoLock = threading.Lock()
         self.TableInfo = AllTableInfoStore(self.logger)
         self.path = path
+        self.StaffName = None
+        self.StaffList = {}
         if not os.path.exists(self.path):
             os.mkdir(self.path)
         self.tmp_path = path + '/tmp'
@@ -50,7 +54,8 @@ class DataBase(SQLControl):
         self.MaxOrderMataListID = None
         self.MenuPageLoad.join()
         self.Printer = PrinterControl(self.logger, self.Setting)
-        LoadStoreInfo.join()
+        self.StaffLoad.join()
+        # LoadStoreInfo.join()
 
     def LoadStoreInfo(self):
         try:
@@ -62,14 +67,31 @@ class DataBase(SQLControl):
             data = data.iloc[0]
             self.Setting.SetValue(self.config.StoreList.TABLE_ORDER,
                                   json.loads(data[self.config.StoreList.TABLE_ORDER]))
-        except:
-            pass
+        except Exception as e:
+            self.logger.error('online StoreInfo Load failed.', exc_info=e)
+
+    def LoadStaffInfo(self):
+        query = (f"select * from {self.config.Staff.NAME} where `{self.config.Staff.ID_STORE}` = '{self.STORE_ID}' and "
+                 f"`{self.config.Staff.VALID}` = '1';")
+        with self.Lock:
+            try:
+                self.logger.info(query)
+                data = pd.read_sql(query, self.conn)
+                self.SaveStaff(data)
+                self.logger.info('Online staff list loaded.')
+            except Exception as e:
+                self.logger.error('Connection issue try to load local staff', exc_info=e)
+                with sqlite3.connect(Config.DataBase.PATH) as conn:
+                    self.logger.info(f'query: {query}')
+                    data = pd.read_sql(query, conn)
+                    self.logger.info('Local staff loaded.')
+        self.StaffList = data.set_index(self.config.Staff.STAFF_NAME)[self.config.Staff.ID].to_dict()
 
     def LoadMenuPage(self):
         with self.Lock:
             try:
                 query = (
-                    f"select * from {self.config.ManuPageList.NAME} where `{self.config.ManuPageList.STORE_ID}` = '"
+                    f"select * from {self.config.ManuPageList.NAME} where `{self.config.ManuPageList.ID_STORE}` = '"
                     f"{self.STORE_ID}' and `{self.config.ManuPageList.VALID}` = '1'")
                 self.logger.info(query)
                 data = pd.read_sql(query, self.conn)
@@ -83,17 +105,15 @@ class DataBase(SQLControl):
                                   exc_info=e)
 
     def RefreshMenu(self):
+        query = (f"select * from {self.config.MenuList.NAME} where {self.config.MenuList.ID_STORE} = "
+                 f"'{self.STORE_ID}' and `{self.config.MenuList.VALID}` = '1'")
         with self.Lock:
             try:
-                query = (f"select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = "
-                         f"'{self.STORE_ID}' and `{self.config.MenuList.VALID}` = '1'")
                 self.logger.info(query)
                 data = pd.read_sql(query, self.conn)
                 self.SaveMenu(data)
             except Exception as e:
                 self.logger.error('Connection issue try to load local menu', exc_info=e)
-                query = (f'select * from {self.config.MenuList.NAME} where {self.config.MenuList.STORE_ID} = '
-                         f'{self.STORE_ID}')
                 with sqlite3.connect(Config.DataBase.PATH) as conn:
                     self.logger.info(f'query: {query}')
                     data = pd.read_sql(query, conn)
@@ -106,6 +126,11 @@ class DataBase(SQLControl):
 
     def SaveMenu(self, data: pd.DataFrame):
         table = self.config.MenuList.NAME
+        self.executeLocally(f'DELETE FROM {table} where 1=1')
+        self.SaveLocalData(data, table)
+
+    def SaveStaff(self, data: pd.DataFrame):
+        table = self.config.Staff.NAME
         self.executeLocally(f'DELETE FROM {table} where 1=1')
         self.SaveLocalData(data, table)
 
@@ -318,14 +343,15 @@ class DataBase(SQLControl):
 
     def DataBaseCheck(self):
         tablelist = self.get_local_data(f"SELECT name FROM sqlite_master WHERE type='table';")
-        for i in [self.config.OrderList, self.config.OrderMetaData]:
+        for i in [self.config.OrderList, self.config.OrderMetaData, self.config.Staff, self.config.MenuList,
+                  self.config.ManuPageList]:
             if i.NAME not in tablelist['name'].to_list():
                 self.executeLocally(i.INITIAL_QUERY)
                 self.HardLoadData(i)
 
     def HardLoadData(self, Table):
         data = self.get_data(f"select * from {Table.NAME} where {Table.ID_STORE}={self.STORE_ID};")
-        if len(data) > 0:
+        if len(data) > 0 and self.config.LOADED in data.keys():
             update_data = data[(data[self.config.LOADED] == 0) | (data[self.config.UPDATED] == 0)]
             data[self.config.LOADED] = True
             data[self.config.UPDATED] = True
@@ -600,3 +626,9 @@ class DataBase(SQLControl):
                  f"`{self.config.LOADED}`='0' where "
                  f"`{table.ID}`='{aOrderInfo.ID}' and `{table.ID_STORE}`='{self.STORE_ID}'")
         self.executeLocally(query)
+
+    def GetStaffName(self, ID):
+        for i in self.StaffList:
+            if self.StaffList[i] == ID:
+                return i
+        return None
