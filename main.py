@@ -58,6 +58,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.OrderDetailPanel = OrderDetail(self.centralwidget)
         self.OrderDetailPanel.setVisible(False)
 
+        self.Receipt = Receipt(self)
+        self.Receipt.setVisible(False)
+
         self.JumpWindow = JumpWindow(self)
         self.JumpWindow.setVisible(False)
 
@@ -122,9 +125,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.FinalStatusPanel.setVisible(False)
 
-        self.Receipt = Receipt(self.RightTopFrame)
-        self.Receipt.setVisible(False)
-
         self.setCentralWidget(self.centralwidget)
         self.toolbar = self.addToolBar("Panels")
         icon = QtGui.QIcon()
@@ -154,9 +154,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.Connection = ConnectionLabel(self)
         self.toolbar.addWidget(self.Connection)
-        # self.TestAction = QtGui.QAction("Test", self)
-        # self.toolbar.addAction(self.TestAction)
-        # self.TestAction.triggered.connect(self.ShowJumpWindow)
+        self.TestAction = QtGui.QAction("Test", self)
+        self.toolbar.addAction(self.TestAction)
+        self.TestAction.triggered.connect(self.ShowTestPanel)
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -230,6 +230,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hbox = QtWidgets.QHBoxLayout(self)
         hbox.addWidget(self.splitter)
         hbox.addWidget(self.SettingPanel)
+        hbox.addWidget(self.Receipt)
         self.centralwidget.setLayout(hbox)
 
         hbox = QtWidgets.QHBoxLayout(self.frame_2)
@@ -241,7 +242,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hbox.addWidget(self.MenuPanel)
         hbox.addWidget(self.StatusPanel)
         hbox.addWidget(self.FinalStatusPanel)
-        hbox.addWidget(self.Receipt)
         self.RightTopFrame.setLayout(hbox)
 
         hbox = QtWidgets.QHBoxLayout(self.RightBottomFrame)
@@ -263,6 +263,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         try:
             self.SettingPanel.setVisible(False)
             self.splitter.setVisible(True)
+            self.Receipt.setVisible(False)
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
 
@@ -271,6 +272,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.Logger.info(f'start to load Table {TableNumber}')
             self.TableNumber = TableNumber
             self.MenuPanel.setVisible(False)
+            self.Receipt.setVisible(False)
             self.DataBase.GetOpenTableInfo()
             TableInfo = None
             if TableNumber in self.DataBase.TableInfo.ByTableIDDict:
@@ -335,6 +337,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.TableButClick(self.TableNumber)
         except Exception as e:
             self.Logger.error(f'Error during close Table {self.TableNumber}', exc_info=e)
+
+    def ShowTestPanel(self):
+        self.Receipt.setVisible(True)
+        self.Receipt.raise_()
 
     def ShowJumpWindow(self):
         try:

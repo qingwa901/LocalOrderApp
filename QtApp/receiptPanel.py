@@ -11,7 +11,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets, QtPrintSupport
 from TableInfoStore import TableInfoStore
 from QtApp.Base import CFrame
-
+from PySide6.QtGui import QPageSize
 
 class Receipt(CFrame):
     def __init__(self, aParent):
@@ -24,7 +24,8 @@ class Receipt(CFrame):
         self.setObjectName("Form")
         self.resize(468, 1000)
         self.setObjectName("Form")
-        self.web_view = QtWebEngineWidgets.QWebEngineView(self)
+        # self.web_view = QtWebEngineWidgets.QWebEngineView(self)
+        self.web_view = QtWidgets.QTextBrowser(self)
         # set the widget as the main window's central widget
         vview = QtWidgets.QVBoxLayout(self)
         vview.addWidget(self.web_view)
@@ -38,7 +39,7 @@ class Receipt(CFrame):
                                 .itemprice{margin-right:0;margin-left: auto;}</style>
                                 <div id="receipt">
                                 <div id="receipt_head" style="text-align: center;">
-                                <div id="icon"><img src="file://{Path_To_LOGO}" style="width:50px;height:50px;"></div>
+                                <div id="icon"><img src="file://{Path_To_LOGO}" width="50" height="50"></div>
                                 <div id="address">{ADDRESS}</div>
                                 </div><hr>
                                 <div id="receipt_info">VAT No: {VATNO}<br>Date: {TIME}<br>#ORDER: {ORDERID}<br>#Table: {TABLE_NUMBER}
@@ -91,12 +92,12 @@ class Receipt(CFrame):
                                 grid-template-columns: 1fr 1fr;align-items: center;}.itemname{flex-wrap: wrap;}
                                 .itemprice{margin-right:0;margin-left: auto;}</style>
                                 <div id="receipt">
-                                <div id="receipt_head" style="text-align: center;">
-                                <div id="icon"><img src="file://{Path_To_LOGO}" style="width:50px;height:50px;"></div>
-                                <div id="address">{ADDRESS}</div>
+                                <div id="receipt_head" style="text-align: center;"">
+                                <div id="icon"><img src="Path_To_LOGO}" style="width:50px;height:50px;"></div>
+                                <p style='font-size: large;'>{ADDRESS}</p>
                                 </div><hr>
                                 <div id="receipt_info">VAT No: {VATNO}<br>Date: {TIME}<br>#ORDER: {ORDERID}<br>#Table: {TABLE_NUMBER}
-                                </div></div><hr>'''.replace('{Path_To_LOGO}', 'D:/Code/web_python/App/img/Login.png')
+                                </div></div><hr>'''.replace('{Path_To_LOGO}', 'img/Login.png')
                        .replace('{ADDRESS}', 'Address')
                        .replace('{VATNO}', '')
                        .replace('{TIME}', TableInfo.EndTime)
@@ -156,29 +157,41 @@ class Receipt(CFrame):
         self.web_view.setHtml(receiptform)
 
     def print_me2(self):
-        printer = QtPrintSupport.QPrinter()
-        printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
-        printer.setPrinterName('ET-2850 Series(Network)')
-        painter = QtGui.QPainter(printer)
-        # scale = printer.pageRect(QtPrintSupport.QPrinter.Unit.DevicePixel).width() / (self.width()+50)
-        # painter.translate(printer.paperRect(QtPrintSupport.QPrinter.Unit.DevicePixel).center())
-        # painter.scale(scale, scale)
-        # painter.translate((self.width() / 2) * -1, (self.height() / 2) * -1)
-        # self.web_view.page().printRequested()
-        self.web_view.render(painter, QtCore.QPoint())
-        painter.end()
+        printerName = self.DataBase.Printer.DefaultCashierPrinter
+        if printerName is not None:
+            printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.PrinterResolution)
+            printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
+            printer.setPrinterName(printerName)
+            painter = QtGui.QPainter(printer)
+            # scale = printer.pageRect(QtPrintSupport.QPrinter.Unit.DevicePixel).width() / (self.width()+50)
+            # painter.translate(printer.paperRect(QtPrintSupport.QPrinter.Unit.DevicePixel).center())
+            # painter.scale(scale, scale)
+            # painter.translate((self.width() / 2) * -1, (self.height() / 2) * -1)
+            # self.web_view.page().printRequested()
+            self.web_view.render(painter, QtCore.QPoint())
+            painter.end()
 
     def print_me3(self):
-        printer = QtPrintSupport.QPrinter()
-        printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
-        printer.setPrinterName('ET-2850 Series(Network)')
-        document = QtGui.QTextDocument()
-        cursor = QtGui.QTextCursor(document)
-        blockFormat = QtGui.QTextBlockFormat()
-        cursor.insertBlock(blockFormat)
-        cursor.insertHtml(self.HTML)
-        blockFormat.setPageBreakPolicy(QtGui.QTextFormat.PageBreak_AlwaysBefore)
-        document.print_(printer)
+        printerName = self.DataBase.Printer.DefaultCashierPrinter
+        if printerName is not None:
+            printer = QtPrintSupport.QPrinter()
+            printer.setPageMargins(QtCore.QMargins(0, 0, 0, 0), QtGui.QPageLayout.Millimeter)
+            printer.setFullPage(True)
+            # printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
+            printer.setPrinterName(printerName)
+            size = QPageSize(QtCore.QSize(70 * 2.83465, 297 *2.83465))
+            printer.setPageSize(size)
+            # document = QtGui.QTextDocument()
+            # document.setPageSize(
+            #     QtCore.QSizeF(printer.width(), printer.height()))
+            # cursor = QtGui.QTextCursor(document)
+            # blockFormat = QtGui.QTextBlockFormat()
+            # cursor.insertBlock(blockFormat)
+            # cursor.insertHtml(self.HTML)
+            # blockFormat.setPageBreakPolicy(QtGui.QTextFormat.PageBreak_AlwaysBefore)
+            # document.print_(printer)
+
+            self.web_view.print_(printer)
 
 
 if __name__ == "__main__":

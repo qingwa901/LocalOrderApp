@@ -45,6 +45,7 @@ class DataBase(SQLControl):
         self.DataBaseCheck()
         LoadStoreInfo = threading.Thread(target=self.LoadStoreInfo)
         LoadStoreInfo.start()
+        self.MenuPageLoad.join()
         self.MenuLoad = threading.Thread(target=self.RefreshMenu)
         self.MenuLoad.start()
         self.auto_update = threading.Thread(target=self.AutoUpdate)
@@ -52,9 +53,9 @@ class DataBase(SQLControl):
         self.MaxOrderID = None
         self.MaxOrderListID = None
         self.MaxOrderMataListID = None
-        self.MenuPageLoad.join()
         self.Printer = PrinterControl(self.logger, self.Setting)
         self.StaffLoad.join()
+        self.MenuLoad.join()
         # LoadStoreInfo.join()
 
     def LoadStoreInfo(self):
