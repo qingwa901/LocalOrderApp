@@ -45,6 +45,9 @@ class FinalStatusPanel(FinalStatusBase):
         self.ButDiscountB.pressed.connect(self.AddDiscountB)
         self.BtnAddRemoveServiceCharge.pressed.connect(self.ChangeServiceChargePercent)
 
+    def AddEvent(self):
+        self.BtnPrintReceipt.pressed.connect(self.PrintReceipt)
+
     def setUpOpenKeyboardEvent(self, event):
         self.EditBoxToPayAmount.OpenKeyboardEvent = event
 
@@ -129,8 +132,8 @@ class FinalStatusPanel(FinalStatusBase):
     def CleanTableConnect(self, Event):
         self.BtnCleanTable.pressed.connect(Event)
 
-    def PrintReceiptConnect(self, Event):
-        self.BtnPrintReceipt.pressed.connect(Event)
+    def PrintReceipt(self):
+        self.DataBase.Printer.PrintReceipt(self.TableInfo)
 
     def RemoveCash(self):
         self.cash = 0

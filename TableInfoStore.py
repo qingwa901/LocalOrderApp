@@ -18,6 +18,7 @@ class OrderInfo:
     MenuNote = None
     CreateTime = None
     OrderList = Config.DataBase.OrderList
+    FoodType = None
 
     def SetOrder(self, Order: pd.Series):
         self.ID = Order[self.OrderList.ID]
@@ -46,6 +47,7 @@ class OrderInfo:
         self.NameEN = m.NameEN
         self.OriUnitPrice = m.UnitPrice
         self.MenuNote = m.Note
+        self.FoodType = m.Type
 
 
 class TableInfoStore:

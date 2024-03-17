@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QHeaderView, QAbstractItemV
 from PySide6.QtGui import QColor
 from Config import Config
 from TableInfoStore import TableInfoStore
-from QtApp.Base import CTableWidget,CWidget
+from QtApp.Base import CTableWidget, CWidget
 
 
 class TableWidget(CTableWidget):
@@ -31,14 +31,19 @@ class TableWidget(CTableWidget):
         self.Logger.info(f"{Order.OrderID}, {Order.TableID}, {Order.GetTotalAmount()}, {Order.EndTime}")
         rowCount = self.rowCount()
         self.insertRow(rowCount)
-        self.setItem(rowCount, 0, QTableWidgetItem(str(Order.EndTime)))
+        if Order.EndTime is not None:
+            self.setItem(rowCount, 0, QTableWidgetItem(str(Order.EndTime.split(' ')[1])))
         self.setItem(rowCount, 1, QTableWidgetItem(str(Order.OrderID)))
         self.setItem(rowCount, 2, QTableWidgetItem(str(Order.TableID)))
-        self.setItem(rowCount, 3, QTableWidgetItem(str(Order.GetTotalAmount())))
-        self.setItem(rowCount, 4, QTableWidgetItem(str(Order.ServiceCharge*Order.GetTotalAmount()/100)))
-        self.setItem(rowCount, 5, QTableWidgetItem(str(Order.GetTotalAmount()*Order.Discount/100)))
+        total = round(Order.GetTotalAmount(), 2)
+        self.setItem(rowCount, 3, QTableWidgetItem(str(total)))
+        self.setItem(rowCount, 4, QTableWidgetItem(str(round(Order.ServiceCharge * Order.GetTotalAmount() / 100, 2))))
+        self.setItem(rowCount, 5, QTableWidgetItem(str(round(Order.GetTotalAmount() * Order.Discount / 100, 2))))
         self.setItem(rowCount, 6, QTableWidgetItem(str(Order.Cash)))
         self.setItem(rowCount, 7, QTableWidgetItem(str(Order.Card)))
+        self.setItem(rowCount, 8,
+                     QTableWidgetItem(str(round(total * (1 + Order.ServiceCharge / 100) * (
+                             1 - Order.Discount / 100) - Order.Cash - Order.Card, 2))))
 
     def Clear(self):
         self.selectedRow = None

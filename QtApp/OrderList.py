@@ -11,7 +11,7 @@
 from PySide6 import QtCore, QtWidgets
 from QtApp.Base.OrderTableWidget import TableWidget
 from collections import defaultdict
-from TableInfoStore import OrderInfo
+from TableInfoStore import OrderInfo, TableInfoStore
 from functools import partial
 from Logger import CreateLogger
 from QtApp.Base import CFrame, CPushButton
@@ -23,7 +23,7 @@ class OrderListPanel(CFrame):
         self.setupUi()
         self.OrderEditEvent = None
         self.IsEditable = True
-        self.Orders = []
+        self.Orders = TableInfoStore()
         self.TableInfo = None
         self.tableView.cellClicked.connect(self.OpenOrderEditor)
         self.Btnup.pressed.connect(self.btn_page_up)
@@ -65,18 +65,22 @@ class OrderListPanel(CFrame):
         self.Logger.debug(f'Display Order:ID {TableInfo.OrderID}, table: {TableInfo.TableID}')
         self.tableView.Clear()
         self.BtnPlaceOrder.setVisible(False)
+        self.Orders.Clear()
+        self.Orders.OrderID = TableInfo.OrderID
+        self.Orders.TableID = TableInfo.TableID
+        self.Orders.Orders = []
         for order in TableInfo.Orders.values():
-            self.Orders.append(order)
+            self.Orders.Orders.append(order)
             self.tableView.addRow(order)
 
     def Clear(self):
         self.Logger.info('clear OrderList panel')
         self.tableView.Clear()
         self.BtnPlaceOrder.setVisible(True)
-        self.Orders.clear()
+        self.Orders.Orders = []
 
     def AddOrder(self, Order):
-        self.Orders.append(Order)
+        self.Orders.Orders.append(Order)
         self.tableView.addRow(Order)
 
     def Connect(self, Event):
@@ -84,7 +88,7 @@ class OrderListPanel(CFrame):
 
     def OpenOrderEditor(self, row, column):
         if self.IsEditable:
-            Order = self.Orders[row]
+            Order = self.Orders.Orders[row]
             self.OrderEditEvent(Order)
 
     def btn_page_up(self):

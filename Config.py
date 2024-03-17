@@ -190,7 +190,7 @@ class Config:
         class HistoryOrderTable:
             COL_NAME_EN = ['FinishTime', 'OrderID', 'TableID', 'TotalAmount', 'ServiceCharge', 'Discount', 'Cash',
                            'Card']
-            COL_NAME_CN = ['结束时间', '订单号', '桌号', '总价', '服务费', '折扣', '现金', '刷卡']
+            COL_NAME_CN = ['结束时间', '订单号', '桌号', '总价', '服务费', '折扣', '现金', '刷卡', '差额']
 
         class MenuTag:
             TAG = "tag"

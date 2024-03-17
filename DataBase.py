@@ -74,14 +74,16 @@ class DataBase(SQLControl):
     def LoadStaffInfo(self):
         query = (f"select * from {self.config.Staff.NAME} where `{self.config.Staff.ID_STORE}` = '{self.STORE_ID}' and "
                  f"`{self.config.Staff.VALID}` = '1';")
-        with self.Lock:
-            try:
+
+        try:
+            with self.Lock:
                 self.logger.info(query)
                 data = pd.read_sql(query, self.conn)
                 self.SaveStaff(data)
                 self.logger.info('Online staff list loaded.')
-            except Exception as e:
-                self.logger.error('Connection issue try to load local staff', exc_info=e)
+        except Exception as e:
+            self.logger.error('Connection issue try to load local staff', exc_info=e)
+            with self.LocalLock:
                 with sqlite3.connect(Config.DataBase.PATH) as conn:
                     self.logger.info(f'query: {query}')
                     data = pd.read_sql(query, conn)
@@ -89,32 +91,35 @@ class DataBase(SQLControl):
         self.StaffList = data.set_index(self.config.Staff.STAFF_NAME)[self.config.Staff.ID].to_dict()
 
     def LoadMenuPage(self):
-        with self.Lock:
-            try:
-                query = (
-                    f"select * from {self.config.ManuPageList.NAME} where `{self.config.ManuPageList.ID_STORE}` = '"
-                    f"{self.STORE_ID}' and `{self.config.ManuPageList.VALID}` = '1'")
-                self.logger.info(query)
+
+        try:
+            query = (
+                f"select * from {self.config.ManuPageList.NAME} where `{self.config.ManuPageList.ID_STORE}` = '"
+                f"{self.STORE_ID}' and `{self.config.ManuPageList.VALID}` = '1'")
+            self.logger.info(query)
+            with self.Lock:
                 data = pd.read_sql(query, self.conn)
-                data = data.set_index(self.config.ManuPageList.ID)
-                self.Setting.SetValue(Config.ValueSetting.Manu.EN_NAME,
-                                      data[self.config.ManuPageList.EN_NAME].to_dict())
-                self.Setting.SetValue(Config.ValueSetting.Manu.CN_NAME,
-                                      data[self.config.ManuPageList.CN_NAME].to_dict())
-            except Exception as e:
-                self.logger.error('Connection issue during loading menu page. Start to use previous setting',
-                                  exc_info=e)
+            data = data.set_index(self.config.ManuPageList.ID)
+            self.Setting.SetValue(Config.ValueSetting.Manu.EN_NAME,
+                                  data[self.config.ManuPageList.EN_NAME].to_dict())
+            self.Setting.SetValue(Config.ValueSetting.Manu.CN_NAME,
+                                  data[self.config.ManuPageList.CN_NAME].to_dict())
+        except Exception as e:
+            self.logger.error('Connection issue during loading menu page. Start to use previous setting',
+                              exc_info=e)
 
     def RefreshMenu(self):
         query = (f"select * from {self.config.MenuList.NAME} where {self.config.MenuList.ID_STORE} = "
                  f"'{self.STORE_ID}' and `{self.config.MenuList.VALID}` = '1'")
-        with self.Lock:
-            try:
-                self.logger.info(query)
+
+        try:
+            self.logger.info(query)
+            with self.Lock:
                 data = pd.read_sql(query, self.conn)
                 self.SaveMenu(data)
-            except Exception as e:
-                self.logger.error('Connection issue try to load local menu', exc_info=e)
+        except Exception as e:
+            self.logger.error('Connection issue try to load local menu', exc_info=e)
+            with self.LocalLock:
                 with sqlite3.connect(Config.DataBase.PATH) as conn:
                     self.logger.info(f'query: {query}')
                     data = pd.read_sql(query, conn)
@@ -478,33 +483,37 @@ class DataBase(SQLControl):
         self.executeLocally(query)
         self.TableInfo.ByOrderIDDict[OrderID].Clear()
 
-    def PlaceOrder(self, Orders):
-        if len(Orders) == 0:
-            return
-        table = self.config.OrderList
-        OrderSeires = {table.ID: [],
-                       table.ID_FOOD: [],
-                       table.QTY: [],
-                       table.UNIT_PRICE: [],
-                       table.NOTE: []}
-        self.GetMaxOrderListID()
-        k = 1
-        for Order in Orders:
-            self.MaxOrderListID += 1
-            OrderSeires[table.ID].append(self.MaxOrderListID)
-            OrderSeires[table.ID_FOOD].append(Order.FoodID)
-            OrderSeires[table.QTY].append(Order.Qty)
-            OrderSeires[table.UNIT_PRICE].append(Order.UnitPrice)
-            OrderSeires[table.NOTE].append(Order.Note)
-        data = pd.DataFrame(OrderSeires)
-        data[table.ID_STAFF] = Orders[0].StaffID
-        data[table.ID_ORDER] = Orders[0].OrderID
-        data[table.ID_STORE] = self.STORE_ID
-        data[table.VALID] = 1
-        data[table.CREATE_TIME] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        data[self.config.LOADED] = 0
-        data[self.config.UPDATED] = 0
-        self.SaveLocalData(data, table.NAME)
+    def PlaceOrder(self, Orders: TableInfoStore):
+        try:
+            if len(Orders.Orders) == 0:
+                return
+            table = self.config.OrderList
+            OrderSeires = {table.ID: [],
+                           table.ID_FOOD: [],
+                           table.QTY: [],
+                           table.UNIT_PRICE: [],
+                           table.NOTE: []}
+            self.GetMaxOrderListID()
+            k = 1
+            for Order in Orders.Orders:
+                self.MaxOrderListID += 1
+                OrderSeires[table.ID].append(self.MaxOrderListID)
+                OrderSeires[table.ID_FOOD].append(Order.FoodID)
+                OrderSeires[table.QTY].append(Order.Qty)
+                OrderSeires[table.UNIT_PRICE].append(Order.UnitPrice)
+                OrderSeires[table.NOTE].append(Order.Note)
+            data = pd.DataFrame(OrderSeires)
+            data[table.ID_STAFF] = Orders.Orders[0].StaffID
+            data[table.ID_ORDER] = Orders.Orders[0].OrderID
+            data[table.ID_STORE] = self.STORE_ID
+            data[table.VALID] = 1
+            data[table.CREATE_TIME] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            data[self.config.LOADED] = 0
+            data[self.config.UPDATED] = 0
+            self.SaveLocalData(data, table.NAME)
+            self.Printer.PrintOrder(Orders)
+        except Exception as e:
+            self.logger.error("Error during placing order.", exc_info=e)
 
     def CheckOutTable(self, TableNumber):
         try:
@@ -633,3 +642,17 @@ class DataBase(SQLControl):
             if self.StaffList[i] == ID:
                 return i
         return None
+
+    def GetHistoryOrders(self) -> AllTableInfoStore:
+        OrderMetaData = self.config.OrderMetaData
+        query = (f"select * from {OrderMetaData.NAME} where `{OrderMetaData.VALID}`='1' and "
+                 f"`{OrderMetaData.ID_STORE}`='{self.STORE_ID}'")
+        data = self.get_local_data(query)
+        TableInfo = AllTableInfoStore(self.logger)
+        TableInfo.AddOrderMetaInfo(data)
+        OrderList = self.config.OrderList
+        query = (f"select * from {OrderList.NAME} where `{OrderList.VALID}`='1' and "
+                 f"`{OrderList.ID_STORE}`='{self.STORE_ID}'")
+        data = self.get_local_data(query)
+        TableInfo.AddOrderInfo(data)
+        return TableInfo

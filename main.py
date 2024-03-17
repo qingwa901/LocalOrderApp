@@ -28,7 +28,8 @@ from DataBase import DataBase
 from Logger import CreateLogger
 from Config import Config
 from datetime import datetime
-from TableInfoStore import OrderInfo
+from TableInfoStore import OrderInfo, TableInfoStore
+from QtApp.HistoryOrders import HistoryOrders
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
@@ -63,6 +64,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.JumpWindow = JumpWindow(self)
         self.JumpWindow.setVisible(False)
+        self.HistoryOrdersPanel = HistoryOrders(self)
 
         self.BlockPanel = CWidget(self)
         self.BlockPanel.setVisible(False)
@@ -138,6 +140,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.TableAction = QtGui.QAction(icon1, "MenuPage", self)
         self.toolbar.addAction(self.TableAction)
         self.TableAction.triggered.connect(self.menuTable_onClick)
+
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/ToolBar/History.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.HistoryOrderAction = QtGui.QAction(icon1, "HistoryOrderPanel", self)
+        self.toolbar.addAction(self.HistoryOrderAction)
+        self.HistoryOrderAction.triggered.connect(self.ButHistoryOrder_onClick)
 
         label = QtWidgets.QLabel(self)
         label.setText("值班：")
@@ -216,7 +224,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.FinalStatusPanel.DefaultServiceChargePercent = CurrentServiceChargePercent
             self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
             self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
-            self.FinalStatusPanel.PrintReceiptConnect(self.Receipt.print_me3)
             self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
             self.FinalStatusPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
 
@@ -231,6 +238,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hbox.addWidget(self.splitter)
         hbox.addWidget(self.SettingPanel)
         hbox.addWidget(self.Receipt)
+        hbox.addWidget(self.HistoryOrdersPanel)
         self.centralwidget.setLayout(hbox)
 
         hbox = QtWidgets.QHBoxLayout(self.frame_2)
@@ -256,6 +264,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         try:
             self.SettingPanel.setVisible(True)
             self.splitter.setVisible(False)
+            self.Receipt.setVisible(False)
+            self.HistoryOrdersPanel.setVisible(False)
         except Exception as e:
             self.Logger.error(f'Error during show Setting panel', exc_info=e)
 
@@ -264,6 +274,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.SettingPanel.setVisible(False)
             self.splitter.setVisible(True)
             self.Receipt.setVisible(False)
+            self.HistoryOrdersPanel.setVisible(False)
+        except Exception as e:
+            self.Logger.error(f'Error during show menu panel', exc_info=e)
+
+    def ButHistoryOrder_onClick(self, r):
+        try:
+            self.SettingPanel.setVisible(False)
+            self.splitter.setVisible(False)
+            self.Receipt.setVisible(False)
+            self.HistoryOrdersPanel.setVisible(True)
+            self.HistoryOrdersPanel.DisplayAllOrders()
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
 
@@ -306,6 +327,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.Receipt.LoadTable(TableInfo)
         except Exception as e:
             self.Logger.error(f'Error during show Table {TableNumber} info.', exc_info=e)
+
+    def resizeEvent(self, event):
+        self.BlockPanel.resize(self.size())
+        self.JumpWindow.move(self.width() // 2 - 300, self.height() // 2 - 150)
+        QtWidgets.QMainWindow.resizeEvent(self, event)
 
     def OpenTable(self):
         try:
@@ -441,10 +467,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         except Exception as e:
             self.Logger.error(f'Error during order food into orderlist', exc_info=e)
 
-    def PlaceOrder(self, Orders):
+    def PlaceOrder(self, Orders: TableInfoStore):
         try:
             self.Logger.info(f'Place order')
-            for order in Orders:
+            for order in Orders.Orders:
                 order.OrderID = self.OrderID
                 order.StaffID = self.DataBase.StaffList[self.DataBase.StaffName]
             self.DataBase.PlaceOrder(Orders)

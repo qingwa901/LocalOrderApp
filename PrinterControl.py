@@ -14,6 +14,7 @@ from TableInfoStore import TableInfoStore
 import pdfkit
 from Logger import CreateLogger
 from logging import Logger
+from PySide6 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets, QtPrintSupport
 
 
 class PrinterControl:
@@ -30,8 +31,8 @@ class PrinterControl:
         if value in self.PrinterList():
             self.DefaultKitchenPrinters[MenuID] = value
             MenuName = self.Setting.GetValue(Config.ValueSetting.Manu.EN_NAME)
-            self.logger.info(f'change Kitchen {MenuName} printer to {value}')
-            self.Setting.SetValue(Config.ValueSetting.Printer.STR_KITCHEN_PRINTER + MenuName, value)
+            self.logger.info(f'change Kitchen {MenuName[MenuID]} printer to {value}')
+            self.Setting.SetValue(Config.ValueSetting.Printer.STR_KITCHEN_PRINTER + MenuName[MenuID], value)
 
     def SetDefaultCashierPrinter(self, value: str):
         if value in self.PrinterList():
@@ -145,6 +146,124 @@ class PrinterControl:
         Thanks for visiting!<br>You can find us on instagram<br> @usagi_animemaid_cafe</div></div></body></html>
         '''.replace('{TOTAL}', str(round(Total, 2)))
         self.convert_html_to_pdf(receiptform, Config.DataBase.TMP_PRINT_PDF_PATH)
+
+    def LoadReceiptHTML(self, TableInfo: TableInfoStore):
+        receiptform = ('''<html><body><style type="text/css">.receipt_main {display: grid;width = 100%;
+                                 grid-template-columns: 1fr 1fr;align-items: center;}.itemname{flex-wrap: wrap;}
+                                 .itemprice{margin-right:0;margin-left: auto;}</style>
+                                 <div id="receipt">
+                                 <div id="receipt_head" style="text-align: center;">
+                                 <div id="icon"><img src="file://{Path_To_LOGO}" width="50" height="50"></div>
+                                 <div id="address">{ADDRESS}</div>
+                                 </div><hr>
+                                 <div id="receipt_info">VAT No: {VATNO}<br>Date: {TIME}<br>#ORDER: {ORDERID}<br>#Table: {TABLE_NUMBER}
+                                 </div></div><hr>'''.replace('{Path_To_LOGO}', 'D:/Code/web_python/App/img/Login.png')
+                       .replace('{ADDRESS}', 'Address')
+                       .replace('{VATNO}', '')
+                       .replace('{TIME}', TableInfo.EndTime)
+                       .replace('{ORDERID}', str(TableInfo.OrderID))
+                       .replace('{TABLE_NUMBER}', str(TableInfo.TableID)))
+        Total = TableInfo.GetTotalAmount()
+        receiptform += "<table width='100%'>"
+        for OrderID in TableInfo.Orders:
+            Order = TableInfo.Orders[OrderID]
+            if Order.Qty > 0:
+                receiptform += ('''<tr><td style="flex-wrap: wrap;">{QTY} x {NAME} {NOTE}</td>
+                 <td style="text-align: right;">£{PRICE}</td>'''
+                                .replace('{QTY}', str(int(Order.Qty))).replace('{NAME}', Order.NameEN)
+                                .replace('{NOTE}', Order.Note).replace('{PRICE}', str(round(Order.UnitPrice, 2))))
+        receiptform += "</table><hr><table width='100%'>"
+        receiptform += ('''<tr><td style="flex-wrap: wrap;">SUBTOTAL</td>
+                             <td style="text-align: right;">£{TOTAL}</td></tr>'''
+                        .replace('{TOTAL}', str(round(Total, 2))))
+        if TableInfo.ServiceCharge != 0:
+            receiptform += ('''<tr><td style="flex-wrap: wrap;">{SERVICE_CHARGE_PERCENT}% Service Charge</td>
+                                     <td style="text-align: right;">
+                                     £{SERVICE_CHARGE_AMOUNT}</td></tr>'''
+                            .replace('{SERVICE_CHARGE_PERCENT}', str(round(TableInfo.ServiceCharge, 1)))
+                            .replace('{SERVICE_CHARGE_AMOUNT}', str(round(Total * TableInfo.ServiceCharge / 100, 2))))
+            Total = Total * (1 + TableInfo.ServiceCharge)
+        DiscountPercent = round(TableInfo.Discount)
+        if DiscountPercent > 0:
+            receiptform += ('''<tr><td style="flex-wrap: wrap;">{DISCOUNT_PERCENT}%DISCOUNT</td>
+                                 <td style="text-align: right;">£{DISCOUNT_AMOUNT}}</td></tr>'''
+                            .replace('{DISCOUNT_PERCENT}', str(round(TableInfo.Discount)))
+                            .replace('{DISCOUNT_AMOUNT}', str(round(Total * TableInfo.Discount / 100, 2))))
+            Total = Total * (1 - DiscountPercent)
+
+        receiptform += '''</table><hr><table width='100%'>
+                                 <tr><td style="flex-wrap: wrap;">12.5% VAT included</td></tr>
+                                 <tr><td style="flex-wrap: wrap;">TOTAL</td>
+                                 <td style="text-align: right;">£{TOTAL}</td></tr></table><hr>
+                                 <div id="receipt_foot" style="text-align: center;">
+                                 Thanks for visiting!<br>You can find us on instagram<br> @usagi_animemaid_cafe</div>
+                                 </div></body></html>
+                                 '''.replace('{TOTAL}', str(round(Total, 2)))
+        self.HTML = receiptform
+        return receiptform
+
+    def LoadOrderHTML(self, TableInfo: list, OrderID, TableID):
+        receiptform = ('''<html><body>
+                                 <div id="receipt_info">#ORDER: {ORDERID}<br>#Table: {TABLE_NUMBER}<br>Date: {TIME}
+                                 </div></div><hr>'''.replace('{Path_To_LOGO}', 'D:/Code/web_python/App/img/Login.png')
+                       .replace('{TIME}', datetime.datetime.now().strftime('%H:%M:%S'))
+                       .replace('{ORDERID}', str(OrderID))
+                       .replace('{TABLE_NUMBER}', str(TableID)))
+        receiptform += "<table width='100%'>"
+        for Order in TableInfo:
+            receiptform += ('''<tr><td style="flex-wrap: wrap;">{QTY} x {NAME}</td>
+             <td style="text-align: right;">{NOTE}</td>'''
+                            .replace('{QTY}', str(int(Order.Qty))).replace('{NAME}', Order.NameEN)
+                            .replace('{NOTE}', Order.Note))
+        receiptform += '''</table></body></html>'''
+        return receiptform
+
+    def Print(self, Html, PrinterName):
+        if PrinterName is not None:
+            printer = QtPrintSupport.QPrinter()
+            printer.setPageMargins(QtCore.QMargins(0, 0, 0, 0), QtGui.QPageLayout.Millimeter)
+            printer.setFullPage(True)
+            printer.setPrinterName(PrinterName)
+            printer.setResolution(80)
+
+            # size = QPageSize(QtCore.QSize(70 * 2.83465, 260 *2.83465))
+            # printer.setPageSize(size)
+            # self.web_view.print_(printer)
+
+            document = QtGui.QTextDocument()
+            document.setPageSize(
+                QtCore.QSizeF(printer.width(), printer.height()))
+            cursor = QtGui.QTextCursor(document)
+            blockFormat = QtGui.QTextBlockFormat()
+            cursor.insertBlock(blockFormat)
+            cursor.insertHtml(Html)
+            blockFormat.setPageBreakPolicy(QtGui.QTextFormat.PageBreak_AlwaysBefore)
+            document.print_(printer)
+
+    def PrintReceipt(self, TableInfo):
+        try:
+            self.logger.info("Print Orders.")
+            self.Print(self.LoadReceiptHTML(TableInfo), self.DefaultCashierPrinter)
+        except Exception as e:
+            self.logger.error("Unknown Error in PrintReceipt", exc_info=e)
+
+    def PrintOrder(self, TableInfo):
+        try:
+            self.logger.info("Print Orders.")
+            OrderDict = {}
+            for type in self.DefaultKitchenPrinters:
+                if self.DefaultKitchenPrinters[type] is not None:
+                    OrderList = list(filter(lambda x: x.FoodType == type, TableInfo.Orders))
+                    if len(OrderList) > 0:
+                        if self.DefaultKitchenPrinters[type] in OrderDict:
+                            OrderDict[self.DefaultKitchenPrinters[type]].extend(OrderList)
+                        else:
+                            OrderDict[self.DefaultKitchenPrinters[type]] = OrderList
+            for PrinterName in OrderDict:
+                self.Print(self.LoadOrderHTML(OrderDict[PrinterName], TableInfo.OrderID, TableInfo.TableID),
+                           PrinterName)
+        except Exception as e:
+            self.logger.error("Unknown Error in PrintOrder", exc_info=e)
 
 
 if __name__ == '__main__':
