@@ -200,11 +200,20 @@ class FinalStatusPanel(FinalStatusBase):
     def AddServiceChargeConnect(self, Event):
         self.AddServiceChargeEvent = Event
 
+    def HistoryOrderSetting(self, Display):
+        self.BtnCleanTable.setVisible(Display)
+        self.ButDiscountB.setVisible(Display)
+        self.ButDiscountA.setVisible(Display)
+        self.BtnReOpen.setVisible(Display)
+        self.BtnAddRemoveServiceCharge.setVisible(Display)
+        self.BtnRemoveDiscount.setVisible(Display)
+
 
 if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    ui = FinalStatusPanel(None, None)
+    ui = FinalStatusPanel(None)
     ui.show()
+    ui.HistoryOrderSetting()
     sys.exit(app.exec_())

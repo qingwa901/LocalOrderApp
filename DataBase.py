@@ -33,6 +33,7 @@ class DataBase(SQLControl):
         self.StaffLoad.start()
         self.TableInfoLock = threading.Lock()
         self.TableInfo = AllTableInfoStore(self.logger)
+        self.OpenPanel = []
         self.path = path
         self.StaffName = None
         self.StaffList = {}
@@ -350,7 +351,7 @@ class DataBase(SQLControl):
     def DataBaseCheck(self):
         tablelist = self.get_local_data(f"SELECT name FROM sqlite_master WHERE type='table';")
         for i in [self.config.OrderList, self.config.OrderMetaData, self.config.Staff, self.config.MenuList,
-                  self.config.ManuPageList]:
+                  self.config.ManuPageList, self.config.CashBoxAmount]:
             if i.NAME not in tablelist['name'].to_list():
                 self.executeLocally(i.INITIAL_QUERY)
                 self.HardLoadData(i)
@@ -656,3 +657,15 @@ class DataBase(SQLControl):
         data = self.get_local_data(query)
         TableInfo.AddOrderInfo(data)
         return TableInfo
+
+    def LoadCashBoxAmount(self):
+        table = self.config.CashBoxAmount
+        query = (f"select max({table.CREATE_TIME}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
+                 f"`{table.VALID}`='1'")
+        data = self.get_local_data(query)
+        LastestTime = data.iloc[0,0]
+        query = (f"select * from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
+                 f"`{table.VALID}`='1' and `{table.CREATE_TIME}`='{LastestTime}'")
+        data = self.get_local_data(query)
+        data = data.set_index(table.CASH_TYPE)
+        return data[table.CASH_AMOUNT].to_dict()

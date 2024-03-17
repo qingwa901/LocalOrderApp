@@ -15,7 +15,7 @@ class OrderDetail(OrderDetailBasePanel):
         self.BtnReduceQty.pressed.connect(self.ReduceQty)
         self.BtnCancel.pressed.connect(self.Cancel)
         self.BtnConfirm.pressed.connect(self.Confirm)
-        self.EditOrderInDataBase = None
+        self.ReloadOrderList = None
 
     def SetupOrder(self, Orderinfo: OrderInfo, TableID: int):
         self.OrderInfo = Orderinfo
@@ -25,7 +25,10 @@ class OrderDetail(OrderDetailBasePanel):
         self.EditPrice.setText(str(round(Orderinfo.UnitPrice, 2)))
         self.EditQty.setText(str(int(Orderinfo.Qty)))
         self.LBStaff.setText(self.DataBase.GetStaffName(Orderinfo.StaffID))
-        self.LBCreateTime.setText(str(Orderinfo.CreateTime.tz_convert(LocalTimeZone)))
+        if Orderinfo.CreateTime is None:
+            self.LBCreateTime.setText('')
+        else:
+            self.LBCreateTime.setText(str(Orderinfo.CreateTime.tz_convert(LocalTimeZone)))
         self.LBExtraRequirement.setText(Orderinfo.Note)
         for TagBtn in self.TagList:
             TagBtn.Clear()
@@ -54,5 +57,7 @@ class OrderDetail(OrderDetailBasePanel):
         self.OrderInfo.Qty = int(self.EditQty.text())
         self.OrderInfo.UnitPrice = round(float(self.EditPrice.text()), 2)
         self.OrderInfo.Note = self.LBExtraRequirement.text()
-        self.EditOrderInDataBase(self.OrderInfo)
+        self.DataBase.EditOrder(self.OrderInfo)
+        if self.ReloadOrderList is not None:
+            self.ReloadOrderList()
         self.Cancel()

@@ -5,20 +5,21 @@ import datetime
 
 
 class OrderInfo:
-    ID = None
-    OrderID = None
-    FoodID = None
-    NameCN = None
-    NameEN = None
-    Qty = None
-    UnitPrice = None
-    OriUnitPrice = None
-    StaffID = None
-    Note = None
-    MenuNote = None
-    CreateTime = None
-    OrderList = Config.DataBase.OrderList
-    FoodType = None
+    def __init__(self):
+        self.ID = None
+        self.OrderID = None
+        self.FoodID = None
+        self.NameCN = None
+        self.NameEN = None
+        self.Qty = None
+        self.UnitPrice = None
+        self.OriUnitPrice = None
+        self.StaffID = None
+        self.Note = None
+        self.MenuNote = None
+        self.CreateTime = None
+        self.OrderList = Config.DataBase.OrderList
+        self.FoodType = None
 
     def SetOrder(self, Order: pd.Series):
         self.ID = Order[self.OrderList.ID]
@@ -114,16 +115,15 @@ class TableInfoStore:
 
 
 class AllTableInfoStore:
-    UpdateTime = None
-    OrderList = Config.DataBase.OrderList
-    OrderMetaList = Config.DataBase.OrderMetaData
-    OnlineOrderTableMap = dict()
-    OfflineOrderTableMap = dict()
-    ByOrderIDDict = {}
-    ByTableIDDict = {}
-
     def __init__(self, logger):
         self.logger = logger
+        self.UpdateTime = None
+        self.OrderList = Config.DataBase.OrderList
+        self.OrderMetaList = Config.DataBase.OrderMetaData
+        self.OnlineOrderTableMap = dict()
+        self.OfflineOrderTableMap = dict()
+        self.ByOrderIDDict = {}
+        self.ByTableIDDict = {}
 
     def _AddOrder(self, order: pd.Series):
         self.logger.debug(f"Order added. ID: {order[self.OrderList.ID]}, OrderID: {order[self.OrderList.ID_ORDER]}")

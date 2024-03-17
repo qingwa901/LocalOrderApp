@@ -85,7 +85,7 @@ class OrderDetailBasePanel(CFrame):
         # self.LBUnitPrice = QtWidgets.QLabel(parent=self.formLayoutWidget)
         # self.LBUnitPrice.setObjectName("LBUnitPrice")
         # self.horizontalLayout_3.addWidget(self.LBUnitPrice)
-        self.EditPrice = EditBox(aParent=self.formLayoutWidget, aValueType=eValueType.Int)
+        self.EditPrice = EditBox(aParent=self.formLayoutWidget, aValueType=eValueType.Float)
         self.EditPrice.setObjectName("lineEdit_2")
         self.horizontalLayout_3.addWidget(self.EditPrice)
         self.formLayout.setLayout(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.horizontalLayout_3)

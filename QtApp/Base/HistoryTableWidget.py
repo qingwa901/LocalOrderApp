@@ -66,7 +66,8 @@ class TableWidget(CTableWidget):
             return
         colCount = self.columnCount()
         for i in range(colCount):
-            self.item(row, i).setBackground(color)
+            if self.item(row, i) is not None:
+                self.item(row, i).setBackground(color)
 
 
 class AppDemo(CWidget):

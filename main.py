@@ -65,6 +65,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.JumpWindow = JumpWindow(self)
         self.JumpWindow.setVisible(False)
         self.HistoryOrdersPanel = HistoryOrders(self)
+        self.HistoryOrdersPanel.setVisible(False)
 
         self.BlockPanel = CWidget(self)
         self.BlockPanel.setVisible(False)
@@ -73,56 +74,56 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.KeyBoard = KeyBoardPanel(self)
         self.KeyBoard.setVisible(False)
 
-        self.splitter = CSplitter(self.centralwidget)
-        self.splitter.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter.setObjectName("splitter")
-        self.TablePanel = TablesPanel(self.splitter)
+        self.MainSplitter = CSplitter(self.centralwidget)
+        self.MainSplitter.setOrientation(QtCore.Qt.Horizontal)
+        self.MainSplitter.setObjectName("splitter")
+        self.TablePanel = TablesPanel(self.MainSplitter)
         self.TablePanel.setupUi(self.TableOrder)
         self.TablePanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.TablePanel.setFrameShadow(QtWidgets.QFrame.Raised)
 
-        self.frame_2 = CFrame(self.splitter)
+        self.frame_2 = CFrame(self.MainSplitter)
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
 
-        self.splitter_2 = CSplitter(self.frame_2)
-        self.splitter_2.setGeometry(QtCore.QRect(0, 10, 451, 621))
-        self.splitter_2.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_2.setObjectName("splitter_2")
+        self.Ordersplit = CSplitter(self.centralwidget)
+        self.Ordersplit.setOrientation(QtCore.Qt.Horizontal)
+        self.Ordersplit.setObjectName("splitter_2")
+        self.Ordersplit.setVisible(False)
 
-        self.RightTopFrame = CFrame(self.splitter_2)
-        self.RightTopFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.RightTopFrame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.RightTopFrame.setObjectName("RightTopFrame")
+        self.OrderLeftPanel = CFrame(self.Ordersplit)
+        self.OrderLeftPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.OrderLeftPanel.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.OrderLeftPanel.setObjectName("OrderLeftPanel")
 
-        self.InitialPanel = InitialTable(self.RightTopFrame)
+        self.OrderRightPanel = CFrame(self.Ordersplit)
+        self.OrderRightPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.OrderRightPanel.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.OrderRightPanel.setObjectName("OrderRightPanel")
+
+        self.InitialPanel = InitialTable(self.OrderRightPanel)
         self.InitialPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.InitialPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.InitialPanel.setVisible(False)
 
-        self.StatusPanel = StatusPanel(self.RightTopFrame)
+        self.StatusPanel = StatusPanel(self.OrderRightPanel)
         self.StatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.StatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.StatusPanel.setVisible(False)
 
-        self.MenuPanel = Menu(self.RightTopFrame)
+        self.MenuPanel = Menu(self.OrderRightPanel)
         self.MenuPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.MenuPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.MenuPanel.setVisible(False)
 
-        self.RightBottomFrame = CFrame(self.splitter_2)
-        self.RightBottomFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.RightBottomFrame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.RightBottomFrame.setObjectName("RightBottomFrame")
-
-        self.OrderPanel = OrderListPanel(self.RightBottomFrame)
+        self.OrderPanel = OrderListPanel(self.OrderLeftPanel)
         self.OrderPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.OrderPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.OrderPanel.setObjectName("OrderPanel")
         self.OrderPanel.setVisible(False)
 
-        self.FinalStatusPanel = FinalStatusPanel(self.RightTopFrame)
+        self.FinalStatusPanel = FinalStatusPanel(self.OrderRightPanel)
         self.FinalStatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.FinalStatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.FinalStatusPanel.setVisible(False)
@@ -147,6 +148,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.toolbar.addAction(self.HistoryOrderAction)
         self.HistoryOrderAction.triggered.connect(self.ButHistoryOrder_onClick)
 
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/ToolBar/close.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.CloseOrderPanelAction = QtGui.QAction(icon1, "CloseOrderPanel", self)
+        self.toolbar.addAction(self.CloseOrderPanelAction)
+        self.CloseOrderPanelAction.triggered.connect(self.ButCloseOrderPanel_onClick)
+        self.CloseOrderPanelAction.setVisible(False)
+
         label = QtWidgets.QLabel(self)
         label.setText("值班：")
         self.toolbar.addWidget(label)
@@ -169,6 +177,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
         self.LayoutSetting()
+        self.DataBase.OpenPanel = [self.MainSplitter]
 
     def AddEvent(self):
         try:
@@ -229,32 +238,36 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
             self.OrderDetailPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
             self.OrderPanel.OrderEditEvent = self.OpenOrderEdit
-            self.OrderDetailPanel.EditOrderInDataBase = self.confirmOrderEdit
+            # self.OrderDetailPanel.EditOrderInDataBase = self.confirmOrderEdit
+            self.OrderDetailPanel.ReloadOrderList = self.OrderPanel.Reload
+
+            self.HistoryOrdersPanel.OpenHistoryOrderEvent = self.loadOrder
         except Exception as e:
             self.Logger.error(f'Error during Set up Event.', exc_info=e)
 
     def LayoutSetting(self):
         hbox = QtWidgets.QHBoxLayout(self)
-        hbox.addWidget(self.splitter)
+        hbox.addWidget(self.MainSplitter)
+        hbox.addWidget(self.Ordersplit)
         hbox.addWidget(self.SettingPanel)
         hbox.addWidget(self.Receipt)
         hbox.addWidget(self.HistoryOrdersPanel)
         self.centralwidget.setLayout(hbox)
 
-        hbox = QtWidgets.QHBoxLayout(self.frame_2)
-        hbox.addWidget(self.splitter_2)
-        self.frame_2.setLayout(hbox)
+        # hbox = QtWidgets.QHBoxLayout(self.frame_2)
+        # hbox.addWidget(self.Ordersplit)
+        # self.frame_2.setLayout(hbox)
 
-        hbox = QtWidgets.QHBoxLayout(self.RightTopFrame)
+        hbox = QtWidgets.QHBoxLayout(self.OrderRightPanel)
         hbox.addWidget(self.InitialPanel)
         hbox.addWidget(self.MenuPanel)
         hbox.addWidget(self.StatusPanel)
         hbox.addWidget(self.FinalStatusPanel)
-        self.RightTopFrame.setLayout(hbox)
+        self.OrderRightPanel.setLayout(hbox)
 
-        hbox = QtWidgets.QHBoxLayout(self.RightBottomFrame)
+        hbox = QtWidgets.QHBoxLayout(self.OrderLeftPanel)
         hbox.addWidget(self.OrderPanel)
-        self.RightBottomFrame.setLayout(hbox)
+        self.OrderLeftPanel.setLayout(hbox)
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
@@ -263,28 +276,46 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def menuSetting_onClick(self, e):
         try:
             self.SettingPanel.setVisible(True)
-            self.splitter.setVisible(False)
+            self.MainSplitter.setVisible(False)
             self.Receipt.setVisible(False)
             self.HistoryOrdersPanel.setVisible(False)
+            self.DataBase.OpenPanel = [self.SettingPanel]
         except Exception as e:
             self.Logger.error(f'Error during show Setting panel', exc_info=e)
 
     def menuTable_onClick(self, e):
         try:
             self.SettingPanel.setVisible(False)
-            self.splitter.setVisible(True)
+            self.MainSplitter.setVisible(True)
             self.Receipt.setVisible(False)
             self.HistoryOrdersPanel.setVisible(False)
+            self.DataBase.OpenPanel = [self.MainSplitter]
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
 
-    def ButHistoryOrder_onClick(self, r):
+    def ButCloseOrderPanel_onClick(self, e):
+        try:
+            self.DataBase.OpenPanel.pop(-1).setVisible(False)
+            self.DataBase.OpenPanel[-1].setVisible(True)
+            if self.DataBase.OpenPanel[-1] == self.HistoryOrdersPanel:
+                self.HistoryOrdersPanel.DisplayAllOrders()
+            if len(self.DataBase.OpenPanel) == 1:
+                self.TableAction.setVisible(True)
+                self.SettingAction.setVisible(True)
+                self.HistoryOrderAction.setVisible(True)
+                self.CloseOrderPanelAction.setVisible(False)
+
+        except Exception as e:
+            self.Logger.error(f'Error during show menu panel', exc_info=e)
+
+    def ButHistoryOrder_onClick(self, e):
         try:
             self.SettingPanel.setVisible(False)
-            self.splitter.setVisible(False)
+            self.MainSplitter.setVisible(False)
             self.Receipt.setVisible(False)
             self.HistoryOrdersPanel.setVisible(True)
             self.HistoryOrdersPanel.DisplayAllOrders()
+            self.DataBase.OpenPanel = [self.HistoryOrdersPanel]
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
 
@@ -292,13 +323,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         try:
             self.Logger.info(f'start to load Table {TableNumber}')
             self.TableNumber = TableNumber
-            self.MenuPanel.setVisible(False)
-            self.Receipt.setVisible(False)
+
             self.DataBase.GetOpenTableInfo()
             TableInfo = None
             if TableNumber in self.DataBase.TableInfo.ByTableIDDict:
                 TableInfo = self.DataBase.TableInfo.ByTableIDDict[TableNumber]
                 self.OrderID = TableInfo.OrderID
+            self.loadOrder(TableInfo, TableNumber)
+
+        except Exception as e:
+            self.Logger.error(f'Error during show Table {TableNumber} info.', exc_info=e)
+
+    def loadOrder(self, TableInfo, TableNumber=None):
+        try:
+            self.MenuPanel.setVisible(False)
+            self.Receipt.setVisible(False)
+            self.CloseOrderPanelAction.setVisible(True)
+
+            self.TableAction.setVisible(False)
+            self.SettingAction.setVisible(False)
+            self.HistoryOrderAction.setVisible(False)
+
+            self.Ordersplit.setVisible(True)
+            self.DataBase.OpenPanel.append(self.Ordersplit)
+            self.MainSplitter.setVisible(False)
             if TableInfo is None or TableInfo.StartTime is None:
                 # initial table
                 self.InitialPanel.setVisible(True)
@@ -324,9 +372,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.OrderPanel.IsEditable = False
                 self.FinalStatusPanel.setVisible(True)
                 self.FinalStatusPanel.DisplayTable(TableInfo)
+                self.FinalStatusPanel.HistoryOrderSetting(True)
+                self.Receipt.LoadTable(TableInfo)
+            else:
+                self.InitialPanel.setVisible(False)
+                self.StatusPanel.setVisible(False)
+                self.OrderPanel.setVisible(True)
+                self.OrderPanel.DisplayTable(TableInfo)
+                self.OrderPanel.IsEditable = False
+                self.FinalStatusPanel.setVisible(True)
+                self.FinalStatusPanel.DisplayTable(TableInfo)
+                self.FinalStatusPanel.HistoryOrderSetting(False)
                 self.Receipt.LoadTable(TableInfo)
         except Exception as e:
-            self.Logger.error(f'Error during show Table {TableNumber} info.', exc_info=e)
+            if TableInfo is None:
+                self.Logger.error(f'Error during show empty table.', exc_info=e)
+            else:
+                self.Logger.error(f'Error during show Order {TableInfo.OrderID} info.', exc_info=e)
 
     def resizeEvent(self, event):
         self.BlockPanel.resize(self.size())
@@ -525,13 +587,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def dropEvent(self, event):
         pos = event.pos()
         widget = event.source()
-
         for n in self.TablePanel.Tables:
             w = self.TablePanel.Tables[n]
             if w.x() + w.width() > pos.x() > w.x() and w.y() + w.height() > pos.y() - self.toolbar.height() > w.y():
                 if widget.TableNumber != n:
                     self.DataBase.SwitchTable(widget.TableNumber, n)
-                    self.TableButClick(n)
 
     def OpenOrderEdit(self, OrderInfo):
         self.OrderDetailPanel.setVisible(True)
@@ -539,10 +599,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.OrderDetailPanel.raise_()
         self.OrderDetailPanel.setFixedWidth(self.width())
         self.OrderDetailPanel.setFixedHeight(self.height())
-
-    def confirmOrderEdit(self, Order):
-        self.DataBase.EditOrder(Order)
-        self.TableButClick(self.TableNumber)
+        self.DataBase.OpenPanel.append(self.OrderDetailPanel)
 
 
 import QtApp.resource_rc

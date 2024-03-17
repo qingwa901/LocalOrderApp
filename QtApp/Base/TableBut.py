@@ -13,10 +13,12 @@ class TableStatus:
 class TableBut(QtWidgets.QPushButton):
     def __init__(self, parent):
         QtWidgets.QPushButton.__init__(self, parent)
+        self.IsDrag = False
 
     def setupUi(self, TableNumber):
         self.TableNumber = TableNumber
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                                           QtWidgets.QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
@@ -34,15 +36,33 @@ class TableBut(QtWidgets.QPushButton):
         elif Status == 2:
             self.setStyleSheet('background-color: red;')
 
-    def mouseMoveEvent(self, e):
-        if e.buttons() == Qt.LeftButton:
-            drag = QDrag(self)
-            mime = QMimeData()
-            drag.setMimeData(mime)
-            pixmap = QPixmap(self.size())
-            self.render(pixmap)
-            drag.setPixmap(pixmap)
-            drag.exec_(Qt.MoveAction)
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            self.dragStartPosition = event.pos()
+
+    def mouseReleaseEvent(self, event):
+        if ((event.pos() - self.dragStartPosition).manhattanLength()
+                < QtWidgets.QApplication.startDragDistance()):
+            self.ClickEvent()
+
+    def mouseMoveEvent(self, event):
+        if not (event.buttons() == QtCore.Qt.LeftButton):
+            return
+        if ((event.pos() - self.dragStartPosition).manhattanLength()
+                < QtWidgets.QApplication.startDragDistance()):
+            return
+        self.IsDrag = True
+        drag = QDrag(self)
+        mime = QMimeData()
+        drag.setMimeData(mime)
+        pixmap = QPixmap(self.size())
+        self.render(pixmap)
+        drag.setPixmap(pixmap)
+        drag.exec_(Qt.MoveAction)
 
     def BindEvent(self, Event):
-        self.pressed.connect(partial(Event, self.TableNumber))
+        self.ClickEventFunction = Event
+
+    def ClickEvent(self):
+        if self.ClickEventFunction is not None:
+            self.ClickEventFunction(self.TableNumber)

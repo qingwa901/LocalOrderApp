@@ -15,7 +15,7 @@ class HistoryOrders(CFrame):
         self.OpenHistoryOrderEvent = None
         self.IsEditable = True
         self.OrderList = None
-        self.tableView.cellClicked.connect(self.OpenHistoryOrderEvent)
+        self.tableView.cellClicked.connect(self.OpenHistoryOrder)
         self.Btnup.pressed.connect(self.btn_page_up)
         self.Btndown.pressed.connect(self.btn_page_down)
 
@@ -27,10 +27,6 @@ class HistoryOrders(CFrame):
         mainLayout = QtWidgets.QVBoxLayout()
         hLayout.addLayout(mainLayout)
         mainLayout.addWidget(self.tableView)
-        # self.BtnPlaceOrder = CPushButton(self)
-        # self.BtnPlaceOrder.setObjectName("BtnPlacecOrder")
-        # self.BtnPlaceOrder.setMaximumWidth(300)
-        # mainLayout.addWidget(self.BtnPlaceOrder)
         vLayout = QtWidgets.QVBoxLayout()
         hLayout.addLayout(vLayout)
         self.Btnup = CPushButton(self)
@@ -60,13 +56,15 @@ class HistoryOrders(CFrame):
         if self.OpenHistoryOrderEvent is not None:
             Order = self.OrderList[row]
             self.OpenHistoryOrderEvent(Order)
+            self.setVisible(False)
 
-    def DisplayAllOrders(self,):
+    def DisplayAllOrders(self):
         self.Logger.debug(f'Display History Orders List:')
         Orders = self.DataBase.GetHistoryOrders()
         self.tableView.Clear()
-        self.OrderList = Orders.ByOrderIDDict.values()
-        for order in self.OrderList:
+        self.OrderList = []
+        for order in Orders.ByOrderIDDict.values():
             self.tableView.addRow(order)
+            self.OrderList.append(order)
 
 

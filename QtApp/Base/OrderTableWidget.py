@@ -28,7 +28,7 @@ class TableWidget(CTableWidget):
         self.setHorizontalHeaderLabels(Config.DisplaySetting.OrderTable.COL_NAME_CN)
 
     def addRow(self, Order: OrderInfo):
-        self.Logger.info(f"{Order.ID}, {Order.NameCN}, {Order.Qty}, {Order.UnitPrice}, {Order.Note}")
+        self.Logger.info(f"Add Order Row: {Order.ID}, {Order.NameCN}, {Order.Qty}, {Order.UnitPrice}, {Order.Note}")
         rowCount = self.rowCount()
         self.insertRow(rowCount)
         self.setItem(rowCount, 0, QTableWidgetItem(str(Order.NameCN)))

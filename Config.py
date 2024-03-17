@@ -176,6 +176,29 @@ class Config:
               `Valid` tinyint NOT NULL DEFAULT '1'
             ) '''
 
+        class CashBoxAmount:
+            NAME = 'CashBoxAmount'
+            ID = 'id'
+            ID_STORE = 'StoreID'
+            STAFF_ID = 'StaffID'
+            CASH_TYPE = 'CashType'
+            CASH_AMOUNT = 'CashAmount'
+            CREATE_TIME = 'DateTime'
+            VALID = 'Valid'
+            COLUMNS = [ID, ID_STORE, STAFF_ID, CASH_TYPE, CASH_AMOUNT, CREATE_TIME, VALID]
+            INITIAL_QUERY = '''CREATE TABLE `CashBoxAmount` (
+              `id` int NOT NULL,
+              `StoreID` int NOT NULL,
+              `StaffID` int NOT NULL,
+              `CashType` varchar(45) NOT NULL,
+              `CashAmount` int NOT NULL,
+              `DateTime` datetime NOT NULL,
+              `Valid` tinyint NOT NULL DEFAULT '1',
+              `Loaded` tinyint NOT NULL DEFAULT '0',
+              `Updated` tinyint NOT NULL DEFAULT '1'
+            );
+            '''
+
     class UI:
         class EatInPage:
             ToolBarSize = 35

@@ -73,6 +73,11 @@ class OrderListPanel(CFrame):
             self.Orders.Orders.append(order)
             self.tableView.addRow(order)
 
+    def Reload(self):
+        self.tableView.Clear()
+        for order in self.Orders.Orders:
+            self.tableView.addRow(order)
+
     def Clear(self):
         self.Logger.info('clear OrderList panel')
         self.tableView.Clear()
