@@ -30,6 +30,7 @@ from Config import Config
 from datetime import datetime
 from TableInfoStore import OrderInfo, TableInfoStore
 from QtApp.HistoryOrders import HistoryOrders
+from QtApp.CEODPanel import CEODPanel
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
@@ -66,6 +67,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.JumpWindow.setVisible(False)
         self.HistoryOrdersPanel = HistoryOrders(self)
         self.HistoryOrdersPanel.setVisible(False)
+
+        self.EODPanel = CEODPanel(self)
+        self.EODPanel.setVisible(False)
 
         self.BlockPanel = CWidget(self)
         self.BlockPanel.setVisible(False)
@@ -147,6 +151,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.HistoryOrderAction = QtGui.QAction(icon1, "HistoryOrderPanel", self)
         self.toolbar.addAction(self.HistoryOrderAction)
         self.HistoryOrderAction.triggered.connect(self.ButHistoryOrder_onClick)
+
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/ToolBar/Summary.jpg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.EODAction = QtGui.QAction(icon1, "EODAction", self)
+        self.toolbar.addAction(self.EODAction)
+        self.EODAction.triggered.connect(self.ButEOD_onClick)
 
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/ToolBar/close.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -242,6 +252,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.OrderDetailPanel.ReloadOrderList = self.OrderPanel.Reload
 
             self.HistoryOrdersPanel.OpenHistoryOrderEvent = self.loadOrder
+
+            self.EODPanel.SetUpOpenKeyboardEvent(self.ShowKeyboard)
         except Exception as e:
             self.Logger.error(f'Error during Set up Event.', exc_info=e)
 
@@ -252,6 +264,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hbox.addWidget(self.SettingPanel)
         hbox.addWidget(self.Receipt)
         hbox.addWidget(self.HistoryOrdersPanel)
+        hbox.addWidget(self.EODPanel)
         self.centralwidget.setLayout(hbox)
 
         # hbox = QtWidgets.QHBoxLayout(self.frame_2)
@@ -279,6 +292,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MainSplitter.setVisible(False)
             self.Receipt.setVisible(False)
             self.HistoryOrdersPanel.setVisible(False)
+            self.EODPanel.setVisible(False)
             self.DataBase.OpenPanel = [self.SettingPanel]
         except Exception as e:
             self.Logger.error(f'Error during show Setting panel', exc_info=e)
@@ -289,6 +303,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MainSplitter.setVisible(True)
             self.Receipt.setVisible(False)
             self.HistoryOrdersPanel.setVisible(False)
+            self.EODPanel.setVisible(False)
             self.DataBase.OpenPanel = [self.MainSplitter]
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
@@ -313,9 +328,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.SettingPanel.setVisible(False)
             self.MainSplitter.setVisible(False)
             self.Receipt.setVisible(False)
+            self.EODPanel.setVisible(False)
             self.HistoryOrdersPanel.setVisible(True)
             self.HistoryOrdersPanel.DisplayAllOrders()
             self.DataBase.OpenPanel = [self.HistoryOrdersPanel]
+        except Exception as e:
+            self.Logger.error(f'Error during show menu panel', exc_info=e)
+
+    def ButEOD_onClick(self, e):
+        try:
+            self.SettingPanel.setVisible(False)
+            self.MainSplitter.setVisible(False)
+            self.Receipt.setVisible(False)
+            self.HistoryOrdersPanel.setVisible(False)
+            self.EODPanel.setVisible(True)
+            self.EODPanel.Load()
+            self.DataBase.OpenPanel = [self.EODPanel]
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
 

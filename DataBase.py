@@ -152,71 +152,24 @@ class DataBase(SQLControl):
             f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
 
     def UpdateOneLine(self, data, table):
-        Value = ''
-        for field in table.COLUMNS:
-            if Value != '':
-                Value += ', '
-            Value += f"`{field}` = '{data[field]}'"
-        self.execute(
-            f"Update {table.NAME} Set {Value}, `{self.config.UPDATED}`=true, `{self.config.LOADED}`=true "
-            f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
-
-    def Update(self):
-        for table in [self.config.OrderList, self.config.OrderMetaData]:
-            data = self.get_local_data(
-                f"select * from {table.NAME} where {self.config.LOADED} = false and {table.ID_STORE}={self.STORE_ID};")
-            if len(data) > 0:
-                data[self.config.LOADED] = True
-                data[self.config.UPDATED] = True
-                self.SaveData(data, table.NAME)
-                self.executeLocally(
-                    f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where "
-                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
-
-            data = self.get_local_data(
-                f"select * from {table.NAME} where {self.config.UPDATED} = false and {self.config.LOADED} = true")
-            if len(data) > 0:
-                data[self.config.UPDATED] = True
-                data.apply(self.UpdateOneLine, axis=1, table=table)
-                self.executeLocally(
-                    f"update {table.NAME} set {self.config.UPDATED}='1' where {table.ID_STORE}= "
-                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
-
-    def Download(self):
-        # self.config.OrderList, self.config.OrderMetaData should only upload, download for remove update data only
-        # So download do not trigger printing event.
-        for table in [self.config.OrderList, self.config.OrderMetaData, self.config.PendingOnlineOrder]:
-            data = self.get_data(
-                f"select * from {table.NAME} where {self.config.LOADED} = false and {table.ID_STORE}={self.STORE_ID};")
-            if len(data) > 0:
-                data[self.config.LOADED] = True
-                data[self.config.UPDATED] = True
-                self.SaveLocalData(data, table.NAME)
-                self.execute(
-                    f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where {table.ID_STORE}="
-                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
-
-            data = self.get_data(
-                f"select * from {table.NAME} where {self.config.UPDATED} = false and {self.config.LOADED} = true "
-                f"and {table.ID_STORE}={self.STORE_ID};")
-            if len(data) > 0:
-                data[self.config.UPDATED] = True
-                data.apply(self.UpdateOneLineLocally, axis=1, table=table)
-                self.execute(
-                    f"update {table.NAME} set {self.config.UPDATED}='1' where {table.ID_STORE}= "
-                    f"{self.STORE_ID} and {table.ID} in ({','.join(data[table.ID])})")
-            if table == self.config.OrderList:
-                self.TableInfo.AddOrderInfo(data)
-            if table == self.config.PendingOnlineOrder:
-                if len(data) > 0:
-                    OrderData = data.apply(self.OnlineOrderConvert, axis=1)
-                    self.SaveOrdersLocal(OrderData)
-                    OrderData.apply(self._PrintOrder, axis=1)
+        if data[table.Valid]:
+            Value = ''
+            for field in table.COLUMNS:
+                if Value != '':
+                    Value += ', '
+                Value += f"`{field}` = '{data[field]}'"
+            self.execute(
+                f"Update {table.NAME} Set {Value}, `{self.config.UPDATED}`=true, `{self.config.LOADED}`=true "
+                f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
+        else:
+            query = f"delete from {table.Name} where `{table.ID}`='{data[table.ID]}';"
+            self.execute(query)
 
     def Update_(self):
-        for table in [self.config.OrderList, self.config.OrderMetaData]:
+        for table in [self.config.OrderList, self.config.OrderMetaData, self.config.HistoryOrderList,
+                      self.config.HistoryOrderMetaData]:
             data = self.get_local_data(
-                f"select * from {table.NAME} where {self.config.LOADED} = '0' and {table.ID_STORE}={self.STORE_ID};")
+                f"select * from {table.NAME} where {self.config.LOADED}='0' and {table.ID_STORE}={self.STORE_ID};")
             if len(data) > 0:
                 data[self.config.LOADED] = True
                 data[self.config.UPDATED] = True
@@ -225,8 +178,15 @@ class DataBase(SQLControl):
                 if len(ExistData) > 0:
                     ExistData.apply(self.UpdateOneLine, axis=1, table=table)
                 NewData = data[~data[table.ID].isin(ExistIDList)]
-                if len(NewData) > 0:
-                    self.SaveData(NewData, table.NAME)
+                NewValidData = NewData[NewData[table.VALID] == 1]
+                NewInvalidData = NewData[NewData[table.VALID] == 0]
+                if len(NewValidData) > 0:
+                    self.SaveData(NewValidData, table.NAME)
+                if len(NewInvalidData) > 0:
+                    for RowID in NewInvalidData[table.ID].to_list():
+                        query = (f"delete from {table.NAME} where `{table.ID}`='{RowID}' and "
+                                 f"`{table.ID_STORE}`='{self.STORE_ID}';")
+                        self.executeLocally(query)
                 IDstr = "','".join(data[table.ID].astype(str))
                 self.executeLocally(
                     f"update {table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where {table.ID_STORE} = "
@@ -308,10 +268,6 @@ class DataBase(SQLControl):
                         break
 
     def GetOpenTableInfo(self):
-        # if (self.TableInfo is not None and self.TableInfo.UpdateTime is not None
-        #         and time.time() - self.TableInfo.UpdateTime < 1):
-        #     # Table State Change unable to apply on the first time. Cause display error.
-        #     return
         with self.TableInfoLock:
             table = Config.DataBase.OrderMetaData
             query = (f"select {table.ID_ORDER} from {table.NAME} where "
@@ -351,7 +307,8 @@ class DataBase(SQLControl):
     def DataBaseCheck(self):
         tablelist = self.get_local_data(f"SELECT name FROM sqlite_master WHERE type='table';")
         for i in [self.config.OrderList, self.config.OrderMetaData, self.config.Staff, self.config.MenuList,
-                  self.config.ManuPageList, self.config.CashBoxAmount]:
+                  self.config.ManuPageList, self.config.CashBoxAmount, self.config.HistoryOrderMetaData,
+                  self.config.HistoryOrderList, self.config.EODSummary]:
             if i.NAME not in tablelist['name'].to_list():
                 self.executeLocally(i.INITIAL_QUERY)
                 self.HardLoadData(i)
@@ -663,9 +620,87 @@ class DataBase(SQLControl):
         query = (f"select max({table.CREATE_TIME}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
                  f"`{table.VALID}`='1'")
         data = self.get_local_data(query)
-        LastestTime = data.iloc[0,0]
+        LastestTime = data.iloc[0, 0]
         query = (f"select * from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
                  f"`{table.VALID}`='1' and `{table.CREATE_TIME}`='{LastestTime}'")
         data = self.get_local_data(query)
         data = data.set_index(table.CASH_TYPE)
         return data[table.CASH_AMOUNT].to_dict()
+
+    def SaveTodayDataToHistoryTable(self):
+        MetaTable = self.config.OrderMetaData
+        query = (f"select * from {MetaTable.NAME} where `{MetaTable.ID_STORE}`='{self.STORE_ID}' and "
+                 f"`{MetaTable.VALID}`='1';")
+        MetaData = self.get_local_data(query)
+        OrderTable = self.config.OrderList
+        query = (f"select * from {OrderTable.NAME} where `{OrderTable.ID_STORE}`='{self.STORE_ID}' and "
+                 f"`{OrderTable.VALID}`='1';")
+        OrderData = self.get_local_data(query)
+        OrderIDList = MetaData[
+            (MetaData[MetaTable.FIELD] == MetaTable.Fields.IS_FINISHED) & MetaData[MetaTable.VALUE] == 'True'][
+            MetaTable.ID_ORDER].to_list()
+        if len(OrderIDList) > 0:
+            HistMetaTable = self.config.HistoryOrderMetaData
+            HistOrderTable = self.config.HistoryOrderList
+            query = (f"select max({HistMetaTable.ID_ORDER}) from {HistMetaTable.NAME} where"
+                     f"`{OrderTable.ID_STORE}`='{self.STORE_ID}' and `{OrderTable.VALID}`='1';")
+            MaxOrderID = self.get_local_data(query)
+            if len(MaxOrderID) == 0:
+                MaxOrderID = 0
+            else:
+                MaxOrderID = MaxOrderID.iloc[0, 0]
+            for OrderID in OrderIDList:
+                MaxOrderID += 1
+                SubMetaData = MetaData[MetaData[HistMetaTable.ID_ORDER] == OrderID]
+                SubMetaData[HistMetaTable.ID_ORDER] = MaxOrderID
+                SubMetaData = SubMetaData.drop(HistMetaTable.ID, axis=1)
+                SubMetaData[self.config.LOADED] = False
+                self.SaveLocalData(SubMetaData, HistMetaTable.NAME)
+                SubOrderData = OrderData[OrderData[HistOrderTable.ID_ORDER] == OrderID]
+                SubOrderData[HistOrderTable.ID_ORDER] = MaxOrderID
+                SubOrderData = SubOrderData.drop(HistOrderTable.ID, axis=1)
+                SubOrderData[self.config.LOADED] = False
+                self.SaveLocalData(SubOrderData, HistOrderTable.NAME)
+                query = (
+                    f"update {MetaTable.NAME} set `{MetaTable.VALID}`='0', `{self.config.LOADED}`='0' where "
+                    f"`{MetaTable.ID_STORE}`='{self.STORE_ID}'"
+                    f"` and {MetaTable.ID_ORDER}`='{OrderID}';")
+                self.executeLocally(query)
+                query = (
+                    f"update {OrderTable.NAME} set `{OrderTable.VALID}`='0', `{self.config.LOADED}`='0' where "
+                    f"`{OrderTable.ID_STORE}`='{self.STORE_ID}' and "
+                    f"`{OrderTable.ID_ORDER}`='{OrderID}';")
+                self.executeLocally(query)
+
+    def SaveCoinInfo(self, CoinDict):
+        if len(CoinDict) == 0:
+            return
+        table = self.config.CashBoxAmount
+        CoinDF = pd.DataFrame(CoinDict, index=[table.CASH_AMOUNT]).T.reset_index()
+        CoinDF.columns = [table.CASH_TYPE, table.CASH_AMOUNT]
+        CoinDF[table.VALID] = True
+        CoinDF[table.ID_STORE] = self.STORE_ID
+        CoinDF[table.STAFF_ID] = self.StaffList[self.StaffName]
+        CoinDF[table.CREATE_TIME] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        CoinDF[self.config.LOADED] = True
+        CoinDF[self.config.UPDATED] = False
+        query = (f"select max({table.ID}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
+                 f"`{table.VALID}`='1';")
+        MaxID = self.get_local_data(query).iloc[0, 0]
+        CoinDF[table.ID] = MaxID + 1
+        for i in range(len(CoinDF)):
+            CoinDF.loc[i, table.ID] += i
+        self.SaveLocalData(CoinDF, table.NAME)
+
+    def SaveEODSummary(self, InfoDict):
+        table = self.config.EODSummary
+        SummaryDF = pd.DataFrame(InfoDict, columns=[0])
+        SummaryDF[self.config.LOADED] = False
+        SummaryDF[self.config.UPDATED] = False
+        SummaryDF[table.ID_STORE] = self.STORE_ID
+        SummaryDF[table.STAFF_ID] = self.StaffList[self.StaffName]
+        SummaryDF[table.DATETIME] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        query = f"select max({table.ID}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}';"
+        MaxID = self.get_local_data(query).iloc[0, 0]
+        SummaryDF[table.ID] = MaxID
+        self.SaveLocalData(SummaryDF, table.NAME)

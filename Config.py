@@ -77,6 +77,40 @@ class Config:
                 DISCOUNT_PERCENT = 'DiscountPercent'
                 SERVICE_CHARGE_PERCENT = 'ServiceChargePercent'
 
+        class HistoryOrderMetaData:
+            NAME = 'HistoryOrderMetaData'
+            ID = 'ID'
+            ID_ORDER = 'OrderID'
+            ID_STORE = 'StoreID'
+            FIELD = 'Field'
+            VALUE = 'Value'
+            CREATE_TIME = 'CreateTime'
+            VALID = 'Valid'
+            COLUMNS = [ID_ORDER, ID_STORE, FIELD, VALUE, CREATE_TIME, VALID]
+            INITIAL_QUERY = '''CREATE TABLE `HistoryOrderMetaData` (
+              `ID` int NOT NULL,
+              `OrderID` int NOT NULL,
+              `StoreID` varchar(45) NOT NULL,
+              `Field` varchar(225) NOT NULL,
+              `Value` varchar(225) NOT NULL,
+              `CreateTime` datetime NOT NULL,
+              `Valid` tinyint NOT NULL DEFAULT '1',
+              `Loaded` tinyint NOT NULL DEFAULT '0',
+              `Updated` tinyint NOT NULL DEFAULT '1'
+            ) ;
+            '''
+
+            class Fields:
+                START_TIME = 'StartTime'
+                END_TIME = 'EndTime'
+                IS_FINISHED = 'IsFinished'
+                NUM_OF_PEOPLE = 'NumOfPeople'
+                ID_TABLE = 'IDTable'
+                CASH = 'Cash'
+                CARD = 'Card'
+                DISCOUNT_PERCENT = 'DiscountPercent'
+                SERVICE_CHARGE_PERCENT = 'ServiceChargePercent'
+
         class OrderList:
             NAME = 'OrderList'
             ID = 'ID'
@@ -93,6 +127,38 @@ class Config:
             COLUMNS = [ID_ORDER, ID_STORE, ID_FOOD, ID_STAFF, QTY, UNIT_PRICE, CREATE_TIME, NOTE, EOD_COUNTED,
                        VALID]
             INITIAL_QUERY = '''CREATE TABLE `OrderList` (
+              `ID` int NOT NULL,
+              `IDOrder` int NOT NULL,
+              `IDStore` int NOT NULL,
+              `IDFood` int NOT NULL,
+              `IDStaff` bigint unsigned NOT NULL,
+              `Qty` int NOT NULL,
+              `UnitPrice` decimal(10,2) NOT NULL,
+              `CreateTime` datetime NOT NULL,
+              `Note` varchar(225) DEFAULT NULL,
+              `EODCounted` tinyint NOT NULL DEFAULT '0',
+              `Valid` tinyint NOT NULL DEFAULT '1',
+              `Loaded` tinyint NOT NULL DEFAULT '0',
+              `Updated` tinyint NOT NULL DEFAULT '1'
+            );
+            '''
+
+        class HistoryOrderList:
+            NAME = 'HistoryOrderList'
+            ID = 'ID'
+            ID_ORDER = 'IDOrder'
+            ID_STORE = 'IDStore'
+            ID_FOOD = 'IDFood'
+            ID_STAFF = 'IDStaff'
+            QTY = 'Qty'
+            UNIT_PRICE = 'UnitPrice'
+            CREATE_TIME = 'CreateTime'
+            NOTE = 'Note'
+            EOD_COUNTED = 'EODCounted'
+            VALID = 'Valid'
+            COLUMNS = [ID_ORDER, ID_STORE, ID_FOOD, ID_STAFF, QTY, UNIT_PRICE, CREATE_TIME, NOTE, EOD_COUNTED,
+                       VALID]
+            INITIAL_QUERY = '''CREATE TABLE `HistoryOrderList` (
               `ID` int NOT NULL,
               `IDOrder` int NOT NULL,
               `IDStore` int NOT NULL,
@@ -190,14 +256,45 @@ class Config:
               `id` int NOT NULL,
               `StoreID` int NOT NULL,
               `StaffID` int NOT NULL,
-              `CashType` varchar(45) NOT NULL,
+              `CashType` decimal(10,2) NOT NULL,
               `CashAmount` int NOT NULL,
               `DateTime` datetime NOT NULL,
               `Valid` tinyint NOT NULL DEFAULT '1',
               `Loaded` tinyint NOT NULL DEFAULT '0',
-              `Updated` tinyint NOT NULL DEFAULT '1'
-            );
-            '''
+              `Updated` tinyint NOT NULL DEFAULT '1');
+                        '''
+
+        class EODSummary:
+            NAME = 'EODSummary'
+            ID = 'ID'
+            ID_STORE = 'StoreID'
+            STAFF_ID = 'IDStaff'
+            REAL_INCOME = 'RealIncome'
+            RECORD_INCOME = 'RecordIncome'
+            REAL_CASH = 'RealCash'
+            RECORD_CASH = 'RecordCash'
+            REAL_CARD = 'RealCard'
+            RECORD_CARD = 'RecordCard'
+            MONEY_IN = 'MoneyIn'
+            MONEY_OUT = 'MoneyOut'
+            NOTE = 'Note'
+            DATETIME = 'DateTime'
+            INITIAL_QUERY = '''CREATE TABLE `EODSummary` (
+              `ID` int NOT NULL,
+              `StoreID` int NOT NULL,
+              `IDStaff` int NOT NULL,
+              `RealIncome` decimal(10,2) NOT NULL,
+              `RecordIncome` decimal(10,2) NOT NULL,
+              `RealCash` decimal(10,2) NOT NULL,
+              `RecordCash` decimal(10,2) NOT NULL,
+              `RealCard` decimal(10,2) NOT NULL,
+              `RecordCard` decimal(10,2) NOT NULL,
+              `MoneyIn` decimal(10,2) NOT NULL,
+              `MoneyOut` decimal(10,2) NOT NULL,
+              `Note` varchar(225) DEFAULT NULL,
+              `DateTime` datetime NOT NULL,
+              `Loaded` tinyint NOT NULL DEFAULT '0',
+              `Updated` tinyint NOT NULL DEFAULT '1');'''
 
     class UI:
         class EatInPage:

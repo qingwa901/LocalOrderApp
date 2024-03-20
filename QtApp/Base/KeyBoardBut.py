@@ -55,4 +55,7 @@ class KeyBoardBtn(CPushButton):
             if value != '0':
                 self.target.setText(value + text)
         else:
-            self.target.setText(value + text)
+            if value != '0':
+                self.target.setText(value + text)
+            else:
+                self.target.setText(text)

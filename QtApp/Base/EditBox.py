@@ -55,8 +55,16 @@ class EditBox(CLineEdit):
 
     def value(self):
         if self.ValueType == eValueType.Int:
-            return int(self.text())
+            try:
+                return int(self.text())
+            except Exception as e:
+                self.Logger.error(f'can not convert ({self.text()}) to int', exc_info=e)
+                return 0
         elif self.ValueType == eValueType.Float:
-            return float(self.text())
+            try:
+                return float(self.text())
+            except Exception as e:
+                self.Logger.error(f'can not convert ({self.text()}) to float', exc_info=e)
+                return 0
         elif self.ValueType == eValueType.String:
             return self.text()
