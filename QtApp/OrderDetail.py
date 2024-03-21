@@ -52,6 +52,8 @@ class OrderDetail(OrderDetailBasePanel):
 
     def Cancel(self):
         self.setVisible(False)
+        self.DataBase.OpenPanel.pop(-1).setVisible(False)
+        self.DataBase.OpenPanel[-1].setVisible(True)
 
     def Confirm(self):
         self.OrderInfo.Qty = int(self.EditQty.text())

@@ -16,12 +16,11 @@ class EditBox(CLineEdit):
         self.Max = None
         self.Min = None
 
-    def focusInEvent(self, aEvent: QtGui.QFocusEvent):
-        if aEvent.gotFocus() and aEvent.reason().value != 3:
-            if self.OpenKeyboardEvent is None:
-                return
-            else:
-                self.OpenKeyboardEvent(self)
+    def mousePressEvent(self, aEvent: QtGui.QMouseEvent):
+        if self.OpenKeyboardEvent is None:
+            return
+        else:
+            self.OpenKeyboardEvent(self)
 
     def setMinimum(self, value):
         self.Min = value

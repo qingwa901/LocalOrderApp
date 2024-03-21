@@ -73,6 +73,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.BlockPanel = CWidget(self)
         self.BlockPanel.setVisible(False)
+        # self.BlockPanel.SetBackgoundColor('red')
         self.BlockPanel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
         self.KeyBoard = KeyBoardPanel(self)
@@ -314,11 +315,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.DataBase.OpenPanel[-1].setVisible(True)
             if self.DataBase.OpenPanel[-1] == self.HistoryOrdersPanel:
                 self.HistoryOrdersPanel.DisplayAllOrders()
-            if len(self.DataBase.OpenPanel) == 1:
+            if len(self.DataBase.OpenPanel) <= 1:
                 self.TableAction.setVisible(True)
                 self.SettingAction.setVisible(True)
                 self.HistoryOrderAction.setVisible(True)
                 self.CloseOrderPanelAction.setVisible(False)
+                self.EODAction.setVisible(True)
 
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
@@ -367,13 +369,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MenuPanel.setVisible(False)
             self.Receipt.setVisible(False)
             self.CloseOrderPanelAction.setVisible(True)
-
+            self.EODAction.setVisible(False)
             self.TableAction.setVisible(False)
             self.SettingAction.setVisible(False)
             self.HistoryOrderAction.setVisible(False)
 
             self.Ordersplit.setVisible(True)
-            self.DataBase.OpenPanel.append(self.Ordersplit)
+            if self.DataBase.OpenPanel[-1] != self.Ordersplit:
+                self.DataBase.OpenPanel.append(self.Ordersplit)
             self.MainSplitter.setVisible(False)
             if TableInfo is None or TableInfo.StartTime is None:
                 # initial table
@@ -420,6 +423,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event):
         self.BlockPanel.resize(self.size())
+        self.OrderDetailPanel.resize(self.size())
         self.JumpWindow.move(self.width() // 2 - 300, self.height() // 2 - 150)
         QtWidgets.QMainWindow.resizeEvent(self, event)
 
@@ -622,6 +626,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     self.DataBase.SwitchTable(widget.TableNumber, n)
 
     def OpenOrderEdit(self, OrderInfo):
+        # self.Ordersplit.setVisible(False)
         self.OrderDetailPanel.setVisible(True)
         self.OrderDetailPanel.SetupOrder(OrderInfo, self.TableNumber)
         self.OrderDetailPanel.raise_()

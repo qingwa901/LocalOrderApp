@@ -27,6 +27,7 @@ class DataBase(SQLControl):
         self.config = Config.DataBase
         self.Setting = ConfigSetting(logger)
         self.STORE_ID = self.config.STORE_ID  # Todo save store id to setting file
+        self.DataBaseCheck()
         self.MenuPageLoad = threading.Thread(target=self.LoadMenuPage)
         self.MenuPageLoad.start()
         self.StaffLoad = threading.Thread(target=self.LoadStaffInfo)
@@ -152,7 +153,7 @@ class DataBase(SQLControl):
             f"where {table.ID_STORE} = {self.STORE_ID} and {table.ID} = {data[table.ID]}")
 
     def UpdateOneLine(self, data, table):
-        if data[table.Valid]:
+        if data[table.VALID]:
             Value = ''
             for field in table.COLUMNS:
                 if Value != '':
@@ -329,6 +330,9 @@ class DataBase(SQLControl):
         query = (f'select max({self.config.OrderMetaData.ID_ORDER}) from {self.config.OrderMetaData.NAME} where '
                  f'{self.config.OrderMetaData.ID_STORE}={self.STORE_ID};')
         data = self.get_local_data(query)
+        if data is None:
+            self.MaxOrderID = 0
+            return
         if data.iloc[0, 0] is None:
             self.MaxOrderID = 0
         else:
@@ -338,6 +342,9 @@ class DataBase(SQLControl):
         query = (f'select max({self.config.OrderList.ID}) from {self.config.OrderList.NAME} where '
                  f'{self.config.OrderList.ID_STORE}={self.STORE_ID};')
         data = self.get_local_data(query)
+        if data is None:
+            self.MaxOrderListID = 0
+            return
         if data.iloc[0, 0] is None:
             self.MaxOrderListID = 0
         else:
@@ -347,6 +354,9 @@ class DataBase(SQLControl):
         query = (f'select max({self.config.OrderMetaData.ID}) from {self.config.OrderMetaData.NAME} where '
                  f'{self.config.OrderMetaData.ID_STORE}={self.STORE_ID};')
         data = self.get_local_data(query)
+        if data is None:
+            self.MaxOrderMataListID = 0
+            return
         if data.iloc[0, 0] is None:
             self.MaxOrderMataListID = 0
         else:
@@ -620,12 +630,28 @@ class DataBase(SQLControl):
         query = (f"select max({table.CREATE_TIME}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
                  f"`{table.VALID}`='1'")
         data = self.get_local_data(query)
+        if data is None:
+            return {}
         LastestTime = data.iloc[0, 0]
+        if LastestTime is None:
+            return {}
         query = (f"select * from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
                  f"`{table.VALID}`='1' and `{table.CREATE_TIME}`='{LastestTime}'")
         data = self.get_local_data(query)
         data = data.set_index(table.CASH_TYPE)
         return data[table.CASH_AMOUNT].to_dict()
+
+    def GetMaxID(self, table):
+        query = (f"select max({table.ID}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
+                 f"`{table.VALID}`='1';")
+        data = self.get_local_data(query)
+        if data is None:
+            return 0
+        index = data.iloc[0, 0]
+        if index is None:
+            return 0
+        else:
+            return index
 
     def SaveTodayDataToHistoryTable(self):
         MetaTable = self.config.OrderMetaData
@@ -637,7 +663,7 @@ class DataBase(SQLControl):
                  f"`{OrderTable.VALID}`='1';")
         OrderData = self.get_local_data(query)
         OrderIDList = MetaData[
-            (MetaData[MetaTable.FIELD] == MetaTable.Fields.IS_FINISHED) & MetaData[MetaTable.VALUE] == 'True'][
+            (MetaData[MetaTable.FIELD] == MetaTable.Fields.IS_FINISHED) & (MetaData[MetaTable.VALUE] == 'True')][
             MetaTable.ID_ORDER].to_list()
         if len(OrderIDList) > 0:
             HistMetaTable = self.config.HistoryOrderMetaData
@@ -645,26 +671,36 @@ class DataBase(SQLControl):
             query = (f"select max({HistMetaTable.ID_ORDER}) from {HistMetaTable.NAME} where"
                      f"`{OrderTable.ID_STORE}`='{self.STORE_ID}' and `{OrderTable.VALID}`='1';")
             MaxOrderID = self.get_local_data(query)
-            if len(MaxOrderID) == 0:
+            if MaxOrderID is None:
                 MaxOrderID = 0
             else:
                 MaxOrderID = MaxOrderID.iloc[0, 0]
+            if MaxOrderID is None:
+                MaxOrderID = 0
             for OrderID in OrderIDList:
                 MaxOrderID += 1
                 SubMetaData = MetaData[MetaData[HistMetaTable.ID_ORDER] == OrderID]
                 SubMetaData[HistMetaTable.ID_ORDER] = MaxOrderID
-                SubMetaData = SubMetaData.drop(HistMetaTable.ID, axis=1)
+                # SubMetaData = SubMetaData.drop(HistMetaTable.ID, axis=1)
+                MaxHisMetaID = self.GetMaxID(HistMetaTable) + 1
+                SubMetaData = SubMetaData.reset_index(drop=True)
+                for i in range(len(SubMetaData)):
+                    SubMetaData.loc[i, HistMetaTable.ID] = i + MaxHisMetaID
                 SubMetaData[self.config.LOADED] = False
                 self.SaveLocalData(SubMetaData, HistMetaTable.NAME)
                 SubOrderData = OrderData[OrderData[HistOrderTable.ID_ORDER] == OrderID]
                 SubOrderData[HistOrderTable.ID_ORDER] = MaxOrderID
-                SubOrderData = SubOrderData.drop(HistOrderTable.ID, axis=1)
+                # SubOrderData = SubOrderData.drop(HistOrderTable.ID, axis=1)
+                MaxOrderListID = self.GetMaxID(HistOrderTable) + 1
+                SubOrderData = SubOrderData.reset_index(drop=True)
+                for i in range(len(SubMetaData)):
+                    SubOrderData.loc[i, HistOrderTable.ID] = i + MaxOrderListID
                 SubOrderData[self.config.LOADED] = False
                 self.SaveLocalData(SubOrderData, HistOrderTable.NAME)
                 query = (
                     f"update {MetaTable.NAME} set `{MetaTable.VALID}`='0', `{self.config.LOADED}`='0' where "
                     f"`{MetaTable.ID_STORE}`='{self.STORE_ID}'"
-                    f"` and {MetaTable.ID_ORDER}`='{OrderID}';")
+                    f" and `{MetaTable.ID_ORDER}`='{OrderID}';")
                 self.executeLocally(query)
                 query = (
                     f"update {OrderTable.NAME} set `{OrderTable.VALID}`='0', `{self.config.LOADED}`='0' where "
@@ -682,11 +718,17 @@ class DataBase(SQLControl):
         CoinDF[table.ID_STORE] = self.STORE_ID
         CoinDF[table.STAFF_ID] = self.StaffList[self.StaffName]
         CoinDF[table.CREATE_TIME] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        CoinDF[self.config.LOADED] = True
+        CoinDF[self.config.LOADED] = False
         CoinDF[self.config.UPDATED] = False
         query = (f"select max({table.ID}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}' and "
                  f"`{table.VALID}`='1';")
-        MaxID = self.get_local_data(query).iloc[0, 0]
+        MaxID = self.get_local_data(query)
+        if MaxID is None:
+            MaxID = 0
+        else:
+            MaxID = MaxID.iloc[0, 0]
+        if MaxID is None:
+            MaxID = 0
         CoinDF[table.ID] = MaxID + 1
         for i in range(len(CoinDF)):
             CoinDF.loc[i, table.ID] += i
@@ -701,6 +743,12 @@ class DataBase(SQLControl):
         SummaryDF[table.STAFF_ID] = self.StaffList[self.StaffName]
         SummaryDF[table.DATETIME] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         query = f"select max({table.ID}) from {table.NAME} where `{table.ID_STORE}`='{self.STORE_ID}';"
-        MaxID = self.get_local_data(query).iloc[0, 0]
+        MaxID = self.get_local_data(query)
+        if MaxID is None:
+            MaxID = 0
+        else:
+            MaxID = MaxID.iloc[0, 0]
+        if MaxID is None:
+            MaxID = 0
         SummaryDF[table.ID] = MaxID
         self.SaveLocalData(SummaryDF, table.NAME)

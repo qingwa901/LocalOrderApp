@@ -14,6 +14,7 @@ class CEODPanel(CEODPanelBase):
         self.Total = 0
         self.ConnectSummary()
         self.BtnReset.pressed.connect(self.Load)
+        self.BtnConfirm.pressed.connect(self.Save)
 
     def Load(self):
         self.Total = 0
@@ -31,7 +32,10 @@ class CEODPanel(CEODPanelBase):
         self.LBTotalIncome.setText(str(round(self.Total, 2)))
         CashDict = self.DataBase.LoadCashBoxAmount()
         for i in self.Values:
-            if i in CashDict:
+            if str(float(i)) in CashDict:
+                self.Values[i].setText(str(int(CashDict[str(float(i))])))
+                self.PreviousCashBox += int(CashDict[str(float(i))]) * i
+            elif i in CashDict:
                 self.Values[i].setText(str(int(CashDict[i])))
                 self.PreviousCashBox += int(CashDict[i]) * i
             else:
