@@ -693,7 +693,7 @@ class DataBase(SQLControl):
                 # SubOrderData = SubOrderData.drop(HistOrderTable.ID, axis=1)
                 MaxOrderListID = self.GetMaxID(HistOrderTable) + 1
                 SubOrderData = SubOrderData.reset_index(drop=True)
-                for i in range(len(SubMetaData)):
+                for i in range(len(SubOrderData)):
                     SubOrderData.loc[i, HistOrderTable.ID] = i + MaxOrderListID
                 SubOrderData[self.config.LOADED] = False
                 self.SaveLocalData(SubOrderData, HistOrderTable.NAME)

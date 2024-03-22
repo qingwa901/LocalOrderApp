@@ -62,7 +62,9 @@ class CEODPanel(CEODPanelBase):
             self.realTotal += i * self.Values[i].value()
         self.LBRealTotalCash.setText(str(round(self.realTotal, 2)))
         self.LBTotalCash.setText(
-            str(round(float(self.LBTodayTotalCash.text()) + self.EditMoneyIn.value() - self.EditMoneyOut.value(), 2)))
+            str(round(float(
+                self.LBTodayTotalCash.text()) + self.EditMoneyIn.value() - self.EditMoneyOut.value() + self.PreviousCashBox,
+                      2)))
         RealTotalIncome = self.EditRealTotalCard.value() + float(
             self.LBRealTotalCash.text()) - self.EditMoneyIn.value() + self.EditMoneyOut.value() - self.PreviousCashBox
         self.LBRealTotalIncome.setText(str(round(RealTotalIncome, 2)))
