@@ -13,8 +13,14 @@ class CEODPanel(CEODPanelBase):
         self.PreviousCashBox = 0
         self.Total = 0
         self.ConnectSummary()
-        self.BtnReset.pressed.connect(self.Load)
+        self.BtnReset.pressed.connect(self.reset)
         self.BtnConfirm.pressed.connect(self.Save)
+
+    def reset(self):
+        self.EditMoneyIn.setText("0")
+        self.EditMoneyOut.setText("0")
+        self.EditRealTotalCard.setText("0")
+        self.Load()
 
     def Load(self):
         self.Total = 0
@@ -24,7 +30,7 @@ class CEODPanel(CEODPanelBase):
         data = self.DataBase.GetHistoryOrders()
         for order in data.ByOrderIDDict.values():
             if order.IsFinished:
-                self.Total += order.GetTotalAmount() * (1 - order.Discount / 100) * (1 + order.ServiceCharge / 100)
+                self.Total += round(order.GetTotalAmount() * (1 - order.Discount / 100) * (1 + order.ServiceCharge / 100),2)
                 self.TotalCash += order.Cash
                 self.TotalCard += order.Card
         self.LBTotalCard.setText(str(round(self.TotalCard, 2)))
@@ -99,4 +105,4 @@ class CEODPanel(CEODPanelBase):
         self.DataBase.SaveCoinInfo(CoinData)
         self.DataBase.SaveEODSummary(self.GetSummaryData())
         self.DataBase.SaveTodayDataToHistoryTable()
-        self.Load()
+        self.reset()

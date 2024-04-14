@@ -38,12 +38,12 @@ class CEODPanelBase(CFrame):
             else:
                 label.setText(_translate("Form", f"{round(i * 100)}p 数量"))
             ValueBox = EditBox(self, eValueType.Int)
+            ValueBox.setText('0')
             ValueBox.setMinimum(0)
             formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, label)
             formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, ValueBox)
             Row = len(self.Values) // 3
             self.gridLayout.addLayout(formLayout,Row,len(self.Values) % 3)
-            self.Values[i] = ValueBox
             self.Values[i] = ValueBox
 
         Row = len(self.Values) // 3 + 1

@@ -27,7 +27,6 @@ from QtApp.Base import CWidget, CFrame, CSplitter
 from DataBase import DataBase
 from Logger import CreateLogger
 from Config import Config
-from datetime import datetime
 from TableInfoStore import OrderInfo, TableInfoStore
 from QtApp.HistoryOrders import HistoryOrders
 from QtApp.CEODPanel import CEODPanel
@@ -37,7 +36,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.Logger = CreateLogger('Zhangji', 'TmpLog')
-        self.DataBase = DataBase(self.Logger, 'DataBase')
+        self.DataBase = DataBase(self.Logger, 'DataBase.sql')
         self.TableOrder = self.DataBase.Setting.GetValue(Config.DataBase.StoreList.TABLE_ORDER)
         self.TableNumber = None
         try:
@@ -181,9 +180,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.Connection = ConnectionLabel(self)
         self.toolbar.addWidget(self.Connection)
-        self.TestAction = QtGui.QAction("Test", self)
-        self.toolbar.addAction(self.TestAction)
-        self.TestAction.triggered.connect(self.ShowTestPanel)
+        # self.TestAction = QtGui.QAction("Test", self)
+        # self.toolbar.addAction(self.TestAction)
+        # self.TestAction.triggered.connect(self.ShowTestPanel)
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -202,14 +201,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT))
             if CurrentServiceChargePercent is None:
                 CurrentServiceChargePercent = 10
+                self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT, 10)
             CurrentDiscountPercentA = (
                 self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_A))
             if CurrentDiscountPercentA is None:
                 CurrentDiscountPercentA = 5
+                self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_A, 5)
             CurrentDiscountPercentB = (
                 self.DataBase.Setting.GetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_B))
             if CurrentDiscountPercentB is None:
                 CurrentDiscountPercentB = 10
+                self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_DISCOUNT_PERCENT_B, 10)
 
             self.SettingPanel.EventChangeDefaultServiceChargePercent = self.ChangeDefaultServiceChargePercent
             self.SettingPanel.SetupServiceChargePercentList(Config.ValueSetting.TableOrder.SERVICE_CHARGE_PERCENT_LIST,
@@ -221,7 +223,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.SettingPanel.SetupDiscountPercentBList(Config.ValueSetting.TableOrder.DISCOUNT_PERCENT_LIST,
                                                         CurrentDiscountPercentB)
 
-            self.InitialPanel.AddConnect(self.OpenTable)
+            self.InitialPanel.TableButClickEvent = self.TableButClick
             self.InitialPanel.setKeyBoardEvent(self.ShowKeyboard)
 
             self.JumpWindow.InitialCloseEvent(self.CloseJumpWindow)
@@ -237,15 +239,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.OrderPanel.Connect(self.PlaceOrder)
 
             self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
-            self.FinalStatusPanel.AddCardConnect(self.AddCard)
-            self.FinalStatusPanel.AddCashConnect(self.AddCash)
-            self.FinalStatusPanel.AddDiscountConnect(self.AddDiscountPercent)
-            self.FinalStatusPanel.AddServiceChargeConnect(self.AddServiceChargePercent)
             self.FinalStatusPanel.DefaultServiceChargePercent = CurrentServiceChargePercent
             self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
             self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
-            self.FinalStatusPanel.CleanTableConnect(self.CleanTable)
+            self.FinalStatusPanel.CloseEvent = self.CleanTable
             self.FinalStatusPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
+            self.FinalStatusPanel.BackEvent = self.ButCloseOrderPanel_onClick
 
             self.OrderDetailPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
             self.OrderPanel.OrderEditEvent = self.OpenOrderEdit
@@ -585,12 +584,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.DataBase.ReopenTable(self.TableNumber)
         self.TableButClick(self.TableNumber)
 
-    def AddCash(self, TotalCash):
-        self.DataBase.AddCash(Cash=TotalCash, TableNumber=self.TableNumber)
-
-    def AddCard(self, TotalCard):
-        self.DataBase.AddCard(Card=TotalCard, TableNumber=self.TableNumber)
-
     def AddServiceChargePercent(self, ServiceChargePercent):
         self.DataBase.AddServicePercent(ServicePercent=ServiceChargePercent, TableNumber=self.TableNumber)
 
@@ -610,7 +603,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.DefaultDiscountPercentB = Value
 
     def CleanTable(self):
-        self.DataBase.FinishTable(self.TableNumber)
         self.TableButClick(self.TableNumber)
 
     def dragEnterEvent(self, e):

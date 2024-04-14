@@ -27,20 +27,21 @@ class SettingPanel(SettingPanelBase):
         self.PrintList = Printer.PrinterList()
         for PrinterName in self.PrintList:
             self.CBCashierPrinter.addItem(PrinterName)
+        self.CBCashierPrinter.addItem("不打印")
         if self.Printer.DefaultCashierPrinter is not None:
             self.CBCashierPrinter.setCurrentText(self.Printer.DefaultCashierPrinter)
         else:
-            self.CBCashierPrinter.setCurrentIndex(-1)
+            self.CBCashierPrinter.setCurrentIndex(len(self.PrintList))
         self.CBCashierPrinter.currentIndexChanged.connect(self.CashierPrinterChange)
         self.BtnCashierTestPrint.pressed.connect(self.SendCashierTestOrder)
         for CBPrinterID in self.CBsPrinter:
             for PrinterName in self.PrintList:
                 self.CBsPrinter[CBPrinterID].addItem(PrinterName)
-
+            self.CBsPrinter[CBPrinterID].addItem("不打印")
             if self.Printer.DefaultKitchenPrinters[CBPrinterID] is not None:
                 self.CBsPrinter[CBPrinterID].setCurrentText(self.Printer.DefaultKitchenPrinters[CBPrinterID])
             else:
-                self.CBsPrinter[CBPrinterID].setCurrentIndex(-1)
+                self.CBsPrinter[CBPrinterID].setCurrentIndex(len(self.PrintList))
             self.CBsPrinter[CBPrinterID].currentIndexChanged.connect(partial(self.KitchenPrinterChange, CBPrinterID))
             self.BtnsPrinterTest[CBPrinterID].pressed.connect(partial(self.SendKitchenTestOrder, CBPrinterID))
 
@@ -73,10 +74,16 @@ class SettingPanel(SettingPanelBase):
         self.CBDiscountPercentB.currentIndexChanged.connect(self.CBDiscountPercentBChangeEvent)
 
     def KitchenPrinterChange(self, MenuId, index):
-        self.Printer.SetDefaultKitchenPrinter(self.PrintList[index], MenuId)
+        if index < len(self.PrintList):
+            self.Printer.SetDefaultKitchenPrinter(self.PrintList[index], MenuId)
+        else:
+            self.Printer.SetDefaultKitchenPrinter("", MenuId)
 
     def CashierPrinterChange(self, index):
-        self.Printer.SetDefaultCashierPrinter(self.PrintList[index])
+        if index < len(self.PrintList):
+            self.Printer.SetDefaultCashierPrinter(self.PrintList[index])
+        else:
+            self.Printer.SetDefaultCashierPrinter("")
 
     def CBServiceChargePercentChangeEvent(self, index):
         self.EventChangeDefaultServiceChargePercent(self.ServiceChargePercentList[index])

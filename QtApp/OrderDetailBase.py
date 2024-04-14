@@ -178,6 +178,7 @@ class OrderDetailBasePanel(CFrame):
         # self.pushButton_5.setText(_translate("Form", "PushButton"))
         self.BtnConfirm.setText(_translate("Form", "确认"))
         self.BtnCancel.setText(_translate("Form", "返回"))
+        self.BtnCancel.setVisible(False)
         self.BtnAddLabel.setText(_translate("Form", "添加"))
         # self.pushButton_2.setText(_translate("Form", "PushButton"))
         # self.pushButton.setText(_translate("Form", "PushButton"))

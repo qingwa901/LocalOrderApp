@@ -21,12 +21,11 @@ class FinalStatusPanel(FinalStatusBase):
         self.total = 0
         self.cash = 0
         self.card = 0
+        self.OrderID = None
+        self.CloseEvent = None
+        self.BackEvent = None
         self.ServiceChargePercent = 10
         self.DiscountPercent = 0
-        self.AddCashEvent = None
-        self.AddCardEvent = None
-        self.AddDiscountEvent = None
-        self.AddServiceChargeEvent = None
         self.BtnCashRemove.pressed.connect(self.RemoveCash)
         self.BtnCardRemove.pressed.connect(self.RemoveCard)
         self.BtnPay5Cash.pressed.connect(partial(self.AddCash, 5))
@@ -44,8 +43,8 @@ class FinalStatusPanel(FinalStatusBase):
         self.ButDiscountA.pressed.connect(self.AddDiscountA)
         self.ButDiscountB.pressed.connect(self.AddDiscountB)
         self.BtnAddRemoveServiceCharge.pressed.connect(self.ChangeServiceChargePercent)
-
-    def AddEvent(self):
+        self.BtnCleanTable.pressed.connect(self.CleanTableEvent)
+        self.BtnDeleteOrder.pressed.connect(self.DeleteOrder)
         self.BtnPrintReceipt.pressed.connect(self.PrintReceipt)
 
     def setUpOpenKeyboardEvent(self, event):
@@ -82,6 +81,8 @@ class FinalStatusPanel(FinalStatusBase):
     def DisplayTable(self, TableInfo: TableInfoStore):
         self.Clear()
         self.TableInfo = TableInfo
+        self.OrderID = TableInfo.OrderID
+        self.LBOrderID.setText(str(TableInfo.OrderID))
         self.LBTableNumber.setText(TableInfo.TableID)
         self.LBStartTime.setText(TableInfo.StartTime)
         self.LBEndTime.setText(TableInfo.EndTime)
@@ -129,40 +130,41 @@ class FinalStatusPanel(FinalStatusBase):
     def ReopenConnect(self, Event):
         self.BtnReOpen.pressed.connect(Event)
 
-    def CleanTableConnect(self, Event):
-        self.BtnCleanTable.pressed.connect(Event)
+    def CleanTableEvent(self):
+        self.DataBase.FinishTable(self.OrderID)
+        self.CloseEvent()
 
     def PrintReceipt(self):
-        self.DataBase.Printer.PrintReceipt(self.TableInfo)
+        self.DataBase.Printer.PrintReceipt(self.DataBase.TableInfo.ByOrderIDDict[self.OrderID])
 
     def RemoveCash(self):
         self.cash = 0
-        self.AddCashEvent(0)
+        self.DataBase.AddCash(0, self.OrderID)
         self.DisplayAllInfo()
 
     def RemoveCard(self):
         self.card = 0
-        self.AddCardEvent(0)
+        self.DataBase.AddCard(0, self.OrderID)
         self.DisplayAllInfo()
 
     def AddCash(self, Amount):
         self.cash += Amount
-        self.AddCashEvent(self.cash)
+        self.DataBase.AddCash(self.cash, self.OrderID)
         self.DisplayAllInfo()
 
     def AddCard(self, Amount):
         self.card += Amount
-        self.AddCardEvent(self.cash)
+        self.DataBase.AddCard(self.card, self.OrderID)
         self.DisplayAllInfo()
 
     def AddRestCash(self):
         self.cash += float(self.EditBoxToPayAmount.text())
-        self.AddCashEvent(self.cash)
+        self.DataBase.AddCash(self.cash, self.OrderID)
         self.DisplayAllInfo()
 
     def AddRestCard(self):
         self.card += float(self.EditBoxToPayAmount.text())
-        self.AddCardEvent(self.card)
+        self.DataBase.AddCard(self.card, self.OrderID)
         self.DisplayAllInfo()
 
     def ChangeServiceChargePercent(self):
@@ -170,35 +172,27 @@ class FinalStatusPanel(FinalStatusBase):
             self.ServiceChargePercent = 0
         else:
             self.ServiceChargePercent = self.DefaultServiceChargePercent
-        self.AddServiceChargeEvent(self.ServiceChargePercent)
+        self.DataBase.AddServicePercent(self.ServiceChargePercent, self.OrderID)
         self.DisplayAllInfo()
 
     def RemoveDiscount(self):
         self.DiscountPercent = 0
-        self.AddDiscountEvent(0)
+        self.DataBase.AddDiscountPercent(0, self.OrderID)
         self.DisplayAllInfo()
 
     def AddDiscountA(self):
         self.DiscountPercent = self.DefaultDiscountPercentA
-        self.AddDiscountEvent(self.DefaultDiscountPercentA)
+        self.DataBase.AddDiscountPercent(self.DefaultDiscountPercentA, self.OrderID)
         self.DisplayAllInfo()
 
     def AddDiscountB(self):
         self.DiscountPercent = self.DefaultDiscountPercentB
-        self.AddDiscountEvent(self.DefaultDiscountPercentB)
+        self.DataBase.AddDiscountPercent(self.DefaultDiscountPercentB, self.OrderID)
         self.DisplayAllInfo()
 
-    def AddCashConnect(self, Event):
-        self.AddCashEvent = Event
-
-    def AddCardConnect(self, Event):
-        self.AddCardEvent = Event
-
-    def AddDiscountConnect(self, Event):
-        self.AddDiscountEvent = Event
-
-    def AddServiceChargeConnect(self, Event):
-        self.AddServiceChargeEvent = Event
+    def DeleteOrder(self):
+        self.DataBase.DeleteOrder(self.OrderID)
+        self.BackEvent(None)
 
     def HistoryOrderSetting(self, Display):
         self.BtnCleanTable.setVisible(Display)
@@ -207,6 +201,7 @@ class FinalStatusPanel(FinalStatusBase):
         self.BtnReOpen.setVisible(Display)
         self.BtnAddRemoveServiceCharge.setVisible(Display)
         self.BtnRemoveDiscount.setVisible(Display)
+        self.BtnDeleteOrder.setVisible(not Display)
 
 
 if __name__ == "__main__":
@@ -215,5 +210,5 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     ui = FinalStatusPanel(None)
     ui.show()
-    ui.HistoryOrderSetting()
+    ui.HistoryOrderSetting(True)
     sys.exit(app.exec_())

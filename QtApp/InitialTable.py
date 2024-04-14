@@ -10,46 +10,62 @@
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.Base.EditBox import EditBox, eValueType
-from QtApp.Base import CFrame, CWidget
-
+from QtApp.Base import CFrame, CWidget, CPushButton
+from QtApp.Base.FlowLayout import FlowLayout
+from functools import partial
 
 class InitialTable(CFrame):
     def __init__(self, aParant):
         CFrame.__init__(self, aParant)
+        self.TableButClickEvent = None
         self.setupUi()
 
     def setupUi(self):
         self.setObjectName("InitialTable")
         self.resize(469, 361)
-        self.formLayoutWidget = CWidget(self)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 10, 281, 133))
-        self.formLayoutWidget.setObjectName("formLayoutWidget")
-        self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
-        self.formLayout.setContentsMargins(0, 0, 0, 0)
+        self.vbox = QtWidgets.QVBoxLayout(self)
+
+        self.formLayout = QtWidgets.QFormLayout(self)
+        self.vbox.addLayout(self.formLayout)
+        # self.formLayout.setContentsMargins(0, 0, 0, 0)
         self.formLayout.setObjectName("formLayout")
-        self.label = QtWidgets.QLabel(self.formLayoutWidget)
+
+        self.label = QtWidgets.QLabel(self)
         self.label.setObjectName("label")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
-        self.LBTableNumber = QtWidgets.QLabel(self.formLayoutWidget)
+        self.LBTableNumber = QtWidgets.QLabel(self)
         self.LBTableNumber.setObjectName("LBTableNumber")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.LBTableNumber)
-        self.label_2 = QtWidgets.QLabel(self.formLayoutWidget)
+        self.label_2 = QtWidgets.QLabel(self)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
-        self.EditBoxNumOfPeople = EditBox(self.formLayoutWidget, eValueType.Int)
+        self.EditBoxNumOfPeople = EditBox(self, eValueType.Int)
         self.EditBoxNumOfPeople.setMinimum(1)
         self.EditBoxNumOfPeople.setMaximum(30)
         self.EditBoxNumOfPeople.setObjectName("EditBoxNumOfPeople")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.EditBoxNumOfPeople)
-        self.gridLayoutWidget = CWidget(self)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 220, 121, 80))
-        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
+        self.weget = CWidget(self)
+        self.vbox.addWidget(self.weget)
+
+        self.flowLayout = FlowLayout(self.weget)
+        self.weget.setLayout(self.flowLayout)
+        for i in range(1, 9):
+            Btn = CPushButton(self)
+            Btn.setText(f"{i}人")
+            Btn.pressed.connect(partial(self.OpenTableEvent, i))
+            self.flowLayout.addWidget(Btn)
+        self.gridLayout = QtWidgets.QGridLayout(self)
+
+        self.vbox.addLayout(self.gridLayout)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
-        self.OpenTable = QtWidgets.QPushButton(self.gridLayoutWidget)
-        self.OpenTable.setObjectName("OpenTable")
-        self.gridLayout.addWidget(self.OpenTable, 0, 0, 1, 1)
+        self.BtnOpenTable = CPushButton(self)
+        self.BtnOpenTable.setObjectName("OpenTable")
+        self.gridLayout.addWidget(self.BtnOpenTable, 0, 0, 1, 1)
+
+        self.BtnOpenTable.pressed.connect(self.OpenTableEvent)
+
+        self.setLayout(self.vbox)
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -63,15 +79,24 @@ class InitialTable(CFrame):
         self.label.setText(_translate("Form", "桌号"))
         self.LBTableNumber.setText(_translate("Form", "None"))
         self.label_2.setText(_translate("Form", "人数"))
-        self.OpenTable.setText(_translate("Form", "开台"))
+        self.BtnOpenTable.setText(_translate("Form", "开台"))
 
     def DisplayTable(self, TableNumber):
         self.TableNumber = TableNumber
         self.LBTableNumber.setText(str(TableNumber))
         self.EditBoxNumOfPeople.setText('2')
 
-    def AddConnect(self, Event):
-        self.OpenTable.pressed.connect(Event)
+    def OpenTableEvent(self, NumberOfPeople=None):
+        try:
+            TableNumber = self.TableNumber
+            if NumberOfPeople is None:
+                NumberOfPeople = self.EditBoxNumOfPeople.value()
+            self.Logger.info(f'Table {TableNumber} open, Number Of People {NumberOfPeople}.')
+            if TableNumber is not None:
+                self.DataBase.InitialOrder(TableNumber, NumberOfPeople)
+                self.TableButClickEvent(TableNumber)
+        except Exception as e:
+            self.Logger.error(f'Error during Table {self.TableNumber} open', exc_info=e)
 
 
 if __name__ == "__main__":
@@ -79,6 +104,5 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     ui = InitialTable(None)
-    ui.setupUi()
     ui.show()
     sys.exit(app.exec_())

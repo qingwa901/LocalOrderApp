@@ -279,8 +279,9 @@ class Config:
             MONEY_OUT = 'MoneyOut'
             NOTE = 'Note'
             DATETIME = 'DateTime'
+            VALID = 'Valid'
             COLUMNS = [ID, ID_STORE, STAFF_ID, REAL_INCOME, RECORD_INCOME, REAL_CASH, RECORD_CASH, REAL_CARD,
-                       RECORD_CARD, MONEY_IN, MONEY_OUT, NOTE, DATETIME]
+                       RECORD_CARD, MONEY_IN, MONEY_OUT, NOTE, DATETIME, VALID]
             INITIAL_QUERY = '''CREATE TABLE `EODSummary` (
               `ID` int NOT NULL,
               `StoreID` int NOT NULL,
@@ -295,6 +296,7 @@ class Config:
               `MoneyOut` decimal(10,2) NOT NULL,
               `Note` varchar(225) DEFAULT NULL,
               `DateTime` datetime NOT NULL,
+              `Valid` tinyint NOT NULL DEFAULT '1',
               `Loaded` tinyint NOT NULL DEFAULT '0',
               `Updated` tinyint NOT NULL DEFAULT '1');'''
 
