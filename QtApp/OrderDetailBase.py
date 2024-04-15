@@ -12,6 +12,7 @@ from QtApp.Base.EditBox import EditBox, eValueType
 from Logger import CreateLogger
 from QtApp.Base.TagBut import CTagBtn
 from QtApp.Base import CFrame, CWidget, CPushButton, CSplitter
+from QtApp.Base.KeyboardActive import popup_keyboard
 
 class OrderDetailBasePanel(CFrame):
     def __init__(self, aParant):
@@ -133,11 +134,12 @@ class OrderDetailBasePanel(CFrame):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.EditSpecialNote = EditBox(aParent=self.frame_2, aValueType=eValueType.String)
         self.EditSpecialNote.setObjectName("EditBoxSpecialNote")
-        self.EditSpecialNote.setVisible(False)
+        self.EditSpecialNote.mousePressEvent = popup_keyboard
+        # self.EditSpecialNote.setVisible(False)
         self.horizontalLayout_6.addWidget(self.EditSpecialNote)
         self.BtnAddLabel = CPushButton(aParent=self.frame_2)
         self.BtnAddLabel.setObjectName("BtnAddLabel")
-        self.BtnAddLabel.setVisible(False)
+        # self.BtnAddLabel.setVisible(False)
         self.horizontalLayout_6.addWidget(self.BtnAddLabel)
         self.verticalLayout_2.addLayout(self.horizontalLayout_6)
         self.widget1 = CWidget(aParent=self.frame_2)

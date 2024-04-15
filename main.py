@@ -30,7 +30,9 @@ from Config import Config
 from TableInfoStore import OrderInfo, TableInfoStore
 from QtApp.HistoryOrders import HistoryOrders
 from QtApp.CEODPanel import CEODPanel
-
+import os
+# os.environ["QT_IM_MODULE"] = "qtvirtualkeyboard"
+# os.confstr_names +="ang-zh_CN"
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):

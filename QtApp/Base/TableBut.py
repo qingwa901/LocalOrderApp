@@ -14,6 +14,8 @@ class TableBut(QtWidgets.QPushButton):
     def __init__(self, parent):
         QtWidgets.QPushButton.__init__(self, parent)
         self.IsDrag = False
+        self.Status = TableStatus.Empty
+        self.setStyleSheet('background-color: white;')
 
     def setupUi(self, TableNumber):
         self.TableNumber = TableNumber
@@ -30,11 +32,17 @@ class TableBut(QtWidgets.QPushButton):
     def setupColor(self, Status):
         self.setAttribute(Qt.WA_StyledBackground, True)
         if Status == 0:
-            self.setStyleSheet('background-color: white;')
+            if self.Status != Status:
+                self.setStyleSheet('background-color: white;')
+                self.Status = Status
         elif Status == 1:
-            self.setStyleSheet('background-color: yellow;')
+            if self.Status != Status:
+                self.setStyleSheet('background-color: yellow;')
+                self.Status = Status
         elif Status == 2:
-            self.setStyleSheet('background-color: red;')
+            if self.Status != Status:
+                self.setStyleSheet('background-color: red;')
+                self.Status = Status
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
