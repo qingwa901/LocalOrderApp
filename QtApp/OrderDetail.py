@@ -16,6 +16,7 @@ class OrderDetail(OrderDetailBasePanel):
         self.BtnCancel.pressed.connect(self.Cancel)
         self.BtnConfirm.pressed.connect(self.Confirm)
         self.ReloadOrderList = None
+        self.BtnAddLabel.pressed.connect(self.AddSpecialNote)
 
     def SetupOrder(self, Orderinfo: OrderInfo, TableID: int):
         self.OrderInfo = Orderinfo
@@ -40,9 +41,15 @@ class OrderDetail(OrderDetailBasePanel):
                 self.TagList[i].SetTag(TagInfo)
                 i += 1
 
-    def setUpOpenKeyboardEvent(self, Event):
-        self.EditQty.OpenKeyboardEvent = Event
-        self.EditPrice.OpenKeyboardEvent = Event
+    def AddSpecialNote(self):
+        TextList = self.LBExtraRequirement.text().split('/')
+        Name = self.EditSpecialNote.value()
+        if Name != '':
+            if Name in TextList:
+                TextList.remove(Name)
+            else:
+                TextList.append(Name)
+            self.LBExtraRequirement.setText('/'.join(TextList))
 
     def AddQty(self):
         self.EditQty.setText(str(int(self.EditQty.text()) + 1))

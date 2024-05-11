@@ -53,11 +53,27 @@ class KeyBoardPanel(CFrame):
         self.target = target
         for i in self.Btns:
             self.Btns[i].setTarget(target)
+        self.MoveToTarget(target)
 
     def removeTarget(self):
         self.target = None
         for i in self.Btns:
             self.Btns[i].removeTarget()
+
+    def MoveToTarget(self, target):
+        width = 300
+        height = 300
+        x1 = target.AbsX()
+        x2 = x1 + target.width()
+        y1 = target.AbsY()
+        y2 = y1 + target.height()
+        x = x1
+        y = y2
+        if self.parent().width() - x1 < width:
+            x = self.parent().width() - width
+        if self.parent().height() - y2 < height:
+            y = y1 - height
+        self.move(x, y)
 
 
 if __name__ == "__main__":

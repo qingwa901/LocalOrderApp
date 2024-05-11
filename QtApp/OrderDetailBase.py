@@ -134,7 +134,6 @@ class OrderDetailBasePanel(CFrame):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.EditSpecialNote = EditBox(aParent=self.frame_2, aValueType=eValueType.String)
         self.EditSpecialNote.setObjectName("EditBoxSpecialNote")
-        self.EditSpecialNote.mousePressEvent = popup_keyboard
         # self.EditSpecialNote.setVisible(False)
         self.horizontalLayout_6.addWidget(self.EditSpecialNote)
         self.BtnAddLabel = CPushButton(aParent=self.frame_2)

@@ -9,6 +9,8 @@
 
 
 from PySide6 import QtCore, QtGui, QtWidgets
+
+import Config
 from TableInfoStore import TableInfoStore
 from QtApp.FinalStatusBase import FinalStatusBase
 from functools import partial
@@ -22,6 +24,7 @@ class FinalStatusPanel(FinalStatusBase):
         self.cash = 0
         self.card = 0
         self.OrderID = None
+        self.AccountID = None
         self.CloseEvent = None
         self.BackEvent = None
         self.ServiceChargePercent = 10
@@ -46,9 +49,9 @@ class FinalStatusPanel(FinalStatusBase):
         self.BtnCleanTable.pressed.connect(self.CleanTableEvent)
         self.BtnDeleteOrder.pressed.connect(self.DeleteOrder)
         self.BtnPrintReceipt.pressed.connect(self.PrintReceipt)
+        self.DisplayAccount()
+        self.AccountCombo.currentIndexChanged.connect(self.ChangeAccount)
 
-    def setUpOpenKeyboardEvent(self, event):
-        self.EditBoxToPayAmount.OpenKeyboardEvent = event
 
     def SetDefaultDiscountPercentA(self, Value):
         self._DefaultDisCountPercentA = Value
@@ -78,10 +81,26 @@ class FinalStatusPanel(FinalStatusBase):
 
     DefaultServiceChargePercent = property(GetDefaultServiceChargePercent, SetDefaultServiceChargePercent)
 
+    def DisplayAccount(self):
+        OrderAccountList = Config.Config.DataBase.OrderAccountList
+        Account = self.DataBase.GetAccountList()
+        self.AccountCombo.addItem('')
+        self.AccountCombo.setCurrentText('')
+        for i in range(len(Account)):
+            data = Account.iloc[i]
+            self.AccountCombo.addItem(data[OrderAccountList.ACCOUNT_NAME])
+            if data[OrderAccountList.ID] == self.AccountID:
+                self.AccountCombo.setCurrentText(data[OrderAccountList.ACCOUNT_NAME])
+
+    def ChangeAccount(self):
+        Account = self.AccountCombo.currentText()
+        self.DataBase.ChangeAccount(Account, self.OrderID)
+
     def DisplayTable(self, TableInfo: TableInfoStore):
         self.Clear()
         self.TableInfo = TableInfo
         self.OrderID = TableInfo.OrderID
+        self.AccountID = TableInfo.AccountID
         self.LBOrderID.setText(str(TableInfo.OrderID))
         self.LBTableNumber.setText(TableInfo.TableID)
         self.LBStartTime.setText(TableInfo.StartTime)

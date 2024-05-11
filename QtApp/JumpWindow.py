@@ -11,11 +11,13 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.Base import CFrame, CPushButton
 
+
 class JumpWindow(CFrame):
     def __init__(self, aParant):
         CFrame.__init__(self, aParant)
         self.setupUi()
-
+        self.BlockPanel = None
+        self.BtnNo.pressed.connect(self.CloseWindow)
     def setupUi(self):
         self.setObjectName("Form")
         self.setAutoFillBackground(True)
@@ -61,11 +63,30 @@ class JumpWindow(CFrame):
     def SetQuestion(self, text):
         self.LBQuestion.setText(text)
 
-    def connect(self, event):
+    def Yesconnect(self, event):
         self.BtnYes.pressed.connect(event)
 
-    def InitialCloseEvent(self, event):
-        self.BtnNo.pressed.connect(event)
+    def OpenWindow(self):
+        try:
+            self.BlockPanel.setVisible(True)
+            self.setVisible(True)
+            self.BlockPanel.resize(self.width(), self.height())
+            self.resize(600, 300)
+            self.move(self.width() // 2 - 300, self.height() // 2 - 150)
+
+            self.raise_()
+            self.BlockPanel.lower()
+            self.BlockPanel.stackUnder(self)
+            self.BlockPanel.mousePressEvent = lambda x: self.CloseWindow()
+        except Exception as e:
+            self.Logger.error(f'Error during show jump window', exc_info=e)
+
+    def CloseWindow(self):
+        self.setVisible(False)
+        self.BlockPanel.setVisible(False)
+        self.BtnYes.pressed.disconnect()
+
+
 
 
 if __name__ == "__main__":

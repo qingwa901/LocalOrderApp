@@ -20,6 +20,7 @@ from QtApp.FinalStatus import FinalStatusPanel
 from QtApp.receiptPanel import Receipt
 from QtApp.keyboard import KeyBoardPanel
 from QtApp.OrderDetail import OrderDetail
+import QtApp.Base.EditBox as EB
 from QtApp.Base.EditBox import EditBox
 from QtApp.Base.ConnectionLabel import ConnectionLabel
 from QtApp.Base.StaffBox import Staffbox
@@ -30,9 +31,10 @@ from Config import Config
 from TableInfoStore import OrderInfo, TableInfoStore
 from QtApp.HistoryOrders import HistoryOrders
 from QtApp.CEODPanel import CEODPanel
-import os
-# os.environ["QT_IM_MODULE"] = "qtvirtualkeyboard"
-# os.confstr_names +="ang-zh_CN"
+from QtApp.OrderAccountPanel import OrderAccountPanel
+from QtApp.Base.CBLockPanel import BlockPanel
+from QtApp.AccountDetail import AccountDetailPanel
+
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -68,18 +70,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.JumpWindow.setVisible(False)
         self.HistoryOrdersPanel = HistoryOrders(self)
         self.HistoryOrdersPanel.setVisible(False)
+        self.OrderAccountPanel = OrderAccountPanel(self)
+        self.OrderAccountPanel.setVisible(False)
 
         self.EODPanel = CEODPanel(self)
         self.EODPanel.setVisible(False)
 
-        self.BlockPanel = CWidget(self)
+        self.BlockPanel = BlockPanel(self)
         self.BlockPanel.setVisible(False)
         # self.BlockPanel.SetBackgoundColor('red')
         self.BlockPanel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        EB.BlockPanel = self.BlockPanel
+        self.AccountDetail = AccountDetailPanel(self)
+        self.AccountDetail.setVisible(False)
+        self.AccountDetail.BlockPanel = self.BlockPanel
+        self.AccountDetail.RefreshEvent = self.OrderAccountPanel.Refresh
+        self.OrderAccountPanel.OpenEvent = self.AccountDetail.Load
 
         self.KeyBoard = KeyBoardPanel(self)
         self.KeyBoard.setVisible(False)
-
+        EB.NumberKeyBoard = self.KeyBoard
         self.MainSplitter = CSplitter(self.centralwidget)
         self.MainSplitter.setOrientation(QtCore.Qt.Horizontal)
         self.MainSplitter.setObjectName("splitter")
@@ -155,6 +165,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.HistoryOrderAction.triggered.connect(self.ButHistoryOrder_onClick)
 
         icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/ToolBar/Account.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.OrderAccountAction = QtGui.QAction(icon1, "OrderAccountAction", self)
+        self.toolbar.addAction(self.OrderAccountAction)
+        self.OrderAccountAction.triggered.connect(self.ButOrderAccount_onClick)
+
+        icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/ToolBar/Summary.jpg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.EODAction = QtGui.QAction(icon1, "EODAction", self)
         self.toolbar.addAction(self.EODAction)
@@ -179,6 +195,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         spacer = QtWidgets.QWidget()
         spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.toolbar.addWidget(spacer)
+
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/ToolBar/Refresh.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.RefreshAction = QtGui.QAction(icon1, "MenuPage", self)
+        self.toolbar.addAction(self.RefreshAction)
+        self.RefreshAction.triggered.connect(self.menuTable_onClick)
 
         self.Connection = ConnectionLabel(self)
         self.toolbar.addWidget(self.Connection)
@@ -226,9 +248,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                                                         CurrentDiscountPercentB)
 
             self.InitialPanel.TableButClickEvent = self.TableButClick
-            self.InitialPanel.setKeyBoardEvent(self.ShowKeyboard)
-
-            self.JumpWindow.InitialCloseEvent(self.CloseJumpWindow)
 
             self.StatusPanel.CloseTableConnect(self.CloseTableEvent)
             self.StatusPanel.NewOrderConnect(self.StartOrder)
@@ -238,24 +257,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MenuPanel.AddMenu(self.DataBase.menu)
             self.MenuPanel.Connect(self.OrderFood)
 
-            self.OrderPanel.Connect(self.PlaceOrder)
+            self.OrderPanel.AddPlaceOrderEvent(self.PlaceOrder)
+            self.OrderPanel.AddSaveOrderEvent(self.SaveOrder)
 
             self.FinalStatusPanel.ReopenConnect(self.ReopenTable)
             self.FinalStatusPanel.DefaultServiceChargePercent = CurrentServiceChargePercent
             self.FinalStatusPanel.DefaultDiscountPercentA = CurrentDiscountPercentA
             self.FinalStatusPanel.DefaultDiscountPercentB = CurrentDiscountPercentB
             self.FinalStatusPanel.CloseEvent = self.CleanTable
-            self.FinalStatusPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
             self.FinalStatusPanel.BackEvent = self.ButCloseOrderPanel_onClick
 
-            self.OrderDetailPanel.setUpOpenKeyboardEvent(self.ShowKeyboard)
             self.OrderPanel.OrderEditEvent = self.OpenOrderEdit
             # self.OrderDetailPanel.EditOrderInDataBase = self.confirmOrderEdit
             self.OrderDetailPanel.ReloadOrderList = self.OrderPanel.Reload
 
             self.HistoryOrdersPanel.OpenHistoryOrderEvent = self.loadOrder
 
-            self.EODPanel.SetUpOpenKeyboardEvent(self.ShowKeyboard)
         except Exception as e:
             self.Logger.error(f'Error during Set up Event.', exc_info=e)
 
@@ -266,6 +283,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hbox.addWidget(self.SettingPanel)
         hbox.addWidget(self.Receipt)
         hbox.addWidget(self.HistoryOrdersPanel)
+        hbox.addWidget(self.OrderAccountPanel)
         hbox.addWidget(self.EODPanel)
         self.centralwidget.setLayout(hbox)
 
@@ -294,6 +312,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MainSplitter.setVisible(False)
             self.Receipt.setVisible(False)
             self.HistoryOrdersPanel.setVisible(False)
+            self.OrderAccountPanel.setVisible(False)
             self.EODPanel.setVisible(False)
             self.DataBase.OpenPanel = [self.SettingPanel]
         except Exception as e:
@@ -305,6 +324,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MainSplitter.setVisible(True)
             self.Receipt.setVisible(False)
             self.HistoryOrdersPanel.setVisible(False)
+            self.OrderAccountPanel.setVisible(False)
             self.EODPanel.setVisible(False)
             self.DataBase.OpenPanel = [self.MainSplitter]
         except Exception as e:
@@ -320,6 +340,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.TableAction.setVisible(True)
                 self.SettingAction.setVisible(True)
                 self.HistoryOrderAction.setVisible(True)
+                self.OrderAccountAction.setVisible(True)
                 self.CloseOrderPanelAction.setVisible(False)
                 self.EODAction.setVisible(True)
 
@@ -332,9 +353,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MainSplitter.setVisible(False)
             self.Receipt.setVisible(False)
             self.EODPanel.setVisible(False)
+            self.OrderAccountPanel.setVisible(False)
             self.HistoryOrdersPanel.setVisible(True)
             self.HistoryOrdersPanel.DisplayAllOrders()
             self.DataBase.OpenPanel = [self.HistoryOrdersPanel]
+        except Exception as e:
+            self.Logger.error(f'Error during show menu panel', exc_info=e)
+
+    def ButOrderAccount_onClick(self, e):
+        try:
+            self.SettingPanel.setVisible(False)
+            self.MainSplitter.setVisible(False)
+            self.Receipt.setVisible(False)
+            self.EODPanel.setVisible(False)
+            self.HistoryOrdersPanel.setVisible(False)
+            self.OrderAccountPanel.setVisible(True)
+            self.OrderAccountPanel.Refresh()
+            self.DataBase.OpenPanel = [self.OrderAccountPanel]
         except Exception as e:
             self.Logger.error(f'Error during show menu panel', exc_info=e)
 
@@ -343,6 +378,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.SettingPanel.setVisible(False)
             self.MainSplitter.setVisible(False)
             self.Receipt.setVisible(False)
+            self.OrderAccountPanel.setVisible(False)
             self.HistoryOrdersPanel.setVisible(False)
             self.EODPanel.setVisible(True)
             self.EODPanel.Load()
@@ -374,6 +410,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.TableAction.setVisible(False)
             self.SettingAction.setVisible(False)
             self.HistoryOrderAction.setVisible(False)
+            self.OrderAccountAction.setVisible(False)
 
             self.Ordersplit.setVisible(True)
             if self.DataBase.OpenPanel[-1] != self.Ordersplit:
@@ -426,6 +463,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.BlockPanel.resize(self.size())
         self.OrderDetailPanel.resize(self.size())
         self.JumpWindow.move(self.width() // 2 - 300, self.height() // 2 - 150)
+        self.AccountDetail.move(self.width() // 2 - 300, self.height() // 2 - 150)
         QtWidgets.QMainWindow.resizeEvent(self, event)
 
     def OpenTable(self):
@@ -445,15 +483,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             # Need a jump out window
             self.Logger.info(f'Table {self.TableNumber} close check')
             self.JumpWindow.SetQuestion('确定要清台吗？')
-            self.JumpWindow.connect(self.CloseTable)
-            self.ShowJumpWindow()
+            self.JumpWindow.Yesconnect(self.CloseTable)
+            self.JumpWindow.OpenWindow()
         except Exception as e:
             self.Logger.error(f'Error during show Close check', exc_info=e)
 
     def CloseTable(self):
         try:
             self.Logger.info(f'Close Table {self.TableNumber}')
-            self.CloseJumpWindow()
+            self.JumpWindow.CloseWindow()
             self.DataBase.CloseTable(self.DataBase.TableInfo.ByTableIDDict[self.TableNumber].OrderID)
             self.TableButClick(self.TableNumber)
         except Exception as e:
@@ -463,77 +501,54 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Receipt.setVisible(True)
         self.Receipt.raise_()
 
-    def ShowJumpWindow(self):
-        try:
-            self.BlockPanel.setVisible(True)
-            self.JumpWindow.setVisible(True)
-            self.BlockPanel.resize(self.width(), self.height())
-            self.JumpWindow.resize(600, 300)
-            self.JumpWindow.move(self.width() // 2 - 300, self.height() // 2 - 150)
-
-            self.JumpWindow.raise_()
-            self.BlockPanel.lower()
-            self.BlockPanel.stackUnder(self.JumpWindow)
-            self.BlockPanel.mousePressEvent = lambda x: self.CloseJumpWindow()
-        except Exception as e:
-            self.Logger.error(f'Error during show jump window', exc_info=e)
-
-    def CloseJumpWindow(self):
-        try:
-            self.JumpWindow.setVisible(False)
-            self.BlockPanel.setVisible(False)
-            self.JumpWindow.BtnYes.pressed.disconnect()
-        except Exception as e:
-            self.Logger.error(f'Error during close jump window', exc_info=e)
-
     def AbsX(self):
         return 0
 
     def AbsY(self):
         return 0
 
-    def ShowKeyboard(self, target: EditBox):
-        try:
-            self.KeyBoard.OriValue = target.text()
-            width = 300
-            height = 300
-            self.KeyBoard.setTarget(target)
-            self.BlockPanel.setVisible(True)
-            self.KeyBoard.setVisible(True)
-            self.BlockPanel.resize(self.width(), self.height())
-            self.KeyBoard.resize(width, height)
-            x1 = target.AbsX()
-            x2 = x1 + target.width()
-            y1 = target.AbsY()
-            y2 = y1 + target.height()
-            x = x1
-            y = y2
-            if self.width() - x1 < width:
-                x = self.width() - width
-            if self.height() - y2 < height:
-                y = y1 - height
-            self.KeyBoard.move(x, y)
-            self.KeyBoard.raise_()
-            self.KeyBoard.focusWidget()
-            self.BlockPanel.lower()
-            self.BlockPanel.stackUnder(self.KeyBoard)
-            self.BlockPanel.mousePressEvent = lambda x: self.CloseKeyboard()
-        except Exception as e:
-            self.CloseKeyboard()
-            self.Logger.error(f'Error during show jump window', exc_info=e)
-
-    def CloseKeyboard(self):
-        try:
-            if self.KeyBoard.target is not None:
-                self.KeyBoard.target.clean(self.KeyBoard.OriValue)
-                self.KeyBoard.target.clearFocus()
-                self.KeyBoard.OriValue = None
-            self.KeyBoard.removeTarget()
-            self.KeyBoard.setVisible(False)
-            self.BlockPanel.setVisible(False)
-
-        except Exception as e:
-            self.Logger.error(f'Error during close jump window', exc_info=e)
+    # def ShowKeyboard(self, target: EditBox):
+    #     try:
+    #         self.KeyBoard.OriValue = target.text()
+    #         width = 300
+    #         height = 300
+    #         self.KeyBoard.setTarget(target)
+    #         self.BlockPanel.setVisible(True)
+    #         self.KeyBoard.setVisible(True)
+    #         self.BlockPanel.resize(self.width(), self.height())
+    #         self.KeyBoard.resize(width, height)
+    #         x1 = target.AbsX()
+    #         x2 = x1 + target.width()
+    #         y1 = target.AbsY()
+    #         y2 = y1 + target.height()
+    #         x = x1
+    #         y = y2
+    #         if self.width() - x1 < width:
+    #             x = self.width() - width
+    #         if self.height() - y2 < height:
+    #             y = y1 - height
+    #         self.KeyBoard.move(x, y)
+    #         self.KeyBoard.raise_()
+    #         self.KeyBoard.focusWidget()
+    #         self.BlockPanel.lower()
+    #         self.BlockPanel.stackUnder(self.KeyBoard)
+    #         self.BlockPanel.mousePressEvent = lambda x: self.CloseKeyboard()
+    #     except Exception as e:
+    #         self.CloseKeyboard()
+    #         self.Logger.error(f'Error during show jump window', exc_info=e)
+    #
+    # def CloseKeyboard(self):
+    #     try:
+    #         if self.KeyBoard.target is not None:
+    #             self.KeyBoard.target.clean(self.KeyBoard.OriValue)
+    #             self.KeyBoard.target.clearFocus()
+    #             self.KeyBoard.OriValue = None
+    #         self.KeyBoard.removeTarget()
+    #         self.KeyBoard.setVisible(False)
+    #         self.BlockPanel.setVisible(False)
+    #
+    #     except Exception as e:
+    #         self.Logger.error(f'Error during close jump window', exc_info=e)
 
     def StartOrder(self):
         try:
@@ -568,7 +583,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             for order in Orders.Orders:
                 order.OrderID = self.OrderID
                 order.StaffID = self.DataBase.StaffList[self.DataBase.StaffName]
-            self.DataBase.PlaceOrder(Orders)
+            self.DataBase.PlaceOrder(Orders, True)
+            self.TableButClick(self.TableNumber)
+        except Exception as e:
+            self.Logger.error(f'Error during placing order', exc_info=e)
+
+    def SaveOrder(self, Orders: TableInfoStore):
+        try:
+            self.Logger.info(f'Save order')
+            for order in Orders.Orders:
+                order.OrderID = self.OrderID
+                order.StaffID = self.DataBase.StaffList[self.DataBase.StaffName]
+            self.DataBase.PlaceOrder(Orders, False)
             self.TableButClick(self.TableNumber)
         except Exception as e:
             self.Logger.error(f'Error during placing order', exc_info=e)
@@ -585,12 +611,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def ReopenTable(self):
         self.DataBase.ReopenTable(self.TableNumber)
         self.TableButClick(self.TableNumber)
-
-    def AddServiceChargePercent(self, ServiceChargePercent):
-        self.DataBase.AddServicePercent(ServicePercent=ServiceChargePercent, TableNumber=self.TableNumber)
-
-    def AddDiscountPercent(self, DiscountPercent):
-        self.DataBase.AddDiscountPercent(DiscountPercent=DiscountPercent, TableNumber=self.TableNumber)
 
     def ChangeDefaultServiceChargePercent(self, Value):
         self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT, Value)

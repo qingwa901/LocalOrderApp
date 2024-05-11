@@ -10,13 +10,7 @@ from QtApp.Base import CTableWidget, CWidget
 class TableWidget(CTableWidget):
     def __init__(self, aParent):
         super().__init__(aParent, 0, len(Config.DisplaySetting.HistoryOrderTable.COL_NAME_CN))
-        self.verticalHeader().setDefaultSectionSize(25)
-        self.horizontalHeader().setDefaultSectionSize(150)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setupUI()
-        self.selectedRow = None
-        self.currentCellChanged.connect(self.CellChanged)
 
     def test(self):
         for i in range(20):
@@ -33,6 +27,8 @@ class TableWidget(CTableWidget):
         self.insertRow(rowCount)
         if Order.EndTime is not None:
             self.setItem(rowCount, 0, QTableWidgetItem(str(Order.EndTime.split(' ')[1])))
+        else:
+            self.setItem(rowCount, 0, QTableWidgetItem(''))
         self.setItem(rowCount, 1, QTableWidgetItem(str(Order.OrderID)))
         self.setItem(rowCount, 2, QTableWidgetItem(str(Order.TableID)))
         total = round(Order.GetTotalAmount(), 2)
@@ -44,30 +40,6 @@ class TableWidget(CTableWidget):
         self.setItem(rowCount, 8,
                      QTableWidgetItem(str(round(total * (1 + Order.ServiceCharge / 100) * (
                              1 - Order.Discount / 100) - Order.Cash - Order.Card, 2))))
-
-    def Clear(self):
-        self.selectedRow = None
-        rowCount = self.rowCount()
-        for i in range(rowCount - 1, -1, -1):
-            self.removeRow(i)
-
-    def CellChanged(self, currentRow, CurrentColumn, previousRow, previousCol):
-        if self.selectedRow is not None and self.selectedRow > -1:
-            self.setRowBackgroundColor(self.selectedRow, QColor(255, 255, 255))
-        if self.selectedRow != currentRow:
-            self.selectedRow = currentRow
-        if self.selectedRow is not None and self.selectedRow > -1:
-            self.setRowBackgroundColor(self.selectedRow, QColor(207, 254, 255))
-
-    def setRowBackgroundColor(self, row, color):
-        if row == None:
-            return
-        if row >= self.rowCount():
-            return
-        colCount = self.columnCount()
-        for i in range(colCount):
-            if self.item(row, i) is not None:
-                self.item(row, i).setBackground(color)
 
 
 class AppDemo(CWidget):

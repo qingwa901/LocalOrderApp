@@ -70,8 +70,6 @@ class InitialTable(CFrame):
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def setKeyBoardEvent(self, Event):
-        self.EditBoxNumOfPeople.OpenKeyboardEvent = Event
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate

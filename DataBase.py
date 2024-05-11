@@ -125,7 +125,12 @@ class DataBase(SQLControl):
         self.menu.setUp(data)
 
     def HardReloadData(self):
-        pass  # Todo
+        self.LoadMenuPage()
+        self.RefreshMenu()
+        self.LoadStaffInfo()
+        self.LoadStoreInfo()
+        for i in self.config.TABLE_LIST:
+            self.HardLoadData(i, True)
 
     def SaveMenu(self, data: pd.DataFrame):
         table = self.config.MenuList.NAME
@@ -164,7 +169,8 @@ class DataBase(SQLControl):
 
     def Update_(self):
         for table in [self.config.OrderList, self.config.OrderMetaData, self.config.HistoryOrderList,
-                      self.config.HistoryOrderMetaData, self.config.CashBoxAmount, self.config.EODSummary]:
+                      self.config.HistoryOrderMetaData, self.config.CashBoxAmount, self.config.EODSummary,
+                      self.config.OrderAccountList]:
             data = self.get_local_data(
                 f"select * from {table.NAME} where {self.config.LOADED}='0' and {table.ID_STORE}={self.STORE_ID};")
             if len(data) > 0:
@@ -190,7 +196,9 @@ class DataBase(SQLControl):
                     f"{self.STORE_ID} and {table.ID} in ('{IDstr}')")
 
     def Download_(self):
-        for table in [self.config.OrderList, self.config.OrderMetaData, self.config.PendingOnlineOrder]:
+        for table in [self.config.OrderList, self.config.OrderMetaData, self.config.PendingOnlineOrder,
+                      self.config.HistoryOrderList, self.config.HistoryOrderMetaData, self.config.CashBoxAmount,
+                      self.config.EODSummary, self.config.OrderAccountList]:
             data = self.get_data(
                 f"select * from {table.NAME} where {self.config.LOADED}='0' and {table.ID_STORE}={self.STORE_ID};")
             if len(data) > 0:
@@ -208,9 +216,6 @@ class DataBase(SQLControl):
                              f"{table.ID_STORE}={self.STORE_ID} and {table.ID} in "
                              f"({','.join(data[table.ID].astype(str))})")
 
-            # if table == self.config.OrderList:
-            #     if len(data) > 0:
-            #         self.TableInfo.AddOrderInfo(data)
             if table == self.config.PendingOnlineOrder:
                 if len(data) > 0:
                     OrderData = data.apply(self.OnlineOrderConvert, axis=1)
@@ -286,13 +291,35 @@ class DataBase(SQLControl):
             self.TableInfo.LoadMenu(self.menu)
             self.TableInfo.UpdateTime = time.time()
 
-    def GetOpenTableInfo2(self):
+    def GetOpenTableInfo2(self) -> AllTableInfoStore:
         with self.TableInfoLock:
             table = Config.DataBase.OrderMetaData
             query = (f"select {table.ID_ORDER} from {table.NAME} where "
                      f"{table.FIELD}='{table.Fields.IS_FINISHED}' and "
-                     f"{table.VALUE}='False' and "
-                     f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID} = true")
+                     f"{table.VALUE}='0' and "
+                     f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID}='1';")
+            OpenTable = self.get_local_data(query)
+            OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].astype(str).to_list()
+            TableInfo = AllTableInfoStore(self.logger)
+            query = (f"select * from {table.NAME} where {table.ID_ORDER} in ({','.join(OpenOrderList)})"
+                     f" and {table.VALID} = true;")
+            OrderMetaData = self.get_local_data(query)
+            TableInfo.AddOrderMetaInfo(OrderMetaData)
+            query = (f"select * from {Config.DataBase.OrderList.NAME} where {Config.DataBase.OrderList.ID_ORDER} "
+                     f"in ({','.join(OpenOrderList)})")
+            OrderList = self.get_local_data(query)
+            if len(OrderList) > 0:
+                TableInfo.AddOrderInfo(OrderList)
+            TableInfo.LoadMenu(self.menu)
+            return TableInfo
+
+    def GetTakeAwayOrders(self) -> AllTableInfoStore:
+        with self.TableInfoLock:
+            table = Config.DataBase.OrderMetaData
+            query = (f"select {table.ID_ORDER} from {table.NAME} where "
+                     f"{table.FIELD}='{table.Fields.ID_TABLE}' and "
+                     f"{table.VALUE}='0' and "
+                     f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID}='1';")
             OpenTable = self.get_local_data(query)
             OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].astype(str).to_list()
             TableInfo = AllTableInfoStore(self.logger)
@@ -325,24 +352,26 @@ class DataBase(SQLControl):
 
     def DataBaseCheck(self):
         tablelist = self.get_local_data(f"SELECT name FROM sqlite_master WHERE type='table';")
-        for i in [self.config.OrderList, self.config.OrderMetaData, self.config.Staff, self.config.MenuList,
-                  self.config.ManuPageList, self.config.CashBoxAmount, self.config.HistoryOrderMetaData,
-                  self.config.HistoryOrderList, self.config.EODSummary]:
+        for i in self.config.TABLE_LIST:
             if i.NAME not in tablelist['name'].to_list():
                 self.executeLocally(i.INITIAL_QUERY)
                 self.HardLoadData(i)
 
-    def HardLoadData(self, Table):
+    def HardLoadData(self, Table, delete=False):
         data = self.get_data(f"select * from {Table.NAME} where {Table.ID_STORE}={self.STORE_ID};")
         if len(data) > 0 and self.config.LOADED in data.keys():
             update_data = data[(data[self.config.LOADED] == 0) | (data[self.config.UPDATED] == 0)]
             data[self.config.LOADED] = True
             data[self.config.UPDATED] = True
+            if delete:
+                self.executeLocally(f"Delete from {Table.NAME} where 1=1;")
             self.SaveLocalData(data, Table.NAME)
             if len(update_data) > 0:
                 self.execute(
                     f"update {Table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where {Table.ID_STORE}="
                     f"{self.STORE_ID} and {Table.ID} in ({','.join(map(str, update_data[Table.ID].to_list()))})")
+        elif len(data) > 0:
+            self.SaveLocalData(data, Table.NAME)
 
     def GetMaxOrderID(self):
         query = (f'select max({self.config.OrderMetaData.ID_ORDER}) from {self.config.OrderMetaData.NAME} where '
@@ -379,6 +408,17 @@ class DataBase(SQLControl):
             self.MaxOrderMataListID = 0
         else:
             self.MaxOrderMataListID = data.iloc[0, 0]
+
+    def GetMaxID(self, table):
+        query = (f'select max({table.ID}) from {table.NAME} where '
+                 f'{table.ID_STORE}={self.STORE_ID};')
+        data = self.get_local_data(query)
+        if data is None:
+            return 0
+        if data.iloc[0, 0] is None:
+            return 0
+        else:
+            return data.iloc[0, 0]
 
     def InitialOrder(self, TableID, NumOfPeople=None):
         table = self.config.OrderMetaData
@@ -487,7 +527,7 @@ class DataBase(SQLControl):
         self.executeLocally(query)
         self.TableInfo.ByOrderIDDict[OrderID].Clear()
 
-    def PlaceOrder(self, Orders: TableInfoStore):
+    def PlaceOrder(self, Orders: TableInfoStore, Print: bool = True):
         try:
             if len(Orders.Orders) == 0:
                 return
@@ -515,7 +555,8 @@ class DataBase(SQLControl):
             data[self.config.LOADED] = 0
             data[self.config.UPDATED] = 0
             self.SaveLocalData(data, table.NAME)
-            self.Printer.PrintOrder(Orders)
+            if Print:
+                self.Printer.PrintOrder(Orders)
         except Exception as e:
             self.logger.error("Error during placing order.", exc_info=e)
 
@@ -811,3 +852,75 @@ class DataBase(SQLControl):
         query = (f"update {OrderTable.NAME} set `{OrderTable.VALID}`='0', `{self.config.UPDATED}`='0', "
                  f"`{self.config.LOADED}`='0' where `{OrderTable.ID_ORDER}`='{OrderID}';")
         self.executeLocally(query)
+
+    def GetAccountList(self):
+        AccountList = self.config.OrderAccountList
+        query = (
+            f"select `{'`, `'.join(AccountList.COLUMNS)}` from {AccountList.NAME} where `{AccountList.VALID}` = '1'"
+            f" and `{AccountList.ID_STORE}`='{self.STORE_ID}';")
+        data = self.get_local_data(query)
+        return data
+
+    def ChangeAccount(self, Account, OrderID):
+        AccountList = self.config.OrderAccountList
+        query = (
+            f"select `{AccountList.ID}` from {AccountList.NAME} where `{AccountList.ACCOUNT_NAME}`='{Account}' and "
+            f"`{AccountList.VALID}`='1' and `{AccountList.ID_STORE}`='{self.STORE_ID}';")
+        data = self.get_local_data(query)
+        AccountId = None
+        if len(data) > 0:
+            AccountId = data.iloc[0, 0]
+        OrderMeta = self.config.OrderMetaData
+        query = (f"select * from {OrderMeta.NAME} where `{OrderMeta.ID_ORDER}`='{OrderID}' and "
+                 f"`{OrderMeta.ID_STORE}`='{self.STORE_ID}' and `{OrderMeta.FIELD}`='{OrderMeta.Fields.ACCOUNT_ID}';")
+        data = self.get_local_data(query)
+
+        if len(data) == 0 and AccountId is not None:
+            self.GetMaxOrderMataListID()
+            MetaID = self.MaxOrderMataListID
+            MetaID += 1
+            DataDict = {OrderMeta.ID_ORDER: [OrderID],
+                        OrderMeta.ID: [MetaID],
+                        OrderMeta.ID_STORE: [self.STORE_ID],
+                        OrderMeta.CREATE_TIME: [datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")],
+                        OrderMeta.FIELD: [OrderMeta.Fields.ACCOUNT_ID],
+                        OrderMeta.VALUE: [AccountId],
+                        OrderMeta.VALID: [1],
+                        self.config.LOADED: [0],
+                        self.config.UPDATED: [0]}
+            DF = pd.DataFrame(DataDict)
+            self.SaveLocalData(DF, OrderMeta.NAME)
+        elif len(data) > 0 and AccountId is not None:
+            query = (f"update {OrderMeta.NAME} set `{OrderMeta.VALUE}`='{AccountId}', `{OrderMeta.VALID}`='1', "
+                     f"`{OrderMeta.CREATE_TIME}`='{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}',"
+                     f"`{self.config.LOADED}`='0', `{self.config.UPDATED}`='0'"
+                     f" where `{OrderMeta.FIELD}`='{OrderMeta.Fields.ACCOUNT_ID}' and "
+                     f"`{OrderMeta.ID_ORDER}`='{OrderID}' and `{OrderMeta.ID_STORE}`='{self.STORE_ID}';")
+            self.executeLocally(query)
+        elif len(data) > 0 and AccountId is None:
+            query = (f"update {OrderMeta.NAME} set `{OrderMeta.VALID}`='0', `{self.config.UPDATED}`='0', "
+                     f"`{self.config.LOADED}`='0' where `{OrderMeta.ID}`='{data.iloc[0][OrderMeta.ID]}';")
+            self.executeLocally(query)
+
+    def SaveNewAccount(self, AccountID, AccountName, AutoDelete, TotalAmount):
+        AccountList = self.config.OrderAccountList
+        if AccountName == '':
+            return
+        if AccountID is None:
+            id = self.GetMaxID(AccountList)
+            id += 1
+            df = pd.DataFrame([{AccountList.ID: id,
+                                AccountList.ACCOUNT_NAME: AccountName,
+                                AccountList.ID_STORE: self.STORE_ID,
+                                AccountList.AUTO_DELETE: AutoDelete,
+                                AccountList.VALID: '1',
+                                AccountList.TOTAL_AMOUNT: TotalAmount,
+                                self.config.LOADED: 0,
+                                self.config.UPDATED: 0}])
+            self.SaveLocalData(df, AccountList.NAME)
+        else:
+            query = (f"Update {AccountList.NAME} set `{AccountList.ACCOUNT_NAME}`='{AccountName}', "
+                     f"`{AccountList.AUTO_DELETE}`='{1 if AutoDelete else 0}', `{self.config.LOADED}`='0',"
+                     f"`{AccountList.TOTAL_AMOUNT}`='{TotalAmount}'"
+                     f"where `{AccountList.ID_STORE}`='{self.STORE_ID}' and `{AccountList.ID}`='{AccountID}'")
+            self.executeLocally(query)

@@ -2,9 +2,9 @@ from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
 
-class CLineEdit(QtWidgets.QLineEdit):
+class CComboBox(QtWidgets.QComboBox):
     def __init__(self, aParent, *args, **kwargs):
-        QtWidgets.QLineEdit.__init__(self, aParent, *args, **kwargs)
+        QtWidgets.QComboBox.__init__(self, aParent, *args, **kwargs)
         if aParent is not None:
             self.Logger = aParent.Logger
             self.DataBase = aParent.DataBase

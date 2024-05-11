@@ -9,7 +9,7 @@
 
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from QtApp.Base import CFrame, CWidget, CPushButton
+from QtApp.Base import CFrame, CWidget, CPushButton, CComboBox
 from QtApp.Base.EditBox import EditBox, eValueType
 from logging import Logger
 
@@ -34,7 +34,6 @@ class FinalStatusBase(CFrame):
         self.LBTableNumber = QtWidgets.QLabel(self.formLayoutWidget)
         self.LBTableNumber.setObjectName("LBTableNumber")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.LBTableNumber)
-
 
         self.label0 = QtWidgets.QLabel(self.formLayoutWidget)
         self.label0.setObjectName("label")
@@ -191,6 +190,19 @@ class FinalStatusBase(CFrame):
         self.BtnDeleteOrder.setObjectName("BtnDeleteOrder")
         self.gridLayout.addWidget(self.BtnDeleteOrder, 0, 3, 1, 1)
 
+        self.hLayhoutWidge = CWidget(self)
+        self.hLayhoutWidge.setGeometry(QtCore.QRect(10, 360, 295, 31))
+        self.hLayhout = QtWidgets.QHBoxLayout(self.hLayhoutWidge)
+        self.hLayhout.setContentsMargins(0, 0, 0, 0)
+        self.hLayhout.setObjectName('hLayout')
+        self.AccountLabel = QtWidgets.QLabel(self.hLayhoutWidge)
+        self.hLayhout.addWidget(self.AccountLabel)
+        self.AccountCombo = CComboBox(self.hLayhoutWidge)
+        self.hLayhout.addWidget(self.AccountCombo)
+        self.BtnAddToAccount = CPushButton(self.hLayhoutWidge)
+        self.BtnAddToAccount.setVisible(False)
+        self.AccountCombo.setMinimumWidth(150)
+        self.hLayhout.addWidget(self.BtnAddToAccount)
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -230,6 +242,8 @@ class FinalStatusBase(CFrame):
         self.BtnPrintReceipt.setText(_translate("Form", "打单"))
         self.BtnCleanTable.setText(_translate("Form", "清台"))
         self.BtnDeleteOrder.setText(_translate("Form", "删单"))
+        self.AccountLabel.setText(_translate("From", "挂单账户："))
+        self.BtnAddToAccount.setText(_translate("Form", "添加至账户"))
 
 
 if __name__ == "__main__":

@@ -55,12 +55,6 @@ class CEODPanel(CEODPanelBase):
         self.EditMoneyIn.textChanged[str].connect(self.Summary)
         self.EditRealTotalCard.textChanged[str].connect(self.Summary)
 
-    def SetUpOpenKeyboardEvent(self, Event):
-        for i in self.Values.values():
-            i.OpenKeyboardEvent = Event
-        self.EditMoneyOut.OpenKeyboardEvent = Event
-        self.EditMoneyIn.OpenKeyboardEvent = Event
-        self.EditRealTotalCard.OpenKeyboardEvent = Event
 
     def Summary(self, e=None):
         self.realTotal = 0

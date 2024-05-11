@@ -76,6 +76,9 @@ class Config:
                 CARD = 'Card'
                 DISCOUNT_PERCENT = 'DiscountPercent'
                 SERVICE_CHARGE_PERCENT = 'ServiceChargePercent'
+                ACCOUNT_ID = 'AccountID'
+                ORDER_NAME = 'OrderName'
+                ORDER_NOTE = 'OrderNote'
 
         class HistoryOrderMetaData:
             NAME = 'HistoryOrderMetaData'
@@ -110,6 +113,9 @@ class Config:
                 CARD = 'Card'
                 DISCOUNT_PERCENT = 'DiscountPercent'
                 SERVICE_CHARGE_PERCENT = 'ServiceChargePercent'
+                ACCOUNT_ID = 'AccountID'
+                ORDER_NAME = 'OrderName'
+                ORDER_NOTE = 'OrderNote'
 
         class OrderList:
             NAME = 'OrderList'
@@ -300,6 +306,30 @@ class Config:
               `Loaded` tinyint NOT NULL DEFAULT '0',
               `Updated` tinyint NOT NULL DEFAULT '1');'''
 
+        class OrderAccountList:
+            NAME = 'OrderAccountList'
+            ID = 'ID'
+            ID_STORE = 'StoreID'
+            ACCOUNT_NAME = 'AccountName'
+            AUTO_DELETE = 'AutoDelete'
+            TOTAL_AMOUNT = 'TotalAmount'
+            VALID = 'Valid'
+            COLUMNS = [ID, ID_STORE, ACCOUNT_NAME, AUTO_DELETE, TOTAL_AMOUNT, VALID]
+            INITIAL_QUERY = '''CREATE TABLE `OrderAccountList` (
+              `ID` int NOT NULL,
+              `StoreID` int NOT NULL,
+              `AccountName` varchar(225) NOT NULL,
+              `AutoDelete` tinyint NOT NULL DEFAULT '0',
+              `TotalAmount` decimal(10,2) NOT NULL DEFAULT '0.00',
+              `Valid` tinyint NOT NULL DEFAULT '1',
+              `Loaded` tinyint NOT NULL DEFAULT '0',
+              `Updated` tinyint NOT NULL DEFAULT '1'
+            );
+            '''
+
+        TABLE_LIST = [OrderList, OrderMetaData, Staff, MenuList, ManuPageList, CashBoxAmount, HistoryOrderList,
+                      HistoryOrderMetaData, EODSummary, OrderAccountList]
+
     class UI:
         class EatInPage:
             ToolBarSize = 35
@@ -315,6 +345,14 @@ class Config:
             COL_NAME_EN = ['FinishTime', 'OrderID', 'TableID', 'TotalAmount', 'ServiceCharge', 'Discount', 'Cash',
                            'Card']
             COL_NAME_CN = ['结束时间', '订单号', '桌号', '总价', '服务费', '折扣', '现金', '刷卡', '差额']
+
+        class OrderAccountTable:
+            COL_NAME_EN = ['ID', 'Name', 'AutoDelete', 'Total']
+            COL_NAME_CN = ['编号', '账户名', '是否自动删除', '今日前总金额', '今日总金额']
+
+        class TakeAwayTable:
+            COL_NAME_EN = ['ID', 'Name', 'Account', 'Total', 'MoneyToken']
+            COL_NAME_CN = ['编号', '用户', '账户', '总金额', '已收钱']
 
         class MenuTag:
             TAG = "tag"

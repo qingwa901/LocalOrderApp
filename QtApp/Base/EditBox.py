@@ -1,5 +1,9 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.Base import CLineEdit
+from .KeyboardActive import popup_keyboard
+
+BlockPanel = None
+NumberKeyBoard = None
 
 
 class eValueType:
@@ -17,10 +21,62 @@ class EditBox(CLineEdit):
         self.Min = None
 
     def mousePressEvent(self, aEvent: QtGui.QMouseEvent):
-        if self.OpenKeyboardEvent is None:
-            return
+        if self.ValueType == eValueType.String:
+            self.ShowWordKeyBoard(aEvent)
         else:
-            self.OpenKeyboardEvent(self)
+            self.ShowNumberKeyBoard()
+
+    def ShowNumberKeyBoard(self):
+        try:
+            width = 300
+            height = 300
+            if NumberKeyBoard is not None and BlockPanel is not None:
+                NumberKeyBoard.OriValue = self.text()
+                NumberKeyBoard.setTarget(self)
+                NumberKeyBoard.setVisible(True)
+                NumberKeyBoard.resize(width, height)
+                NumberKeyBoard.raise_()
+                NumberKeyBoard.focusWidget()
+
+                BlockPanel.setVisible(True)
+                BlockPanel.Resize()
+                BlockPanel.lower()
+                BlockPanel.stackUnder(NumberKeyBoard)
+                BlockPanel.mousePressEvent = lambda x: self.CloseNumberKeyBoard()
+        except Exception as e:
+            self.Logger.error(f'Error during open number keyboard window', exc_info=e)
+
+    def CloseNumberKeyBoard(self):
+        try:
+            if NumberKeyBoard.target is not None:
+                NumberKeyBoard.target.clean(NumberKeyBoard.OriValue)
+                NumberKeyBoard.target.clearFocus()
+                NumberKeyBoard.OriValue = None
+            NumberKeyBoard.removeTarget()
+            NumberKeyBoard.setVisible(False)
+            BlockPanel.setVisible(False)
+
+        except Exception as e:
+            self.Logger.error(f'Error during close jump window', exc_info=e)
+
+    def ShowWordKeyBoard(self, aEvent):
+        try:
+            if BlockPanel is not None:
+                BlockPanel.setVisible(True)
+                BlockPanel.Resize()
+                BlockPanel.raise_()
+                BlockPanel.mousePressEvent = self.CloseWordKeyBoard
+                popup_keyboard(aEvent)
+        except Exception as e:
+            self.Logger.error(f'Error during open word keyboard window', exc_info=e)
+
+    def CloseWordKeyBoard(self, aEvent):
+        try:
+            popup_keyboard(aEvent)
+            if BlockPanel is not None:
+                BlockPanel.setVisible(False)
+        except Exception as e:
+            self.Logger.error(f'Error during close word keyboard window', exc_info=e)
 
     def setMinimum(self, value):
         self.Min = value

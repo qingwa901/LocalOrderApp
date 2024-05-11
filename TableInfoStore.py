@@ -2,6 +2,7 @@ import pandas as pd
 from Config import Config
 from MenuStore import FullMenuList
 import datetime
+from typing import Dict
 
 
 class OrderInfo:
@@ -70,6 +71,9 @@ class TableInfoStore:
         self.Card = 0
         self.ServiceCharge = 0
         self.Discount = 0
+        self.AccountID = None
+        self.OrderNote = None
+        self.OrderName = None
 
     def SetMetaInfo(self, Info: pd.Series):
         field = Info[self.OrderMetaList.FIELD]
@@ -93,6 +97,12 @@ class TableInfoStore:
             self.Discount = int(value)
         elif field == self.OrderMetaList.Fields.SERVICE_CHARGE_PERCENT:
             self.ServiceCharge = round(float(value), 2)
+        elif field == self.OrderMetaList.Fields.ACCOUNT_ID:
+            self.AccountID = int(value)
+        elif field == self.OrderMetaList.Fields.ORDER_NAME:
+            self.OrderName = value
+        elif field == self.OrderMetaList.Fields.ORDER_NOTE:
+            self.OrderNote = value
 
     def SetOrder(self, Order: pd.Series):
         self.OrderID = Order[self.OrderList.ID_ORDER]
@@ -122,8 +132,8 @@ class AllTableInfoStore:
         self.OrderMetaList = Config.DataBase.OrderMetaData
         self.OnlineOrderTableMap = dict()
         self.OfflineOrderTableMap = dict()
-        self.ByOrderIDDict = {}
-        self.ByTableIDDict = {}
+        self.ByOrderIDDict = Dict[int, TableInfoStore]()
+        self.ByTableIDDict = Dict[int, TableInfoStore]()
 
     def _AddOrder(self, order: pd.Series):
         self.logger.debug(f"Order added. ID: {order[self.OrderList.ID]}, OrderID: {order[self.OrderList.ID_ORDER]}")

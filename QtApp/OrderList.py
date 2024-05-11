@@ -10,10 +10,8 @@
 
 from PySide6 import QtCore, QtWidgets
 from QtApp.Base.OrderTableWidget import TableWidget
-from collections import defaultdict
 from TableInfoStore import OrderInfo, TableInfoStore
 from functools import partial
-from Logger import CreateLogger
 from QtApp.Base import CFrame, CPushButton
 
 
@@ -40,7 +38,13 @@ class OrderListPanel(CFrame):
         self.BtnPlaceOrder = CPushButton(self)
         self.BtnPlaceOrder.setObjectName("BtnPlacecOrder")
         self.BtnPlaceOrder.setMaximumWidth(300)
-        mainLayout.addWidget(self.BtnPlaceOrder)
+        self.BtnSaveOrder = CPushButton(self)
+        self.BtnSaveOrder.setObjectName("BtnSaveOrder")
+        self.BtnSaveOrder.setMaximumWidth(300)
+        hLayout2 = QtWidgets.QHBoxLayout()
+        hLayout2.addWidget(self.BtnPlaceOrder)
+        hLayout2.addWidget(self.BtnSaveOrder)
+        mainLayout.addLayout(hLayout2)
         vLayout = QtWidgets.QVBoxLayout()
         hLayout.addLayout(vLayout)
         self.Btnup = CPushButton(self)
@@ -54,7 +58,8 @@ class OrderListPanel(CFrame):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("Form", "OrderList"))
-        self.BtnPlaceOrder.setText(_translate("Form", "下单"))
+        self.BtnPlaceOrder.setText(_translate("Form", "打印"))
+        self.BtnSaveOrder.setText(_translate("Form", "保存"))
         self.Btnup.setText(_translate("Form", "^"))
         self.Btndown.setText(_translate("Form", "v"))
 
@@ -65,6 +70,7 @@ class OrderListPanel(CFrame):
         self.Logger.debug(f'Display Order:ID {TableInfo.OrderID}, table: {TableInfo.TableID}')
         self.tableView.Clear()
         self.BtnPlaceOrder.setVisible(False)
+        self.BtnSaveOrder.setVisible(False)
         self.Orders.Clear()
         self.Orders.OrderID = TableInfo.OrderID
         self.Orders.TableID = TableInfo.TableID
@@ -82,14 +88,18 @@ class OrderListPanel(CFrame):
         self.Logger.info('clear OrderList panel')
         self.tableView.Clear()
         self.BtnPlaceOrder.setVisible(True)
+        self.BtnSaveOrder.setVisible(True)
         self.Orders.Orders = []
 
     def AddOrder(self, Order):
         self.Orders.Orders.append(Order)
         self.tableView.addRow(Order)
 
-    def Connect(self, Event):
+    def AddPlaceOrderEvent(self, Event):
         self.BtnPlaceOrder.pressed.connect(partial(Event, self.Orders))
+
+    def AddSaveOrderEvent(self, Event):
+        self.BtnSaveOrder.pressed.connect(partial(Event, self.Orders))
 
     def OpenOrderEditor(self, row, column):
         if self.IsEditable:
