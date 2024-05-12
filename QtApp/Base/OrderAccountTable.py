@@ -53,7 +53,7 @@ class TableWidget(CTableWidget):
             else:
                 self.setItem(rowCount, 2, QTableWidgetItem('保留'))
             self.setItem(rowCount, 3, QTableWidgetItem(str(History_Amount)))
-            self.setItem(rowCount, 4, QTableWidgetItem(str(Today_Amount)))
+            self.setItem(rowCount, 4, QTableWidgetItem(str(round(Today_Amount, 2))))
 
     def CurrentAccount(self):
         AccountTable = Config.DataBase.OrderAccountList

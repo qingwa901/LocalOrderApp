@@ -117,8 +117,7 @@ class SQLControl:
     def get_data(self, query):
         while self.open:
             try:
-                if self.conn is None:
-                    raise ConnectionError('Connection not build yet')
+                self.build_connection()
                 with self.Lock:
                     self.logger.info(f'Server query: {query}')
                     data = pd.read_sql(query, self.conn)
@@ -133,8 +132,7 @@ class SQLControl:
     def SaveData(self, data: pd.DataFrame, Table):
         while self.open:
             try:
-                if self.conn is None:
-                    raise ConnectionError('Connection not build yet')
+                self.build_connection()
                 with self.Lock:
                     self.logger.info(f'Server Table: {Table}')
                     data.to_sql(Table, self.conn, if_exists='append', index=False)
@@ -149,8 +147,7 @@ class SQLControl:
     def execute(self, query):
         while self.open:
             try:
-                if self.conn is None:
-                    raise ConnectionError('Connection not build yet')
+                self.build_connection()
                 with self.Lock:
                     self.logger.info(f'Server query: {query}')
                     return self.conn.execute(query)

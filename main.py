@@ -328,6 +328,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def RefreshDataBase(self):
         self.DataBase.HardReloadData()
+        self.DataBase.RefreshMenu()
+        self.MenuPanel.AddMenu(self.DataBase.menu)
 
     def menuSetting_onClick(self, e):
         try:
@@ -412,8 +414,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def TableButClick(self, TableNumber):
         try:
             self.Logger.info(f'start to load Table {TableNumber}')
+            if TableNumber == 0:
+                return self.TakeAwayClick(self.OrderID)
             self.TableNumber = TableNumber
-
             TableInfo = self.DataBase.GetOpenTableInfo2()
             if TableNumber in TableInfo.ByTableIDDict:
                 TableInfo = TableInfo.ByTableIDDict[TableNumber]
@@ -572,6 +575,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def Close(self, e):
         self.Logger.info(f'close connection')
+        self.DataBase.Update_()
         self.DataBase.open = False
         self.DataBase.Setting.open = False
 

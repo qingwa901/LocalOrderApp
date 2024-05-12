@@ -63,6 +63,7 @@ class MenuPage(CFrame):
     def Clear(self):
         for btn in self.ButList:
             btn.Clear()
+        self.Count = 0
 
 
 if __name__ == "__main__":

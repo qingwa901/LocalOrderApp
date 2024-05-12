@@ -53,6 +53,8 @@ class Menu(CFrame):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def AddMenu(self, menu: FullMenuList):
+        for i in self.MenuPageList.values():
+            i.Clear()
         for m in menu.Foods.values():
             if m.Type in self.MenuPageList:
                 self.MenuPageList[m.Type].AddMenu(m)

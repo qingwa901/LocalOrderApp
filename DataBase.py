@@ -768,6 +768,10 @@ class DataBase(SQLControl):
 
     def SaveTodayDataToHistoryTable(self):
         MetaTable = self.config.OrderMetaData
+        AccountTable = self.config.OrderAccountList
+        AccountList = self.GetAccountList()
+        AccountDeleteMap = AccountList.set_index(AccountTable.ID)[AccountTable.AUTO_DELETE].to_dict()
+
         query = (f"select * from {MetaTable.NAME} where `{MetaTable.ID_STORE}`='{self.STORE_ID}' and "
                  f"`{MetaTable.VALID}`='1';")
         MetaData = self.get_local_data(query)
@@ -778,6 +782,11 @@ class DataBase(SQLControl):
         OrderIDList = MetaData[
             (MetaData[MetaTable.FIELD] == MetaTable.Fields.IS_FINISHED) & (MetaData[MetaTable.VALUE] == 'True')][
             MetaTable.ID_ORDER].to_list()
+        DeleteOrderList = MetaData[
+            (MetaData[MetaTable.FIELD] == MetaTable.Fields.ACCOUNT_ID)].set_index(MetaTable.ID_ORDER)[MetaTable.VALUE].to_dict()
+        DeleteOrderList = [int(x) for x in DeleteOrderList.keys() if
+                           int(DeleteOrderList[x]) in AccountDeleteMap and AccountDeleteMap[
+                               int(DeleteOrderList[x])] == 1]
         if len(OrderIDList) > 0:
             HistMetaTable = self.config.HistoryOrderMetaData
             HistOrderTable = self.config.HistoryOrderList
@@ -791,25 +800,26 @@ class DataBase(SQLControl):
             if MaxOrderID is None:
                 MaxOrderID = 0
             for OrderID in OrderIDList:
-                MaxOrderID += 1
-                SubMetaData = MetaData[MetaData[HistMetaTable.ID_ORDER] == OrderID]
-                SubMetaData[HistMetaTable.ID_ORDER] = MaxOrderID
-                # SubMetaData = SubMetaData.drop(HistMetaTable.ID, axis=1)
-                MaxHisMetaID = self.GetMaxID(HistMetaTable) + 1
-                SubMetaData = SubMetaData.reset_index(drop=True)
-                for i in range(len(SubMetaData)):
-                    SubMetaData.loc[i, HistMetaTable.ID] = i + MaxHisMetaID
-                SubMetaData[self.config.LOADED] = False
-                self.SaveLocalData(SubMetaData, HistMetaTable.NAME)
-                SubOrderData = OrderData[OrderData[HistOrderTable.ID_ORDER] == OrderID]
-                SubOrderData[HistOrderTable.ID_ORDER] = MaxOrderID
-                # SubOrderData = SubOrderData.drop(HistOrderTable.ID, axis=1)
-                MaxOrderListID = self.GetMaxID(HistOrderTable) + 1
-                SubOrderData = SubOrderData.reset_index(drop=True)
-                for i in range(len(SubOrderData)):
-                    SubOrderData.loc[i, HistOrderTable.ID] = i + MaxOrderListID
-                SubOrderData[self.config.LOADED] = False
-                self.SaveLocalData(SubOrderData, HistOrderTable.NAME)
+                if OrderID not in DeleteOrderList:
+                    MaxOrderID += 1
+                    SubMetaData = MetaData[MetaData[HistMetaTable.ID_ORDER] == OrderID]
+                    SubMetaData[HistMetaTable.ID_ORDER] = MaxOrderID
+                    # SubMetaData = SubMetaData.drop(HistMetaTable.ID, axis=1)
+                    MaxHisMetaID = self.GetMaxID(HistMetaTable) + 1
+                    SubMetaData = SubMetaData.reset_index(drop=True)
+                    for i in range(len(SubMetaData)):
+                        SubMetaData.loc[i, HistMetaTable.ID] = i + MaxHisMetaID
+                    SubMetaData[self.config.LOADED] = False
+                    self.SaveLocalData(SubMetaData, HistMetaTable.NAME)
+                    SubOrderData = OrderData[OrderData[HistOrderTable.ID_ORDER] == OrderID]
+                    SubOrderData[HistOrderTable.ID_ORDER] = MaxOrderID
+                    # SubOrderData = SubOrderData.drop(HistOrderTable.ID, axis=1)
+                    MaxOrderListID = self.GetMaxID(HistOrderTable) + 1
+                    SubOrderData = SubOrderData.reset_index(drop=True)
+                    for i in range(len(SubOrderData)):
+                        SubOrderData.loc[i, HistOrderTable.ID] = i + MaxOrderListID
+                    SubOrderData[self.config.LOADED] = False
+                    self.SaveLocalData(SubOrderData, HistOrderTable.NAME)
                 query = (
                     f"update {MetaTable.NAME} set `{MetaTable.VALID}`='0', `{self.config.LOADED}`='0' where "
                     f"`{MetaTable.ID_STORE}`='{self.STORE_ID}'"

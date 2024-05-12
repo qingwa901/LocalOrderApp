@@ -46,7 +46,7 @@ class TakeAwayPanel(CFrame):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("Form", "OrderList"))
-        self.BtnNewAccount.setText(_translate("Form", "新建"))
+        self.BtnNewAccount.setText(_translate("Form", "新建外卖单"))
         self.Btnup.setText(_translate("Form", "^"))
         self.Btndown.setText(_translate("Form", "v"))
 
