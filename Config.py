@@ -78,6 +78,7 @@ class Config:
                 SERVICE_CHARGE_PERCENT = 'ServiceChargePercent'
                 ACCOUNT_ID = 'AccountID'
                 ORDER_NAME = 'OrderName'
+                ORDER_NUMBER = 'OrderNumber'
                 ORDER_NOTE = 'OrderNote'
 
         class HistoryOrderMetaData:

@@ -5,6 +5,7 @@ from PySide6.QtGui import QColor
 from Config import Config
 from TableInfoStore import OrderInfo
 from QtApp.Base import CTableWidget, RefreshDecoration
+from typing import Union
 
 
 class TableWidget(CTableWidget):
@@ -28,20 +29,24 @@ class TableWidget(CTableWidget):
         selectedRow = None
         AccountTable = Config.DataBase.OrderAccountList
         OrderData = self.DataBase.GetTakeAwayOrders()
-        AccountData = self.DataBase.GetAccountList()
-        for order in OrderData.ByOrderIDDict.values:
-            rowCount = self.rowCount()
-            self.insertRow(rowCount)
-            self.setItem(rowCount, 0, QTableWidgetItem(str(order.OrderID)))
-            self.setItem(rowCount, 1, QTableWidgetItem(str(order.OrderName)))
-            self.setItem(rowCount, 2, QTableWidgetItem(str(order.OrderName)))
-            for i in range(len(AccountData)):
-                Account = AccountData.iloc[i]
-                if Account[AccountTable.ID] == order.AccountID:
-                    self.setItem(rowCount, 3, QTableWidgetItem(str(Account[AccountTable.ACCOUNT_NAME])))
-            self.setItem(rowCount, 4, QTableWidgetItem('已收' if order.IsFinished else '未收'))
-            if order.OrderID == SelectedOrderID:
-                selectedRow = rowCount
+        if len(OrderData.ByOrderIDDict) > 0:
+            AccountData = self.DataBase.GetAccountList()
+            for order in OrderData.ByOrderIDDict.values():
+                rowCount = self.rowCount()
+                self.insertRow(rowCount)
+                self.setItem(rowCount, 0, QTableWidgetItem(str(order.OrderID)))
+                self.setItem(rowCount, 1, QTableWidgetItem(str(order.OrderName)))
+                AccountName = AccountData[AccountData['ID'] == order.AccountID]['AccountName']
+                if len(AccountName) > 0:
+                    self.setItem(rowCount, 2, QTableWidgetItem(AccountName.iloc[0]))
+                else:
+                    self.setItem(rowCount, 2, QTableWidgetItem(''))
+
+                self.setItem(rowCount, 3, QTableWidgetItem(str(round(order.GetTotalAmount(), 2))))
+
+                self.setItem(rowCount, 4, QTableWidgetItem('已收' if order.IsFinished else '未收'))
+                if order.OrderID == SelectedOrderID:
+                    selectedRow = rowCount
         return selectedRow
 
     @RefreshDecoration
@@ -49,9 +54,16 @@ class TableWidget(CTableWidget):
         self.Clear()
         self.test()
 
-    def CurrentOrderID(self) -> int:
+    def CurrentOrderID(self) -> Union[int, None]:
         row = self.currentRow()
-        return int(self.item(row, 0).text())
+        if row >= 0:
+            try:
+                return int(self.item(row, 0).text())
+            except ValueError:
+                self.Logger.error(f"Order ID {self.item(row, 0).text()} is not int")
+                return None
+        else:
+            return None
 
 
 class AppDemo(QWidget):

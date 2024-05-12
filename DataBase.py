@@ -269,34 +269,12 @@ class DataBase(SQLControl):
                     if not self.open:
                         break
 
-    def GetOpenTableInfo(self):
-        with self.TableInfoLock:
-            table = Config.DataBase.OrderMetaData
-            query = (f"select {table.ID_ORDER} from {table.NAME} where "
-                     f"{table.FIELD}='{table.Fields.IS_FINISHED}' and "
-                     f"{table.VALUE}='False' and "
-                     f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID} = true")
-            OpenTable = self.get_local_data(query)
-            OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].astype(str).to_list()
-            self.TableInfo = AllTableInfoStore(self.logger)
-            query = (f"select * from {table.NAME} where {table.ID_ORDER} in ({','.join(OpenOrderList)})"
-                     f" and {table.VALID} = true;")
-            OrderMetaData = self.get_local_data(query)
-            self.TableInfo.AddOrderMetaInfo(OrderMetaData)
-            query = (f"select * from {Config.DataBase.OrderList.NAME} where {Config.DataBase.OrderList.ID_ORDER} "
-                     f"in ({','.join(OpenOrderList)})")
-            OrderList = self.get_local_data(query)
-            if len(OrderList) > 0:
-                self.TableInfo.AddOrderInfo(OrderList)
-            self.TableInfo.LoadMenu(self.menu)
-            self.TableInfo.UpdateTime = time.time()
-
     def GetOpenTableInfo2(self) -> AllTableInfoStore:
         with self.TableInfoLock:
             table = Config.DataBase.OrderMetaData
             query = (f"select {table.ID_ORDER} from {table.NAME} where "
                      f"{table.FIELD}='{table.Fields.IS_FINISHED}' and "
-                     f"{table.VALUE}='0' and "
+                     f"{table.VALUE}='False' and "
                      f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID}='1';")
             OpenTable = self.get_local_data(query)
             OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].astype(str).to_list()
@@ -322,7 +300,10 @@ class DataBase(SQLControl):
                      f"{table.ID_STORE}='{self.STORE_ID}' and {table.VALID}='1';")
             OpenTable = self.get_local_data(query)
             OpenOrderList = OpenTable[Config.DataBase.OrderMetaData.ID_ORDER].astype(str).to_list()
+
             TableInfo = AllTableInfoStore(self.logger)
+            if len(OpenOrderList) == 0:
+                return TableInfo
             query = (f"select * from {table.NAME} where {table.ID_ORDER} in ({','.join(OpenOrderList)})"
                      f" and {table.VALID} = true;")
             OrderMetaData = self.get_local_data(query)
@@ -336,16 +317,30 @@ class DataBase(SQLControl):
             return TableInfo
 
     def SetUpTableColorUpdate(self, Event):
-        self.color_auto_update = threading.Thread(target=self.AotoUpdateTableColor, args=[Event])
+        self.color_auto_update = threading.Thread(target=self.AutoUpdateTableColor, args=[Event])
         self.color_auto_update.start()
 
-    def AotoUpdateTableColor(self, Event):
+    def AutoUpdateTableColor(self, Event):
         while self.open:
             try:
                 TableInfo = self.GetOpenTableInfo2()
                 Event(TableInfo)
             except Exception as e:
                 self.logger.error(f'Error during AotoUpdateTableColor',
+                                  exc_info=e)
+            finally:
+                time.sleep(2)
+
+    def SetUpTakeAwayUpdate(self, Event):
+        self.TakeAwayUpdate = threading.Thread(target=self.AotoUpdateTakeAway, args=[Event])
+        self.TakeAwayUpdate.start()
+
+    def AotoUpdateTakeAway(self, Event):
+        while self.open:
+            try:
+                Event()
+            except Exception as e:
+                self.logger.error(f'Error during AotoUpdateTakeAway',
                                   exc_info=e)
             finally:
                 time.sleep(2)
@@ -371,6 +366,8 @@ class DataBase(SQLControl):
                     f"update {Table.NAME} set {self.config.LOADED}='1', {self.config.UPDATED}='1' where {Table.ID_STORE}="
                     f"{self.STORE_ID} and {Table.ID} in ({','.join(map(str, update_data[Table.ID].to_list()))})")
         elif len(data) > 0:
+            if delete:
+                self.executeLocally(f"Delete from {Table.NAME} where 1=1;")
             self.SaveLocalData(data, Table.NAME)
 
     def GetMaxOrderID(self):
@@ -420,10 +417,10 @@ class DataBase(SQLControl):
         else:
             return data.iloc[0, 0]
 
-    def InitialOrder(self, TableID, NumOfPeople=None):
+    def InitialOrder(self, TableID, NumOfPeople=None, Name=None, Number=None, Note=None, AccountID=None):
         table = self.config.OrderMetaData
-        self.GetOpenTableInfo()
-        if TableID not in self.TableInfo.ByTableIDDict:
+        TableInfo = self.GetOpenTableInfo2()
+        if TableID not in TableInfo.ByTableIDDict or TableID == 0:
             if self.MaxOrderMataListID is None:
                 self.GetMaxOrderMataListID()
             self.MaxOrderMataListID += 1
@@ -464,12 +461,43 @@ class DataBase(SQLControl):
                                 table.VALUE: [str(ServiceCharge)]
                                 })
             data = data.append(tmp)
-            if self.MaxOrderID not in self.TableInfo.ByOrderIDDict:
-                self.TableInfo.ByOrderIDDict[self.MaxOrderID] = TableInfoStore()
-            self.TableInfo.ByOrderIDDict[self.MaxOrderID].OrderID = self.MaxOrderID
-            self.TableInfo.ByOrderIDDict[self.MaxOrderID].StartTime = StartTime
-            self.TableInfo.ByOrderIDDict[self.MaxOrderID].TablID = TableID
-            self.TableInfo.ByTableIDDict[TableID] = self.TableInfo.ByOrderIDDict[self.MaxOrderID]
+            if Name is not None:
+                self.MaxOrderMataListID += 1
+                tmp = pd.DataFrame({table.ID: [self.MaxOrderMataListID],
+                                    table.ID_ORDER: [self.MaxOrderID],
+                                    table.ID_STORE: [self.STORE_ID],
+                                    table.FIELD: [table.Fields.ORDER_NAME],
+                                    table.VALUE: [Name]
+                                    })
+                data = data.append(tmp)
+
+            if Number is not None:
+                self.MaxOrderMataListID += 1
+                tmp = pd.DataFrame({table.ID: [self.MaxOrderMataListID],
+                                    table.ID_ORDER: [self.MaxOrderID],
+                                    table.ID_STORE: [self.STORE_ID],
+                                    table.FIELD: [table.Fields.ORDER_NUMBER],
+                                    table.VALUE: [Number]
+                                    })
+                data = data.append(tmp)
+            if Note is not None:
+                self.MaxOrderMataListID += 1
+                tmp = pd.DataFrame({table.ID: [self.MaxOrderMataListID],
+                                    table.ID_ORDER: [self.MaxOrderID],
+                                    table.ID_STORE: [self.STORE_ID],
+                                    table.FIELD: [table.Fields.ORDER_NOTE],
+                                    table.VALUE: [Note]
+                                    })
+                data = data.append(tmp)
+            if AccountID is not None:
+                self.MaxOrderMataListID += 1
+                tmp = pd.DataFrame({table.ID: [self.MaxOrderMataListID],
+                                    table.ID_ORDER: [self.MaxOrderID],
+                                    table.ID_STORE: [self.STORE_ID],
+                                    table.FIELD: [table.Fields.ACCOUNT_ID],
+                                    table.VALUE: [AccountID]
+                                    })
+                data = data.append(tmp)
             if NumOfPeople is not None:
                 self.MaxOrderMataListID += 1
                 tmp = pd.DataFrame({table.ID: [self.MaxOrderMataListID],
@@ -479,7 +507,6 @@ class DataBase(SQLControl):
                                     table.VALUE: [str(NumOfPeople)]
                                     })
                 data = data.append(tmp)
-                self.TableInfo.ByOrderIDDict[self.MaxOrderID].NumOfPeople = NumOfPeople
                 self.logger.info(
                     f"New Order Created: OrderID: {self.MaxOrderID}, TableID: {TableID}, #People: {NumOfPeople}")
             data[table.VALUE] = data[table.VALUE].astype(str)
@@ -487,7 +514,7 @@ class DataBase(SQLControl):
             self.SaveLocalData(data, table.NAME)
             return self.MaxOrderID
         else:
-            OrderId = self.TableInfo.ByTableIDDict[TableID].OrderID
+            OrderId = TableInfo.ByTableIDDict[TableID].OrderID
             self.logger.info(
                 f"New Order Created Error: OrderID: {OrderId}, TableID: {TableID} already exist.")
             return OrderId
@@ -525,7 +552,7 @@ class DataBase(SQLControl):
         query = (f"Update {ordertable.NAME} set {ordertable.VALID}=false, {Loaded}=false "
                  f"where {ordertable.ID_ORDER}={OrderID} and {ordertable.ID_STORE}={self.STORE_ID}")
         self.executeLocally(query)
-        self.TableInfo.ByOrderIDDict[OrderID].Clear()
+        # self.TableInfo.ByOrderIDDict[OrderID].Clear()
 
     def PlaceOrder(self, Orders: TableInfoStore, Print: bool = True):
         try:
@@ -560,13 +587,12 @@ class DataBase(SQLControl):
         except Exception as e:
             self.logger.error("Error during placing order.", exc_info=e)
 
-    def CheckOutTable(self, TableNumber):
+    def CheckOutTable(self, OrderID):
         try:
             table = self.config.OrderMetaData
             if self.MaxOrderMataListID is None:
                 self.GetMaxOrderMataListID()
             self.MaxOrderMataListID += 1
-            OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
             EndTime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
             self.logger.info(f'Order {OrderID} add end time {EndTime}.')
             data = {table.ID: [self.MaxOrderMataListID],
@@ -581,18 +607,17 @@ class DataBase(SQLControl):
             data = pd.DataFrame(data)
             self.SaveLocalData(data, table.NAME)
         except Exception as e:
-            self.logger.error(f'Error during adding order end time. TableID: {TableNumber}',
+            self.logger.error(f'Error during adding order end time. OrderID: {OrderID}',
                               exc_info=e)
 
-    def ReopenTable(self, TableNumber):
+    def ReopenTable(self, OrderID):
         try:
             table = self.config.OrderMetaData
-            OrderID = self.TableInfo.ByTableIDDict[TableNumber].OrderID
             self.executeLocally(f"Update {table.NAME} set `{table.VALID}` = false, `{self.config.LOADED}`=false where "
                                 f"`{table.ID_STORE}`='{self.STORE_ID}' and `{table.FIELD}`='{table.Fields.END_TIME}'"
                                 f" and `{table.ID_ORDER}`='{OrderID}'")
         except Exception as e:
-            self.logger.error(f'Error during remove order end time. TableID: {TableNumber}',
+            self.logger.error(f'Error during remove order end time. OrderID: {OrderID}',
                               exc_info=e)
 
     def AddCash(self, Cash, OrderID):
@@ -853,7 +878,7 @@ class DataBase(SQLControl):
                  f"`{self.config.LOADED}`='0' where `{OrderTable.ID_ORDER}`='{OrderID}';")
         self.executeLocally(query)
 
-    def GetAccountList(self):
+    def GetAccountList(self) -> pd.DataFrame:
         AccountList = self.config.OrderAccountList
         query = (
             f"select `{'`, `'.join(AccountList.COLUMNS)}` from {AccountList.NAME} where `{AccountList.VALID}` = '1'"

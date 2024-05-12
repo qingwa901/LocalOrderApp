@@ -34,6 +34,9 @@ from QtApp.CEODPanel import CEODPanel
 from QtApp.OrderAccountPanel import OrderAccountPanel
 from QtApp.Base.CBLockPanel import BlockPanel
 from QtApp.AccountDetail import AccountDetailPanel
+from QtApp.TakeAwayPanel import TakeAwayPanel
+from QtApp.InitialTakeAwayPanel import InitialTakeAwayPanel
+from typing import Union
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
@@ -81,6 +84,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         # self.BlockPanel.SetBackgoundColor('red')
         self.BlockPanel.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         EB.BlockPanel = self.BlockPanel
+        self.JumpWindow.BlockPanel = self.BlockPanel
         self.AccountDetail = AccountDetailPanel(self)
         self.AccountDetail.setVisible(False)
         self.AccountDetail.BlockPanel = self.BlockPanel
@@ -98,10 +102,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.TablePanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.TablePanel.setFrameShadow(QtWidgets.QFrame.Raised)
 
-        self.frame_2 = CFrame(self.MainSplitter)
-        self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_2.setObjectName("frame_2")
+        # self.frame_2 = CFrame(self.MainSplitter)
+        # self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        # self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
+        # self.frame_2.setObjectName("frame_2")
+        self.TakeAwayPanel = TakeAwayPanel(self.MainSplitter)
+        self.TakeAwayPanel.setObjectName("TakeAwayPanel")
+        self.TakeAwayPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.TakeAwayPanel.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.TakeAwayPanel.Refresh()
+        self.TakeAwayPanel.OpenEvent = self.TakeAwayClick
 
         self.Ordersplit = CSplitter(self.centralwidget)
         self.Ordersplit.setOrientation(QtCore.Qt.Horizontal)
@@ -123,6 +133,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.InitialPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.InitialPanel.setVisible(False)
 
+        self.InitialTakeAwayPanel = InitialTakeAwayPanel(self.OrderRightPanel)
+        self.InitialTakeAwayPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.InitialTakeAwayPanel.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.InitialTakeAwayPanel.setVisible(False)
+
         self.StatusPanel = StatusPanel(self.OrderRightPanel)
         self.StatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.StatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -143,6 +158,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.FinalStatusPanel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.FinalStatusPanel.setVisible(False)
+        self.FinalStatusPanel.JumpWindow = self.JumpWindow
 
         self.setCentralWidget(self.centralwidget)
         self.toolbar = self.addToolBar("Panels")
@@ -200,7 +216,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         icon1.addPixmap(QtGui.QPixmap(":/ToolBar/Refresh.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.RefreshAction = QtGui.QAction(icon1, "MenuPage", self)
         self.toolbar.addAction(self.RefreshAction)
-        self.RefreshAction.triggered.connect(self.menuTable_onClick)
+        self.RefreshAction.triggered.connect(self.RefreshDataBase)
 
         self.Connection = ConnectionLabel(self)
         self.toolbar.addWidget(self.Connection)
@@ -219,6 +235,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.closeEvent = self.Close
 
             self.DataBase.SetUpTableColorUpdate(self.TablePanel.setupTableColor)
+            self.DataBase.SetUpTakeAwayUpdate(self.TakeAwayPanel.Refresh)
             self.SettingPanel.SetupPrinters(self.DataBase.Printer)
 
             CurrentServiceChargePercent = (
@@ -248,6 +265,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                                                         CurrentDiscountPercentB)
 
             self.InitialPanel.TableButClickEvent = self.TableButClick
+
+            self.InitialTakeAwayPanel.OpenOrderEvent = self.TakeAwayClick
 
             self.StatusPanel.CloseTableConnect(self.CloseTableEvent)
             self.StatusPanel.NewOrderConnect(self.StartOrder)
@@ -293,6 +312,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         hbox = QtWidgets.QHBoxLayout(self.OrderRightPanel)
         hbox.addWidget(self.InitialPanel)
+        hbox.addWidget(self.InitialTakeAwayPanel)
         hbox.addWidget(self.MenuPanel)
         hbox.addWidget(self.StatusPanel)
         hbox.addWidget(self.FinalStatusPanel)
@@ -305,6 +325,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "MainWindow"))
+
+    def RefreshDataBase(self):
+        self.DataBase.HardReloadData()
 
     def menuSetting_onClick(self, e):
         try:
@@ -391,17 +414,36 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.Logger.info(f'start to load Table {TableNumber}')
             self.TableNumber = TableNumber
 
-            self.DataBase.GetOpenTableInfo()
-            TableInfo = None
-            if TableNumber in self.DataBase.TableInfo.ByTableIDDict:
-                TableInfo = self.DataBase.TableInfo.ByTableIDDict[TableNumber]
+            TableInfo = self.DataBase.GetOpenTableInfo2()
+            if TableNumber in TableInfo.ByTableIDDict:
+                TableInfo = TableInfo.ByTableIDDict[TableNumber]
                 self.OrderID = TableInfo.OrderID
-            self.loadOrder(TableInfo, TableNumber)
+                self.loadOrder(TableInfo, TableNumber)
+            else:
+                self.loadOrder(None, TableNumber)
 
         except Exception as e:
             self.Logger.error(f'Error during show Table {TableNumber} info.', exc_info=e)
 
-    def loadOrder(self, TableInfo, TableNumber=None):
+    def TakeAwayClick(self, OrderID):
+        try:
+            self.Logger.info(f'start to load Take Away {OrderID}')
+            self.TableNumber = 0
+
+            TableInfo = self.DataBase.GetTakeAwayOrders()
+            if OrderID in TableInfo.ByOrderIDDict:
+                TableInfo = TableInfo.ByOrderIDDict[OrderID]
+                self.OrderID = TableInfo.OrderID
+                self.loadOrder(TableInfo, None, True)
+            else:
+                self.loadOrder(None, None, True)
+
+        except Exception as e:
+            self.TableNumber = None
+            self.OrderID = None
+            self.Logger.error(f'Error during show Take Away {OrderID} info.', exc_info=e)
+
+    def loadOrder(self, TableInfo: Union[TableInfoStore, None], TableNumber=None, IsTakeAway: bool = False):
         try:
             self.MenuPanel.setVisible(False)
             self.Receipt.setVisible(False)
@@ -418,14 +460,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.MainSplitter.setVisible(False)
             if TableInfo is None or TableInfo.StartTime is None:
                 # initial table
-                self.InitialPanel.setVisible(True)
-                self.InitialPanel.DisplayTable(TableNumber)
+                if IsTakeAway:
+                    self.InitialTakeAwayPanel.setVisible(True)
+                    self.InitialTakeAwayPanel.Clear()
+                    self.InitialPanel.setVisible(False)
+                else:
+                    self.InitialPanel.setVisible(True)
+                    self.InitialPanel.DisplayTable(TableNumber)
+                    self.InitialTakeAwayPanel.setVisible(False)
                 self.OrderPanel.setVisible(False)
                 self.StatusPanel.setVisible(False)
                 self.FinalStatusPanel.setVisible(False)
             elif TableInfo.EndTime is None:
                 # working table
                 self.InitialPanel.setVisible(False)
+                self.InitialTakeAwayPanel.setVisible(False)
                 self.StatusPanel.setVisible(True)
                 self.StatusPanel.DisplayTable(TableInfo)
                 self.OrderPanel.setVisible(True)
@@ -435,6 +484,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             elif not TableInfo.IsFinished:
                 # finishing table
                 self.InitialPanel.setVisible(False)
+                self.InitialTakeAwayPanel.setVisible(False)
                 self.StatusPanel.setVisible(False)
                 self.OrderPanel.setVisible(True)
                 self.OrderPanel.DisplayTable(TableInfo)
@@ -445,6 +495,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.Receipt.LoadTable(TableInfo)
             else:
                 self.InitialPanel.setVisible(False)
+                self.InitialTakeAwayPanel.setVisible(False)
                 self.StatusPanel.setVisible(False)
                 self.OrderPanel.setVisible(True)
                 self.OrderPanel.DisplayTable(TableInfo)
@@ -466,17 +517,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.AccountDetail.move(self.width() // 2 - 300, self.height() // 2 - 150)
         QtWidgets.QMainWindow.resizeEvent(self, event)
 
-    def OpenTable(self):
-        try:
-            TableNumber = self.TableNumber
-            self.Logger.info(f'Table {TableNumber} open')
-            if TableNumber is not None:
-                self.InitialPanel.setVisible(False)
-                self.StatusPanel.setVisible(True)
-                self.OrderID = self.DataBase.InitialOrder(TableNumber, self.InitialPanel.EditBoxNumOfPeople.value())
-                self.TableButClick(self.TableNumber)
-        except Exception as e:
-            self.Logger.error(f'Error during Table {self.TableNumber} open', exc_info=e)
+    # def OpenTable(self):
+    #     try:
+    #         TableNumber = self.TableNumber
+    #         self.Logger.info(f'Table {TableNumber} open')
+    #         if TableNumber is not None:
+    #             self.InitialPanel.setVisible(False)
+    #             self.StatusPanel.setVisible(True)
+    #             self.OrderID = self.DataBase.InitialOrder(TableNumber, self.InitialPanel.EditBoxNumOfPeople.value())
+    #             self.TableButClick(self.TableNumber)
+    #     except Exception as e:
+    #         self.Logger.error(f'Error during Table {self.TableNumber} open', exc_info=e)
 
     def CloseTableEvent(self):
         try:
@@ -491,9 +542,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def CloseTable(self):
         try:
             self.Logger.info(f'Close Table {self.TableNumber}')
-            self.JumpWindow.CloseWindow()
-            self.DataBase.CloseTable(self.DataBase.TableInfo.ByTableIDDict[self.TableNumber].OrderID)
-            self.TableButClick(self.TableNumber)
+            self.DataBase.CloseTable(self.OrderID)
+            self.ButCloseOrderPanel_onClick(None)
+            # if self.TableNumber > 0:
+            #     self.TableButClick(self.TableNumber)
+            # else:
+            #     self.TakeAwayClick(self.OrderID)
         except Exception as e:
             self.Logger.error(f'Error during close Table {self.TableNumber}', exc_info=e)
 
@@ -506,49 +560,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def AbsY(self):
         return 0
-
-    # def ShowKeyboard(self, target: EditBox):
-    #     try:
-    #         self.KeyBoard.OriValue = target.text()
-    #         width = 300
-    #         height = 300
-    #         self.KeyBoard.setTarget(target)
-    #         self.BlockPanel.setVisible(True)
-    #         self.KeyBoard.setVisible(True)
-    #         self.BlockPanel.resize(self.width(), self.height())
-    #         self.KeyBoard.resize(width, height)
-    #         x1 = target.AbsX()
-    #         x2 = x1 + target.width()
-    #         y1 = target.AbsY()
-    #         y2 = y1 + target.height()
-    #         x = x1
-    #         y = y2
-    #         if self.width() - x1 < width:
-    #             x = self.width() - width
-    #         if self.height() - y2 < height:
-    #             y = y1 - height
-    #         self.KeyBoard.move(x, y)
-    #         self.KeyBoard.raise_()
-    #         self.KeyBoard.focusWidget()
-    #         self.BlockPanel.lower()
-    #         self.BlockPanel.stackUnder(self.KeyBoard)
-    #         self.BlockPanel.mousePressEvent = lambda x: self.CloseKeyboard()
-    #     except Exception as e:
-    #         self.CloseKeyboard()
-    #         self.Logger.error(f'Error during show jump window', exc_info=e)
-    #
-    # def CloseKeyboard(self):
-    #     try:
-    #         if self.KeyBoard.target is not None:
-    #             self.KeyBoard.target.clean(self.KeyBoard.OriValue)
-    #             self.KeyBoard.target.clearFocus()
-    #             self.KeyBoard.OriValue = None
-    #         self.KeyBoard.removeTarget()
-    #         self.KeyBoard.setVisible(False)
-    #         self.BlockPanel.setVisible(False)
-    #
-    #     except Exception as e:
-    #         self.Logger.error(f'Error during close jump window', exc_info=e)
 
     def StartOrder(self):
         try:
@@ -601,16 +612,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def CheckOut(self):
         TableNumber = int(self.StatusPanel.TableNumber)
+        OrderID = int(self.StatusPanel.OrderID)
         try:
-            self.Logger.info(f'Table {TableNumber} checkout')
-            self.DataBase.CheckOutTable(TableNumber)
-            self.TableButClick(TableNumber)
+            self.Logger.info(f'Table {TableNumber} orderID {OrderID} checkout')
+            self.DataBase.CheckOutTable(OrderID)
+            if TableNumber > 0:
+                self.TableButClick(TableNumber)
+            else:
+                self.TakeAwayClick(OrderID)
         except Exception as e:
-            self.Logger.error(f'Error during check out table {TableNumber}', exc_info=e)
+            self.Logger.error(f'Error during check out table {TableNumber}  orderID {OrderID} ', exc_info=e)
 
     def ReopenTable(self):
-        self.DataBase.ReopenTable(self.TableNumber)
-        self.TableButClick(self.TableNumber)
+        self.DataBase.ReopenTable(self.OrderID)
+        if self.TableNumber > 0:
+            self.TableButClick(self.TableNumber)
+        else:
+            self.TakeAwayClick(self.OrderID)
 
     def ChangeDefaultServiceChargePercent(self, Value):
         self.DataBase.Setting.SetValue(Config.ValueSetting.TableOrder.STR_DEFAULT_SERVICE_CHARGE_PERCENT, Value)
@@ -625,7 +643,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.FinalStatusPanel.DefaultDiscountPercentB = Value
 
     def CleanTable(self):
-        self.TableButClick(self.TableNumber)
+        self.ButCloseOrderPanel_onClick(None)
 
     def dragEnterEvent(self, e):
         e.accept()

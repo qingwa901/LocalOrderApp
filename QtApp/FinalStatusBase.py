@@ -12,6 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from QtApp.Base import CFrame, CWidget, CPushButton, CComboBox
 from QtApp.Base.EditBox import EditBox, eValueType
 from logging import Logger
+from QtApp.Base.CAccountCombo import AccountCombo
 
 
 class FinalStatusBase(CFrame):
@@ -197,11 +198,10 @@ class FinalStatusBase(CFrame):
         self.hLayhout.setObjectName('hLayout')
         self.AccountLabel = QtWidgets.QLabel(self.hLayhoutWidge)
         self.hLayhout.addWidget(self.AccountLabel)
-        self.AccountCombo = CComboBox(self.hLayhoutWidge)
+        self.AccountCombo = AccountCombo(self.hLayhoutWidge)
         self.hLayhout.addWidget(self.AccountCombo)
         self.BtnAddToAccount = CPushButton(self.hLayhoutWidge)
         self.BtnAddToAccount.setVisible(False)
-        self.AccountCombo.setMinimumWidth(150)
         self.hLayhout.addWidget(self.BtnAddToAccount)
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)

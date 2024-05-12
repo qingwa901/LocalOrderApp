@@ -18,6 +18,9 @@ class JumpWindow(CFrame):
         self.setupUi()
         self.BlockPanel = None
         self.BtnNo.pressed.connect(self.CloseWindow)
+        self.BtnYes.pressed.connect(self.YesEvent)
+        self.ToDOEvent = None
+
     def setupUi(self):
         self.setObjectName("Form")
         self.setAutoFillBackground(True)
@@ -64,15 +67,20 @@ class JumpWindow(CFrame):
         self.LBQuestion.setText(text)
 
     def Yesconnect(self, event):
-        self.BtnYes.pressed.connect(event)
+        self.ToDOEvent = event
+
+    def YesEvent(self):
+        if self.ToDOEvent is not None:
+            self.ToDOEvent()
+        self.CloseWindow()
 
     def OpenWindow(self):
         try:
             self.BlockPanel.setVisible(True)
             self.setVisible(True)
-            self.BlockPanel.resize(self.width(), self.height())
+            self.BlockPanel.resize(self.parent().width(), self.parent().height())
             self.resize(600, 300)
-            self.move(self.width() // 2 - 300, self.height() // 2 - 150)
+            self.move(self.parent().width() // 2 - 300, self.parent().height() // 2 - 150)
 
             self.raise_()
             self.BlockPanel.lower()
@@ -84,9 +92,7 @@ class JumpWindow(CFrame):
     def CloseWindow(self):
         self.setVisible(False)
         self.BlockPanel.setVisible(False)
-        self.BtnYes.pressed.disconnect()
-
-
+        self.ToDOEvent = None
 
 
 if __name__ == "__main__":

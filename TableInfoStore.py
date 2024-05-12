@@ -73,6 +73,7 @@ class TableInfoStore:
         self.Discount = 0
         self.AccountID = None
         self.OrderNote = None
+        self.OrderNumber = None
         self.OrderName = None
 
     def SetMetaInfo(self, Info: pd.Series):
@@ -101,6 +102,8 @@ class TableInfoStore:
             self.AccountID = int(value)
         elif field == self.OrderMetaList.Fields.ORDER_NAME:
             self.OrderName = value
+        elif field == self.OrderMetaList.Fields.ORDER_NUMBER:
+            self.OrderNumber = value
         elif field == self.OrderMetaList.Fields.ORDER_NOTE:
             self.OrderNote = value
 
@@ -132,8 +135,8 @@ class AllTableInfoStore:
         self.OrderMetaList = Config.DataBase.OrderMetaData
         self.OnlineOrderTableMap = dict()
         self.OfflineOrderTableMap = dict()
-        self.ByOrderIDDict = Dict[int, TableInfoStore]()
-        self.ByTableIDDict = Dict[int, TableInfoStore]()
+        self.ByOrderIDDict = dict[int, TableInfoStore]()
+        self.ByTableIDDict = dict[int, TableInfoStore]()
 
     def _AddOrder(self, order: pd.Series):
         self.logger.debug(f"Order added. ID: {order[self.OrderList.ID]}, OrderID: {order[self.OrderList.ID_ORDER]}")

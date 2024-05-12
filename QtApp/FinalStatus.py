@@ -47,11 +47,10 @@ class FinalStatusPanel(FinalStatusBase):
         self.ButDiscountB.pressed.connect(self.AddDiscountB)
         self.BtnAddRemoveServiceCharge.pressed.connect(self.ChangeServiceChargePercent)
         self.BtnCleanTable.pressed.connect(self.CleanTableEvent)
-        self.BtnDeleteOrder.pressed.connect(self.DeleteOrder)
+        self.BtnDeleteOrder.pressed.connect(self.DeleteEvent)
         self.BtnPrintReceipt.pressed.connect(self.PrintReceipt)
-        self.DisplayAccount()
-        self.AccountCombo.currentIndexChanged.connect(self.ChangeAccount)
-
+        self.AccountCombo.DisplayAccount()
+        self.JumpWindow = None
 
     def SetDefaultDiscountPercentA(self, Value):
         self._DefaultDisCountPercentA = Value
@@ -81,34 +80,24 @@ class FinalStatusPanel(FinalStatusBase):
 
     DefaultServiceChargePercent = property(GetDefaultServiceChargePercent, SetDefaultServiceChargePercent)
 
-    def DisplayAccount(self):
-        OrderAccountList = Config.Config.DataBase.OrderAccountList
-        Account = self.DataBase.GetAccountList()
-        self.AccountCombo.addItem('')
-        self.AccountCombo.setCurrentText('')
-        for i in range(len(Account)):
-            data = Account.iloc[i]
-            self.AccountCombo.addItem(data[OrderAccountList.ACCOUNT_NAME])
-            if data[OrderAccountList.ID] == self.AccountID:
-                self.AccountCombo.setCurrentText(data[OrderAccountList.ACCOUNT_NAME])
-
-    def ChangeAccount(self):
-        Account = self.AccountCombo.currentText()
-        self.DataBase.ChangeAccount(Account, self.OrderID)
-
     def DisplayTable(self, TableInfo: TableInfoStore):
         self.Clear()
         self.TableInfo = TableInfo
         self.OrderID = TableInfo.OrderID
         self.AccountID = TableInfo.AccountID
         self.LBOrderID.setText(str(TableInfo.OrderID))
-        self.LBTableNumber.setText(TableInfo.TableID)
+        if int(TableInfo.TableID) > 0:
+            self.LBTableNumber.setText(TableInfo.TableID)
+        else:
+            self.LBTableNumber.setText("外卖")
         self.LBStartTime.setText(TableInfo.StartTime)
         self.LBEndTime.setText(TableInfo.EndTime)
         self.LBNumOfPeople.setText(TableInfo.NumOfPeople)
         self.total = round(TableInfo.GetTotalAmount(), 2)
         self.DiscountPercent = TableInfo.Discount
         self.ServiceChargePercent = TableInfo.ServiceCharge
+        self.AccountCombo.Clear()
+        self.AccountCombo.SetUp(TableInfo)
         if TableInfo.Cash is None:
             self.cash = 0
         else:
@@ -120,6 +109,8 @@ class FinalStatusPanel(FinalStatusBase):
         self.DisplayAllInfo()
 
     def Clear(self):
+        self.TableInfo = None
+        self.OrderID = None
         self.card = 0
         self.cash = 0
         self.total = 0
@@ -213,6 +204,17 @@ class FinalStatusPanel(FinalStatusBase):
         self.DataBase.DeleteOrder(self.OrderID)
         self.BackEvent(None)
 
+    def DeleteEvent(self):
+        if self.JumpWindow is not None:
+            try:
+                # Need a jump out window
+                self.Logger.info(f'Order {self.OrderID} delete check')
+                self.JumpWindow.SetQuestion('确定要删除订单吗？')
+                self.JumpWindow.Yesconnect(self.DeleteOrder)
+                self.JumpWindow.OpenWindow()
+            except Exception as e:
+                self.Logger.error(f'Error during show Close check', exc_info=e)
+
     def HistoryOrderSetting(self, Display):
         self.BtnCleanTable.setVisible(Display)
         self.ButDiscountB.setVisible(Display)
@@ -220,7 +222,7 @@ class FinalStatusPanel(FinalStatusBase):
         self.BtnReOpen.setVisible(Display)
         self.BtnAddRemoveServiceCharge.setVisible(Display)
         self.BtnRemoveDiscount.setVisible(Display)
-        self.BtnDeleteOrder.setVisible(not Display)
+        self.BtnDeleteOrder.setVisible(False)  # Not use this function. not Display
 
 
 if __name__ == "__main__":

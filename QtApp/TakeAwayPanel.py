@@ -17,6 +17,7 @@ class TakeAwayPanel(CFrame):
         self.Btndown.pressed.connect(self.btn_page_down)
         self.OpenEvent = None
         self.BtnNewAccount.pressed.connect(self.OpenNew)
+        self.tableView.cellClicked.connect(self.OpenOrderEditor)
 
     def setupUi(self):
         self.setObjectName("orderList")
@@ -63,6 +64,11 @@ class TakeAwayPanel(CFrame):
     def OpenNew(self):
         if self.OpenEvent is not None:
             self.OpenEvent(None)
+
+    def OpenOrderEditor(self, row, column):
+        if self.IsEditable:
+            OrderID = self.tableView.CurrentOrderID()
+            self.OpenEvent(OrderID)
 
 
 if __name__ == "__main__":
